@@ -16,7 +16,7 @@ export function firestoreTyped<T extends SerializedDocumentData>(
 
 // Export all types
 export * from './types/firestore-typed.types'
-export * from './errors/validation.error'
+export * from './errors/errors'
 
 // Export core classes
 export { FirestoreTyped } from './core/firestore-typed'

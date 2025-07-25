@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc -p tsconfig.build.json",
     "build:watch": "tsc --watch",
     "format": "prettier --write \"src/**/*.ts\"",
     "test": "jest",
@@ -29,13 +29,15 @@
     "typia": ">=5.3.0"
   },
   "devDependencies": {
+    "@eslint/js": "^9.31.0",
     "@types/jest": "^30.0.0",
-    "@typescript-eslint/eslint-plugin": "^8.38.0",
-    "@typescript-eslint/parser": "^8.38.0",
     "eslint": "^9.31.0",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^16.3.0",
     "jest": "^30.0.5",
     "ts-jest": "^29.4.0",
-    "typescript": "~5.8.3"
+    "typescript": "~5.8.3",
+    "typescript-eslint": "^8.38.0"
   },
   "files": [
     "dist/**/*",

@@ -1,7 +1,7 @@
 import type { DocumentReference as FirebaseDocumentReference } from 'firebase-admin/firestore'
 import { validateData } from '../utils/validator'
 import { serializeFirestoreTypes, deserializeFirestoreTypes } from '../utils/firestore-converter'
-import { DocumentNotFoundError, DocumentAlreadyExistsError } from '../errors/validation.error'
+import { DocumentNotFoundError, DocumentAlreadyExistsError } from '../errors/errors'
 import type {
   SerializedDocumentData,
   DocumentSnapshot,

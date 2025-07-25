@@ -1,4 +1,4 @@
-import { FirestoreTypedValidationError } from '../errors/validation.error'
+import { FirestoreTypedValidationError } from '../errors/errors'
 import type { SerializedDocumentData } from '../types/firestore-typed.types'
 
 /**
