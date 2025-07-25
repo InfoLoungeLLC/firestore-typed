@@ -450,7 +450,7 @@ const filteredUsers = await usersCollection
   .get()
 
 // 商品カテゴリベース検索
-const electronicsProducts = await productsCollection
+const cellProducts = await productsCollection
   .where('category', '==', 'electronics')
   .where('price', '<=', 1000)
   .orderBy('name')
@@ -492,27 +492,27 @@ const rangeQuery = await usersCollection
 ```typescript
 // ✅ 有効な使用法 - フィールド名は型チェックされる
 const validQuery = usersCollection.where('name', '==', 'John Doe')
-const sortedQuery = wardsCollection.orderBy('createdAt', 'desc')
+const sortedQuery = usersCollection.orderBy('createdAt', 'desc')
 
 // ❌ 無効なフィールド名のコンパイルエラー
-// const invalidQuery = wardsCollection.where('invalidField', '==', 'value')
+// const invalidQuery = usersCollection.where('invalidField', '==', 'value')
 
 // ⚠️ 注意: 値の型やページネーションパラメータは完全に型チェックされません
-// const query = wardsCollection.where('name', '==', 123) // 型エラーを捕捉できない可能性
-// const paginated = wardsCollection.startAt('any', 'values') // パラメータはunknown[]
+// const query = usersCollection.where('name', '==', 123) // 型エラーを捕捉できない可能性
+// const paginated = usersCollection.startAt('any', 'values') // パラメータはunknown[]
 ```
 
 ### バリデーション統合
 
 ```typescript
 // グローバル設定に基づいてクエリ結果を自動バリデーション
-const validatedResults = await wardsCollection
+const validatedResults = await usersCollection
   .where('name', '!=', '')
   .orderBy('name')
   .get()
 
 // 特定操作でグローバルバリデーション設定を上書き
-const fastResults = await wardsCollection
+const fastResults = await usersCollection
   .limit(100)
   .get({ validateOnRead: false })
 ```
@@ -522,7 +522,7 @@ const fastResults = await wardsCollection
 高度なFirestore機能には、ネイティブクエリオブジェクトにアクセスできます：
 
 ```typescript
-const query = wardsCollection.where('name', '!=', '').orderBy('name')
+const query = usersCollection.where('name', '!=', '').orderBy('name')
 const nativeQuery = query.native // Firebase Queryオブジェクト
 const snapshot = await nativeQuery.get()
 ```
@@ -548,7 +548,7 @@ const db = firestoreTyped<UserEntity>(userEntityValidator)
 const usersCollection = db.collection('users')
 
 // データがUserEntityと一致しない場合、バリデーションエラーをスロー
-await wardsCollection.doc('14101').set(invalidData)
+await usersCollection.doc('user-001').set(invalidData)
 ```
 
 ### Typiaの高度な機能
@@ -651,20 +651,20 @@ const zodValidator = (data: unknown): UserEntity => {
   return UserSchema.parse(data) // バリデーション失敗時にスロー
 }
 
-const db = firestoreTyped<WardEntity>(zodValidator)
+const db = firestoreTyped<UserEntity>(zodValidator)
 
 // Joiの例（未検証）
 import Joi from 'joi'
 
-const wardJoiSchema = Joi.object({
+const userJoiSchema = Joi.object({
   name: Joi.string().required(),
-  reading: Joi.string().required(),
+  email: Joi.string().email().required(),
   createdAt: Joi.date().required(),
   updatedAt: Joi.date().required()
 })
 
 const joiValidator = (data: unknown): UserEntity => {
-  const { error, value } = wardJoiSchema.validate(data)
+  const { error, value } = userJoiSchema.validate(data)
   if (error) throw error
   return value
 }
@@ -678,10 +678,10 @@ const db2 = firestoreTyped<UserEntity>(joiValidator)
 
 ```typescript
 // 特定操作でバリデーションを有効化
-await wardsCollection.doc('14101').set(data, { validateOnWrite: true })
+await usersCollection.doc('user-001').set(data, { validateOnWrite: true })
 
 // 特定操作でバリデーションを無効化
-await wardsCollection.doc('14101').set(data, { validateOnWrite: false })
+await usersCollection.doc('user-001').set(data, { validateOnWrite: false })
 ```
 
 ### バリデーションエラー
@@ -690,7 +690,7 @@ await wardsCollection.doc('14101').set(data, { validateOnWrite: false })
 import { FirestoreTypedValidationError } from '@info-lounge/firestore-typed'
 
 try {
-  await wardsCollection.doc('14101').set(invalidData)
+  await usersCollection.doc('user-001').set(invalidData)
 } catch (error) {
   if (error instanceof FirestoreTypedValidationError) {
     console.log('Validation failed:', error.message)
@@ -705,12 +705,12 @@ try {
 
 ```typescript
 try {
-  const snapshot = await wardsCollection.doc('99999').get()
+  const snapshot = await usersCollection.doc('nonexistent').get()
   if (!snapshot.metadata.exists) {
     console.log('User does not exist')
   }
 } catch (error) {
-  console.error('Error retrieving ward:', error)
+  console.error('Error retrieving user:', error)
 }
 ```
 
@@ -718,7 +718,7 @@ try {
 
 ```typescript
 try {
-  await wardsCollection.doc('14101').set(invalidData)
+  await usersCollection.doc('user-001').set(invalidData)
 } catch (error) {
   if (error instanceof FirestoreTypedValidationError) {
     // バリデーションエラーを処理
@@ -733,12 +733,12 @@ import { DocumentAlreadyExistsError } from '@info-lounge/firestore-typed'
 
 try {
   // ドキュメントが既に存在する場合は失敗します
-  await wardsCollection.doc('14101').set(data, { failIfExists: true })
+  await usersCollection.doc('user-001').set(data, { failIfExists: true })
 } catch (error) {
   if (error instanceof DocumentAlreadyExistsError) {
     console.log('ドキュメントは既に存在します:', error.documentPath)
     // 作成の代わりに更新で対処
-    await wardsCollection.doc('14101').merge(data)
+    await usersCollection.doc('user-001').merge(data)
   }
 }
 ```
@@ -774,7 +774,7 @@ const storeData = {
     path: 'categories/electronics',
     collectionId: 'categories',
     documentId: 'electronics'
-  } as SerializedDocumentReference<'categories', any>,
+  } as SerializedDocumentReference<'categories', CategoryEntity>,
   location: {
     type: 'GeoPoint',
     latitude: 35.6762,
@@ -811,10 +811,10 @@ import { SerializedDocumentReference } from '@info-lounge/firestore-typed'
 type ProductRef = SerializedDocumentReference<'products', ProductEntity>
 
 // コンパイル時バリデーション付きの型安全参照
-const categoryRef: ProductRef = {
+const parentRef: ProductRef = {
   type: 'DocumentReference',
-  path: 'categories/electronics',
-  collectionId: 'categories', // 'categories'と一致する必要がある
+  path: 'products/parent-001',
+  collectionId: 'products', // 'products'と一致する必要がある
   documentId: 'parent-001'
 }
 ```
@@ -875,21 +875,21 @@ const strictDb = db.withOptions({ validateOnRead: true })
 
 ```typescript
 // 型安全なドキュメント操作
-const wards = db.collection('wards')
+const users = db.collection('users')
 
 // TypeScriptが正しい型を強制
-await wards.doc('14101').set({
-  name: 'Tsurumi Ward',
-  reading: 'つるみく',
+await users.doc('user-001').set({
+  name: 'John Doe',
+  email: 'john@example.com',
   createdAt: new Date(),
   updatedAt: new Date()
 })
 
 // これはコンパイル時エラーを発生
-// await wards.doc('14101').set({
-//   id: '14101',
-//   name: 'Tsurumi Ward',
-//   reading: 123 // 型エラー: numberはstringに割り当てできません
+// await users.doc('user-001').set({
+//   id: 'user-001',
+//   name: 'John Doe',
+//   email: 123 // 型エラー: numberはstringに割り当てできません
 // })
 ```
 
@@ -1079,7 +1079,7 @@ class FirestoreTypedInstance<T> {
    * @example
    * ```typescript
    * const usersCollection = db.collection('users')
-   * const wardUsersCollection = db.collection('wards/14101/users')
+   * const userProductsCollection = db.collection('users/user-001/products')
    * ```
    */
   collection(path: string): CollectionReference<T>

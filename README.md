@@ -137,7 +137,7 @@ const db = firestoreTyped<UserEntity>(userEntityValidator, {
 const usersCollection = db.collection('users')
 
 // ✅ This data will be validated before write
-await usersCollection.doc('14101').set({
+await usersCollection.doc('user-001').set({
   name: 'John Doe',
   email: 'john@example.com',
   createdAt: new Date(),
@@ -145,7 +145,7 @@ await usersCollection.doc('14101').set({
 })
 
 // ✅ This data will be validated after read (if validateOnRead: true)
-const user = await usersCollection.doc('14101').get()
+const user = await usersCollection.doc('user-001').get()
 // user.data is guaranteed to match UserEntity or throw validation error
 ```
 
@@ -423,8 +423,8 @@ FirestoreTyped provides a complete type-safe query builder that allows you to us
 
 ```typescript
 // Single condition search
-const tsurumiUsers = await usersCollection
-  .where('name', '==', 'Tsurumi User')
+const johnUsers = await usersCollection
+  .where('name', '==', 'John Doe')
   .get()
 
 // Sorting functionality
@@ -444,16 +444,16 @@ const latestUsers = await usersCollection
 ```typescript
 // Multiple condition combined query
 const filteredUsers = await usersCollection
-  .where('name', '>=', 'Naka User')
-  .where('name', '<=', 'Nishi User')
+  .where('email', '>=', 'a@example.com')
+  .where('email', '<=', 'z@example.com')
   .orderBy('name', 'asc')
   .limit(5)
   .get()
 
 // Product type-based search
 const cellProducts = await productsCollection
-  .where('type', '==', 'cell')
-  .where('userId', '==', '14101')
+  .where('category', '==', 'electronics')
+  .where('price', '<=', 1000)
   .orderBy('name')
   .get()
 ```
@@ -481,8 +481,8 @@ if (firstPage.docs.length > 0) {
 // Range queries
 const rangeQuery = await usersCollection
   .orderBy('name')
-  .startAt('Kanagawa User')
-  .endAt('Nishi User')
+  .startAt('Alice')
+  .endAt('John')
   .get()
 ```
 
@@ -492,7 +492,7 @@ The query builder provides type safety for field names and basic operations:
 
 ```typescript
 // ✅ Valid usage - field names are type-checked
-const validQuery = usersCollection.where('name', '==', 'Tsurumi User')
+const validQuery = usersCollection.where('name', '==', 'John Doe')
 const sortedQuery = usersCollection.orderBy('createdAt', 'desc')
 
 // ❌ Compile errors for invalid field names
@@ -550,7 +550,7 @@ const db = firestoreTyped<UserEntity>(userEntityValidator)
 const usersCollection = db.collection('users')
 
 // This will throw a validation error if data doesn't match UserEntity
-await usersCollection.doc('14101').set(invalidData)
+await usersCollection.doc('user-001').set(invalidData)
 ```
 
 ### Advanced Typia Features
@@ -644,7 +644,7 @@ import { z } from 'zod'
 
 const UserSchema = z.object({
   name: z.string(),
-  reading: z.string(),
+  email: z.string(),
   createdAt: z.date(),
   updatedAt: z.date()
 })
@@ -660,7 +660,7 @@ import Joi from 'joi'
 
 const userJoiSchema = Joi.object({
   name: Joi.string().required(),
-  reading: Joi.string().required(),
+  email: Joi.string().required(),
   createdAt: Joi.date().required(),
   updatedAt: Joi.date().required()
 })
@@ -680,10 +680,10 @@ const db2 = firestoreTyped<UserEntity>(joiValidator)
 
 ```typescript
 // Enable validation for a specific operation
-await usersCollection.doc('14101').set(data, { validateOnWrite: true })
+await usersCollection.doc('user-001').set(data, { validateOnWrite: true })
 
 // Disable validation for a specific operation
-await usersCollection.doc('14101').set(data, { validateOnWrite: false })
+await usersCollection.doc('user-001').set(data, { validateOnWrite: false })
 ```
 
 ### Validation Errors
@@ -692,7 +692,7 @@ await usersCollection.doc('14101').set(data, { validateOnWrite: false })
 import { FirestoreTypedValidationError } from '@info-lounge/firestore-typed'
 
 try {
-  await usersCollection.doc('14101').set(invalidData)
+  await usersCollection.doc('user-001').set(invalidData)
 } catch (error) {
   if (error instanceof FirestoreTypedValidationError) {
     console.log('Validation failed:', error.message)
@@ -720,7 +720,7 @@ try {
 
 ```typescript
 try {
-  await usersCollection.doc('14101').set(invalidData)
+  await usersCollection.doc('user-001').set(invalidData)
 } catch (error) {
   if (error instanceof FirestoreTypedValidationError) {
     // Handle validation error
@@ -735,12 +735,12 @@ import { DocumentAlreadyExistsError } from '@info-lounge/firestore-typed'
 
 try {
   // This will fail if document already exists
-  await usersCollection.doc('14101').set(data, { failIfExists: true })
+  await usersCollection.doc('user-001').set(data, { failIfExists: true })
 } catch (error) {
   if (error instanceof DocumentAlreadyExistsError) {
     console.log('Document already exists at:', error.documentPath)
     // Handle by updating instead of creating
-    await usersCollection.doc('14101').merge(data)
+    await usersCollection.doc('user-001').merge(data)
   }
 }
 ```
@@ -836,8 +836,8 @@ const parentRef: ProductRef = {
 const childProduct: ProductEntity = {
   id: 'child-001',
   name: 'Child Product',
-  type: 'cell',
-  userId: '14101',
+  category: 'electronics',
+  userId: 'user-001',
   parent: {
     type: 'DocumentReference',
     path: 'products/parent-001',
@@ -902,7 +902,7 @@ const strictDb = db.withOptions({ validateOnRead: true })
 const users = db.collection('users')
 
 // TypeScript will enforce correct types
-await users.doc('14101').set({
+await users.doc('user-001').set({
   name: 'John Doe',
   email: 'john@example.com',
   createdAt: new Date(),
@@ -910,10 +910,10 @@ await users.doc('14101').set({
 })
 
 // This will cause a compile-time error
-// await users.doc('14101').set({
-//   id: '14101',
-//   name: 'Tsurumi User',
-//   reading: 123 // Type error: number is not assignable to string
+// await users.doc('user-001').set({
+//   id: 'user-001',
+//   name: 'John Doe',
+//   email: 123 // Type error: number is not assignable to string
 // })
 ```
 
@@ -935,9 +935,9 @@ interface UserEntity {
 interface ProductEntity {
   id: string
   name: string
-  type: string
-  userId: string
-  parent?: SerializedDocumentReference<'products', ProductEntity>
+  category: string
+  price: number
+  parentCategory?: SerializedDocumentReference<'categories', CategoryEntity>
   createdAt: Date
   updatedAt: Date
 }
@@ -958,8 +958,8 @@ const products = productsDb.collection('products')
 const productWithParent: ProductEntity = {
   id: 'prod-001',
   name: 'Test Product',
-  type: 'cell',
-  userId: '14101',
+  category: 'electronics',
+  userId: 'user-001',
   parent: {
     type: 'DocumentReference',
     path: 'categories/electronics-main',
@@ -1037,11 +1037,11 @@ const data = await userCollection.doc('user-id').get({ validateOnRead: true })
 ```typescript
 // ✅ Good: Use collection group queries for cross-collection searches
 const allProducts = await db.queryCollectionGroup('products', (query) =>
-  query.where('type', '==', 'union').orderBy('name')
+  query.where('category', '==', 'electronics').orderBy('name')
 )
 
 // ✅ Good: Regular collection queries for single collection
-const userProducts = await db.collection('users/14101/products').get()
+const userProducts = await db.collection('users/user-001/products').get()
 ```
 
 ### 6. Performance Considerations
@@ -1103,7 +1103,7 @@ class FirestoreTypedInstance<T> {
    * @example
    * ```typescript
    * const usersCollection = db.collection('users')
-   * const userUsersCollection = db.collection('users/14101/users')
+   * const userProductsCollection = db.collection('users/user-001/products')
    * ```
    */
   collection(path: string): CollectionReference<T>
@@ -1154,8 +1154,8 @@ class FirestoreTypedInstance<T> {
    * const allProducts = await db.queryCollectionGroup('products')
    * 
    * // With query constraints
-   * const unionProducts = await db.queryCollectionGroup('products', (query) =>
-   *   query.where('type', '==', 'union').orderBy('name')
+   * const electronicsProducts = await db.queryCollectionGroup('products', (query) =>
+   *   query.where('category', '==', 'electronics').orderBy('name')
    * )
    * ```
    */
@@ -1201,7 +1201,7 @@ class CollectionReference<T> {
 
   /**
    * Full collection path
-   * @example 'users', 'users/14101/products'
+   * @example 'users', 'users/user-001/products'
    */
   get path(): string
 
@@ -1303,7 +1303,7 @@ class DocumentReference<T> {
 
   /**
    * Full document path
-   * @example 'users/user123', 'users/14101/products/assoc456'
+   * @example 'users/user123', 'users/user-001/products/prod456'
    */
   get path(): string
 
