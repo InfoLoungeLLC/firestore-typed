@@ -1,0 +1,53 @@
+{
+  "name": "@info-lounge/firestore-typed",
+  "version": "0.1.0",
+  "description": "Type-safe, low-level wrapper for Firebase Firestore with enhanced validation and developer experience",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "lint": "eslint src/**/*.ts",
+    "lint:fix": "eslint src/**/*.ts --fix"
+  },
+  "keywords": [
+    "firebase",
+    "firestore",
+    "typescript",
+    "type-safety",
+    "validation",
+    "typia"
+  ],
+  "author": "Info Lounge Corporation",
+  "license": "MIT",
+  "peerDependencies": {
+    "firebase-admin": ">=12.0.0",
+    "typia": ">=5.3.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.38.0",
+    "@typescript-eslint/parser": "^8.38.0",
+    "eslint": "^9.31.0",
+    "jest": "^30.0.5",
+    "ts-jest": "^29.4.0",
+    "typescript": "~5.8.3"
+  },
+  "files": [
+    "dist/**/*",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/InfoLoungeLLC/firestore-typed.git"
+  },
+  "bugs": {
+    "url": "https://github.com/InfoLoungeLLC/firestore-typed/issues"
+  },
+  "homepage": "https://github.com/InfoLoungeLLC/firestore-typed#readme"
+}
