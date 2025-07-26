@@ -51,7 +51,7 @@ export const createBasicMockImplementations = () => ({
 
 export const resetAllMocks = (...mocks: jest.Mock[]) => {
   jest.clearAllMocks()
-  mocks.forEach(mock => {
+  mocks.forEach((mock) => {
     if (mock.mockImplementation) {
       mock.mockImplementation((data) => data)
     }

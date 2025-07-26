@@ -152,12 +152,12 @@ describe('FirestoreTyped Type Conversion', () => {
   })
 
   describe('Integration with FirestoreTyped', () => {
-    let db: ReturnType<typeof firestoreTyped<LocationEntity>>
-    let collection: ReturnType<typeof db.collection>
+    let db: ReturnType<typeof firestoreTyped>
+    let collection: ReturnType<typeof db.collection<LocationEntity>>
 
     beforeEach(() => {
-      db = firestoreTyped<LocationEntity>(mockValidator)
-      collection = db.collection('locations')
+      db = firestoreTyped()
+      collection = db.collection<LocationEntity>('locations', mockValidator)
     })
 
     it('should convert types during write operations', async () => {

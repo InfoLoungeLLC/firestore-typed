@@ -37,7 +37,7 @@ describe('FirestoreTyped', () => {
 
   describe('Factory Function', () => {
     it('should create a FirestoreTyped instance with default options', () => {
-      const db = firestoreTyped<TestEntity>(mockValidator)
+      const db = firestoreTyped()
 
       expect(db).toBeDefined()
       expect(db.getOptions()).toEqual({
@@ -47,7 +47,7 @@ describe('FirestoreTyped', () => {
     })
 
     it('should create a FirestoreTyped instance with custom options', () => {
-      const db = firestoreTyped<TestEntity>(mockValidator, {
+      const db = firestoreTyped({
         validateOnRead: true,
         validateOnWrite: false,
       })
@@ -60,12 +60,12 @@ describe('FirestoreTyped', () => {
   })
 
   describe('Collection Operations', () => {
-    let db: ReturnType<typeof firestoreTyped<TestEntity>>
-    let collection: ReturnType<typeof db.collection>
+    let db: ReturnType<typeof firestoreTyped>
+    let collection: ReturnType<typeof db.collection<TestEntity>>
 
     beforeEach(() => {
-      db = firestoreTyped<TestEntity>(mockValidator)
-      collection = db.collection('test-entities')
+      db = firestoreTyped()
+      collection = db.collection<TestEntity>('test-entities', mockValidator)
     })
 
     describe('add()', () => {
@@ -104,10 +104,13 @@ describe('FirestoreTyped', () => {
       })
 
       it('should skip validation when validateOnWrite is false', async () => {
-        const dbNoValidation = firestoreTyped<TestEntity>(mockValidator, {
+        const dbNoValidation = firestoreTyped({
           validateOnWrite: false,
         })
-        const collectionNoValidation = dbNoValidation.collection('test-entities')
+        const collectionNoValidation = dbNoValidation.collection<TestEntity>(
+          'test-entities',
+          mockValidator,
+        )
 
         const invalidData = {
           id: 'test-1',
@@ -178,10 +181,13 @@ describe('FirestoreTyped', () => {
       })
 
       it('should validate data after reading when validateOnRead is true', async () => {
-        const dbWithReadValidation = firestoreTyped<TestEntity>(mockValidator, {
+        const dbWithReadValidation = firestoreTyped({
           validateOnRead: true,
         })
-        const collectionWithValidation = dbWithReadValidation.collection('test-entities')
+        const collectionWithValidation = dbWithReadValidation.collection<TestEntity>(
+          'test-entities',
+          mockValidator,
+        )
 
         // This test would require injecting invalid data directly into the mock
         // For now, we'll test that validation is attempted
@@ -210,7 +216,7 @@ describe('FirestoreTyped', () => {
 
   describe('Options Management', () => {
     it('should create new instance with modified options using withOptions()', () => {
-      const db = firestoreTyped<TestEntity>(mockValidator, {
+      const db = firestoreTyped({
         validateOnRead: false,
         validateOnWrite: true,
       })

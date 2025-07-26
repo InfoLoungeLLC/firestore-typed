@@ -65,7 +65,7 @@ describe('Error Classes', () => {
 
     it('should preserve all properties when thrown and caught', () => {
       const originalError = new Error('Type validation failed')
-      
+
       try {
         throw new FirestoreTypedValidationError(testMessage, testPath, originalError)
       } catch (caught) {
@@ -157,7 +157,7 @@ describe('Error Classes', () => {
         'users/user1',
         'posts/post123',
         'users/user1/comments/comment456',
-        'organizations/org1/projects/project2/tasks/task789'
+        'organizations/org1/projects/project2/tasks/task789',
       ]
 
       paths.forEach((path) => {
@@ -232,7 +232,7 @@ describe('Error Classes', () => {
         'users/user1',
         'posts/post123',
         'users/user1/comments/comment456',
-        'organizations/org1/projects/project2/tasks/task789'
+        'organizations/org1/projects/project2/tasks/task789',
       ]
 
       paths.forEach((path) => {

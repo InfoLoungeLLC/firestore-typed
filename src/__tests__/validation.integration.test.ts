@@ -60,14 +60,14 @@ describe('FirestoreTyped Validation', () => {
   }
 
   describe('Write Validation', () => {
-    let db: ReturnType<typeof firestoreTyped<UserEntity>>
-    let collection: ReturnType<typeof db.collection>
+    let db: ReturnType<typeof firestoreTyped>
+    let collection: ReturnType<typeof db.collection<UserEntity>>
 
     beforeEach(() => {
-      db = firestoreTyped<UserEntity>(strictValidator, {
+      db = firestoreTyped({
         validateOnWrite: true,
       })
-      collection = db.collection('users')
+      collection = db.collection<UserEntity>('users', strictValidator)
     })
 
     it('should accept valid data', async () => {
@@ -258,11 +258,11 @@ describe('FirestoreTyped Validation', () => {
 
   describe('Read Validation', () => {
     it('should validate data on read when validateOnRead is true', async () => {
-      const db = firestoreTyped<UserEntity>(strictValidator, {
+      const db = firestoreTyped({
         validateOnRead: true,
         validateOnWrite: false,
       })
-      const collection = db.collection('users')
+      const collection = db.collection<UserEntity>('users', strictValidator)
 
       // For this test, we need to inject invalid data into the mock
       // Since our mock doesn't actually store/retrieve data in a way we can manipulate,
@@ -272,10 +272,10 @@ describe('FirestoreTyped Validation', () => {
     })
 
     it('should skip validation on read when validateOnRead is false', async () => {
-      const db = firestoreTyped<UserEntity>(strictValidator, {
+      const db = firestoreTyped({
         validateOnRead: false,
       })
-      const collection = db.collection('users')
+      const collection = db.collection<UserEntity>('users', strictValidator)
 
       const snapshot = await collection.doc('test').get()
       expect(snapshot).toBeDefined()
@@ -284,10 +284,10 @@ describe('FirestoreTyped Validation', () => {
 
   describe('Operation-level Validation Override', () => {
     it('should override global validateOnWrite setting', async () => {
-      const db = firestoreTyped<UserEntity>(strictValidator, {
+      const db = firestoreTyped({
         validateOnWrite: true,
       })
-      const collection = db.collection('users')
+      const collection = db.collection<UserEntity>('users', strictValidator)
 
       const invalidUser = {
         name: 'John',
@@ -299,11 +299,11 @@ describe('FirestoreTyped Validation', () => {
     })
 
     it('should override global validateOnRead setting', async () => {
-      const db = firestoreTyped<UserEntity>(strictValidator, {
+      const db = firestoreTyped({
         validateOnRead: false,
         validateOnWrite: false,
       })
-      const collection = db.collection('users')
+      const collection = db.collection<UserEntity>('users', strictValidator)
 
       // First, create a valid document without validation
       const validUser: UserEntity = {

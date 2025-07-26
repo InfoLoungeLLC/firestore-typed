@@ -45,6 +45,8 @@ This package requires the following peer dependencies:
 npm install firebase-admin typia
 ```
 
+**firebase-admin compatibility**: This package supports firebase-admin v12.7.0 and later v12.x versions. firebase-admin v13.x is not currently supported due to TypeScript/ESLint compatibility issues.
+
 ### Typia Transform Configuration
 
 **Important**: Typia requires TypeScript transform plugin configuration to work properly. Use `ts-patch` for the easiest setup.
@@ -96,14 +98,16 @@ npx ts-node your-file.ts
 
 ```typescript
 // ❌ Raw Firestore - No validation, potential runtime errors
-await firestore.collection('users').doc('123').set({
+const db = getFirestore()
+await db.collection('users').doc('123').set({
   name: 123, // Wrong type, but no error until runtime
   email: null // Missing required field
 })
 
 // ✅ FirestoreTyped - Automatic validation prevents errors
-const db = firestoreTyped<UserEntity>(userValidator)
-await db.collection('users').doc('123').set({
+const db = firestoreTyped()
+const users = db.collection<UserEntity>('users', userValidator)
+await users.doc('123').set({
   name: 'John', // Validated at runtime
   email: 'john@example.com' // All fields checked
 })
@@ -127,14 +131,14 @@ interface UserEntity {
 // 2. Create validator (REQUIRED - this is what makes data safe)
 const userEntityValidator = typia.createAssert<UserEntity>()
 
-// 3. Create FirestoreTyped instance with mandatory validator
-const db = firestoreTyped<UserEntity>(userEntityValidator, { 
+// 3. Create FirestoreTyped instance
+const db = firestoreTyped({ 
   validateOnWrite: true,  // Default: validates all writes
   validateOnRead: false   // Optional: validates all reads
 })
 
-// 4. All operations automatically validated
-const usersCollection = db.collection('users')
+// 4. Create typed collection with validator
+const usersCollection = db.collection<UserEntity>('users', userEntityValidator)
 
 // ✅ This data will be validated before write
 await usersCollection.doc('user-001').set({
@@ -163,13 +167,13 @@ interface User {
 // Create validator function
 const userValidator = typia.createAssert<User>()
 
-// Initialize FirestoreTyped with validator
-const db = firestoreTyped<User>(userValidator, {
+// Initialize FirestoreTyped
+const db = firestoreTyped({
   validateOnRead: true,
   validateOnWrite: true
 })
 
-const usersCollection = db.collection('users')
+const usersCollection = db.collection<User>('users', userValidator)
 
 // CREATE: Add document with auto-generated ID
 const newUser = {
@@ -232,24 +236,24 @@ await usersCollection.doc('user-123').delete()
 FirestoreTyped provides a low-level, type-safe interface to Firestore with built-in validation. The main entry point is the `firestoreTyped()` factory function:
 
 ```typescript
-const db = firestoreTyped<T>(validator: (data: unknown) => T, options?: FirestoreTypedOptions)
+const db = firestoreTyped(options?: FirestoreTypedOptions)
 ```
 
 ### Architecture Philosophy
 
-FirestoreTyped follows a **low-level, validator-first** approach:
+FirestoreTyped follows a **low-level, collection-specific validation** approach:
 - **Type Safety**: Generic types ensure compile-time safety
-- **Runtime Validation**: Built-in validator ensures data integrity
+- **Flexible Validation**: Collection-level validators for different entity types
 - **Firebase Native**: Direct mapping to Firestore's native API patterns
 - **Performance Focused**: Minimal overhead with maximum type safety
 
 ### Collection Reference
 
-Collections are accessed through the `collection()` method with built-in validator:
+Collections are accessed through the `collection()` method with type-specific validator:
 
 ```typescript
-// Validator is already configured in the FirestoreTyped instance
-const collection = db.collection(path: string)
+// Validator is provided per collection for maximum flexibility
+const collection = db.collection<T>(path: string, validator: (data: unknown) => T)
 ```
 
 ### Document Reference
@@ -283,7 +287,7 @@ interface FirestoreTypedOptions {
 
 ### Validator Configuration
 
-FirestoreTyped requires a validator function at initialization:
+FirestoreTyped uses collection-level validators for flexible entity type support:
 
 ```typescript
 // Using typia for compile-time type generation
@@ -299,11 +303,14 @@ interface UserEntity {
 // Create validator function
 const userValidator = typia.createAssert<UserEntity>()
 
-// Initialize FirestoreTyped with validator
-const db = firestoreTyped<UserEntity>(userValidator, {
+// Initialize FirestoreTyped
+const db = firestoreTyped({
   validateOnRead: true,
   validateOnWrite: true
 })
+
+// Create typed collection with validator
+const usersCollection = db.collection<UserEntity>('users', userValidator)
 ```
 
 ### Operation Options
@@ -320,6 +327,14 @@ interface WriteOptions {
 ```
 
 ## CRUD Operations
+
+All CRUD operations require a typed collection created with a validator:
+
+```typescript
+// Setup: Create typed collection
+const db = firestoreTyped()
+const collection = db.collection<UserEntity>('users', userValidator)
+```
 
 ### Create Documents
 
@@ -422,6 +437,10 @@ FirestoreTyped provides a complete type-safe query builder that allows you to us
 ### Basic Queries
 
 ```typescript
+// Setup: Create typed collection
+const db = firestoreTyped()
+const usersCollection = db.collection<UserEntity>('users', userValidator)
+
 // Single condition search
 const johnUsers = await usersCollection
   .where('name', '==', 'John Doe')
@@ -546,8 +565,8 @@ interface UserEntity {
 }
 
 const userEntityValidator = typia.createAssert<UserEntity>()
-const db = firestoreTyped<UserEntity>(userEntityValidator)
-const usersCollection = db.collection('users')
+const db = firestoreTyped()
+const usersCollection = db.collection<UserEntity>('users', userEntityValidator)
 
 // This will throw a validation error if data doesn't match UserEntity
 await usersCollection.doc('user-001').set(invalidData)
@@ -603,7 +622,7 @@ interface UserEntity {
 }
 
 const userValidator = typia.createAssert<UserEntity>()
-const db = firestoreTyped<UserEntity>(userValidator)
+const db = firestoreTyped()
 
 // This will validate all the constraints:
 // - id must be valid UUID format
@@ -612,7 +631,7 @@ const db = firestoreTyped<UserEntity>(userValidator)
 // - age must be integer between 0-120
 // - phone must match the regex pattern
 // - status must be one of the allowed values
-await db.collection('users').doc('user123').set({
+await db.collection<UserEntity>('users', userValidator).doc('user123').set({
   id: '550e8400-e29b-41d4-a716-446655440000',
   name: 'John Doe',
   email: 'john@example.com',
@@ -653,7 +672,8 @@ const zodValidator = (data: unknown): UserEntity => {
   return UserSchema.parse(data) // Throws on validation failure
 }
 
-const db = firestoreTyped<UserEntity>(zodValidator)
+const db = firestoreTyped()
+const users = db.collection<UserEntity>('users', zodValidator)
 
 // Joi example (untested)
 import Joi from 'joi'
@@ -671,7 +691,8 @@ const joiValidator = (data: unknown): UserEntity => {
   return value
 }
 
-const db2 = firestoreTyped<UserEntity>(joiValidator)
+const db2 = firestoreTyped()
+const users2 = db2.collection<UserEntity>('users', joiValidator)
 ```
 
 ⚠️ **Important**: These alternative approaches are **untested**. We have only verified compatibility with typia. If you use other validation libraries, please test thoroughly and report any issues.
@@ -702,6 +723,12 @@ try {
 ```
 
 ## Error Handling
+
+```typescript
+// Setup: Create typed collection
+const db = firestoreTyped()
+const usersCollection = db.collection<UserEntity>('users', userValidator)
+```
 
 ### Document Not Found
 
@@ -787,10 +814,12 @@ const storeData = {
   updatedAt: new Date()
 }
 
-// Automatically converts during write:
+// Setup: Create typed collection and automatically converts during write:
 // - Date → Timestamp
 // - SerializedGeoPoint → GeoPoint  
 // - SerializedDocumentReference → DocumentReference
+const db = firestoreTyped()
+const storesCollection = db.collection<StoreEntity>('stores', storeValidator)
 await storesCollection.doc('store-001').set(storeData)
 ```
 
@@ -888,6 +917,9 @@ Based on comprehensive performance testing:
 ### Options Management
 
 ```typescript
+// Initialize with default options
+const db = firestoreTyped()
+
 // Get current options
 const currentOptions = db.getOptions()
 
@@ -898,8 +930,9 @@ const strictDb = db.withOptions({ validateOnRead: true })
 ### Type Safety
 
 ```typescript
-// Type-safe document operations
-const users = db.collection('users')
+// Setup: Create typed collection
+const db = firestoreTyped()
+const users = db.collection<UserEntity>('users', userValidator)
 
 // TypeScript will enforce correct types
 await users.doc('user-001').set({
@@ -946,13 +979,12 @@ interface ProductEntity {
 const userValidator = typia.createAssert<UserEntity>()
 const productValidator = typia.createAssert<ProductEntity>()
 
-// Create separate typed instances for each entity type
-const usersDb = firestoreTyped<UserEntity>(userValidator)
-const users = usersDb.collection('users')
+// Create single FirestoreTyped instance that can handle multiple entity types
+const db = firestoreTyped()
 
-// Type-safe collections with document references
-const productsDb = firestoreTyped<ProductEntity>(productValidator)
-const products = productsDb.collection('products')
+// Create type-safe collections with their respective validators
+const users = db.collection<UserEntity>('users', userValidator)
+const products = db.collection<ProductEntity>('products', productValidator)
 
 // Working with products that have parent references
 const productWithParent: ProductEntity = {
@@ -978,9 +1010,10 @@ const productWithParent: ProductEntity = {
 FirestoreTyped requires validators for type safety and data integrity:
 
 ```typescript
-// ✅ Good: Always provide a validator
+// ✅ Good: Always provide a validator per collection
 const userValidator = typia.createAssert<UserEntity>()
-const db = firestoreTyped<UserEntity>(userValidator)
+const db = firestoreTyped()
+const users = db.collection<UserEntity>('users', userValidator)
 
 // ❌ Bad: Never skip validation
 // This is not possible with FirestoreTyped's design
@@ -1006,6 +1039,10 @@ interface UserEntity {
 ```typescript
 import { FirestoreTypedValidationError } from '@info-lounge/firestore-typed'
 
+// Setup: Create typed collection
+const db = firestoreTyped()
+const userCollection = db.collection<UserEntity>('users', userValidator)
+
 try {
   await userCollection.doc('user-id').set(userData)
 } catch (error) {
@@ -1023,10 +1060,12 @@ try {
 
 ```typescript
 // For read-heavy operations, consider disabling read validation
-const fastDb = firestoreTyped<UserEntity>(userValidator, {
+const fastDb = firestoreTyped({
   validateOnRead: false,  // Skip validation on reads for performance
   validateOnWrite: true   // Always validate writes for data integrity
 })
+
+const userCollection = fastDb.collection<UserEntity>('users', userValidator)
 
 // Override per operation when needed
 const data = await userCollection.doc('user-id').get({ validateOnRead: true })
@@ -1048,10 +1087,11 @@ const userProducts = await db.collection('users/user-001/products').get()
 
 ```typescript
 // ✅ For high-frequency operations, consider validation overhead
-const performanceDb = firestoreTyped<LogEntry>(logValidator, {
+const performanceDb = firestoreTyped({
   validateOnRead: false,   // Skip validation for read-heavy logging
   validateOnWrite: false   // Skip validation for high-frequency writes
 })
+const logs = performanceDb.collection<LogEntry>('logs', logValidator)
 
 // ✅ Use batch operations for multiple writes (planned feature)
 // const batch = db.batch() // ⚠️ Not yet implemented
@@ -1072,21 +1112,19 @@ await batch.commit()
 
 ```typescript
 /**
- * Creates a typed FirestoreTyped instance with built-in validation
- * @param validator - Runtime validation function (typically from typia.createAssert)
+ * Creates a FirestoreTyped instance for multi-entity type support
  * @param options - Global configuration options
  * @returns Configured FirestoreTyped instance
  * @example
  * ```typescript
  * import { firestoreTyped } from '@info-lounge/firestore-typed'
  * 
- * const db = firestoreTyped<UserEntity>(userValidator, options)
+ * const db = firestoreTyped(options)
  * ```
  */
-function firestoreTyped<T>(
-  validator: (data: unknown) => T, 
+function firestoreTyped(
   options?: FirestoreTypedOptions
-): FirestoreTypedInstance<T>
+): FirestoreTyped
 ```
 
 ### FirestoreTyped Instance
@@ -1095,18 +1133,32 @@ function firestoreTyped<T>(
 /**
  * Main FirestoreTyped instance providing type-safe Firestore operations
  */
-class FirestoreTypedInstance<T> {
+class FirestoreTyped {
   /**
-   * Gets a typed collection reference
+   * Gets a typed collection reference with validator
    * @param path - Firestore collection path
+   * @param validator - Runtime validation function for the entity type
    * @returns Type-safe collection reference
    * @example
    * ```typescript
-   * const usersCollection = db.collection('users')
-   * const userProductsCollection = db.collection('users/user-001/products')
+   * const usersCollection = db.collection<UserEntity>('users', userValidator)
+   * const userProductsCollection = db.collection<ProductEntity>('users/user-001/products', productValidator)
    * ```
    */
-  collection(path: string): CollectionReference<T>
+  collection<T>(path: string, validator: (data: unknown) => T): CollectionReference<T>
+
+  /**
+   * Gets a typed collection group reference with validator
+   * @param collectionId - Collection group ID to query across multiple parent documents
+   * @param validator - Runtime validation function for the entity type
+   * @returns Type-safe collection group reference
+   * @example
+   * ```typescript
+   * const allPosts = db.collectionGroup<PostEntity>('posts', postValidator)
+   * const userPosts = allPosts.where('userId', '==', 'user123')
+   * ```
+   */
+  collectionGroup<T>(collectionId: string, validator: (data: unknown) => T): CollectionGroup<T>
 
   /**
    * Gets current configuration options
@@ -1129,7 +1181,7 @@ class FirestoreTypedInstance<T> {
    * const fastDb = db.withOptions({ validateOnWrite: false })
    * ```
    */
-  withOptions(options: Partial<FirestoreTypedOptions>): FirestoreTypedInstance<T>
+  withOptions(options: Partial<FirestoreTypedOptions>): FirestoreTyped
 
   /**
    * Access to native Firestore instance for advanced operations

@@ -61,11 +61,7 @@ describe('DocumentReference', () => {
     mockValidator = jest.fn((data) => data as TestEntity)
 
     // Create DocumentReference instance
-    docRef = new DocumentReference<TestEntity>(
-      mockFirebaseDoc,
-      mockFirestoreTyped,
-      mockValidator
-    )
+    docRef = new DocumentReference<TestEntity>(mockFirebaseDoc, mockFirestoreTyped, mockValidator)
   })
 
   describe('Properties', () => {
@@ -239,7 +235,7 @@ describe('DocumentReference', () => {
         })
 
         await expect(docRef.set(testData, { failIfExists: true })).rejects.toThrow(
-          DocumentAlreadyExistsError
+          DocumentAlreadyExistsError,
         )
 
         expect(mockFirebaseDoc.set).not.toHaveBeenCalled()
@@ -291,7 +287,7 @@ describe('DocumentReference', () => {
       expect(mockValidateData).toHaveBeenCalledWith(
         expectedMergedData,
         'users/test-id',
-        mockValidator
+        mockValidator,
       )
     })
 
@@ -308,7 +304,10 @@ describe('DocumentReference', () => {
 
       await docRef.merge(partialData)
 
-      expect(mockDeserializeFirestoreTypes).toHaveBeenCalledWith({ ...testData, ...partialData }, {})
+      expect(mockDeserializeFirestoreTypes).toHaveBeenCalledWith(
+        { ...testData, ...partialData },
+        {},
+      )
       expect(mockFirebaseDoc.set).toHaveBeenCalledWith(convertedData)
     })
   })

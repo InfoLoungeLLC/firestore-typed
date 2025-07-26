@@ -59,7 +59,7 @@ describe('CollectionGroup', () => {
     collectionGroup = new CollectionGroup<TestPostEntity>(
       mockFirebaseQuery,
       mockFirestoreTyped,
-      mockValidator
+      mockValidator,
     )
   })
 
@@ -215,7 +215,7 @@ describe('CollectionGroup', () => {
           1,
           expect.any(Object),
           'users/user-1/posts/post-1',
-          mockValidator
+          mockValidator,
         )
       })
 
@@ -239,9 +239,7 @@ describe('CollectionGroup', () => {
     })
 
     it('should handle pagination across collections', () => {
-      const query = collectionGroup
-        .orderBy('createdAt', 'desc')
-        .limit(20)
+      const query = collectionGroup.orderBy('createdAt', 'desc').limit(20)
 
       expect(query).toBeInstanceOf(Query)
     })
