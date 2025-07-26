@@ -5,6 +5,48 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.1] - 2025-07-26
+
+### Fixed
+
+- **Documentation**: Updated README.md and README.ja.md to reflect firebase-admin v13.4.0 compatibility
+- **Compatibility Notes**: Removed outdated v13 incompatibility warnings from documentation
+
+### Internal
+
+- Documentation synchronization to match actual firebase-admin v13.4.0 support status
+
+## [0.3.0] - 2025-07-26
+
+### Changed
+
+**BREAKING CHANGE**: Minimum firebase-admin version requirement updated.
+
+- **firebase-admin**: Updated peer dependency from `>=12.7.0 <13.0.0` to `^13.4.0`
+- **Compatibility**: Verified full compatibility with firebase-admin v13.4.0 and @google-cloud/firestore v7.11.3
+
+### Added
+
+- Support for firebase-admin v13.x series (13.4.0 and above)
+- Enhanced stability with latest Google Cloud Firestore package
+
+### Removed
+
+- **GitHub Deployment Tracking**: Removed unnecessary GitHub deployment creation from release workflow
+- **Release Workflow**: Simplified to focus only on npm publishing
+
+### Technical Details
+
+- All 209 tests passing with firebase-admin v13.4.0
+- No TypeScript/ESLint compatibility issues found
+- Previous v13 type inference problems appear to be resolved in later versions
+
+### Migration Guide
+
+Users upgrading from v0.2.x:
+- Update firebase-admin to version 13.4.0 or higher
+- No code changes required - API remains the same
+
 ## [0.2.1] - 2025-07-26
 
 ### Fixed
