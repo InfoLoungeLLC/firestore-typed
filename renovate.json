@@ -6,7 +6,7 @@
     ":semanticCommitTypeAll(chore)"
   ],
   "timezone": "Asia/Tokyo",
-  "schedule": ["after 10pm and before 5am", "on weekends"],
+  "schedule": ["after 10pm and before 5am every weekday", "every weekend"],
   "labels": ["dependencies"],
   "packageRules": [
     {
@@ -64,6 +64,6 @@
   "lockFileMaintenance": {
     "enabled": true,
     "automerge": true,
-    "schedule": ["before 5am on monday"]
+    "schedule": ["before 5am on Monday"]
   }
 }
