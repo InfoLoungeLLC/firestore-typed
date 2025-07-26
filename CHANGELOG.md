@@ -46,6 +46,10 @@ const productCollection = db.collection<ProductEntity>('products', productValida
 - **Enhanced flexibility**: Mix different validators in the same application instance
 - **Improved developer experience**: More intuitive API that aligns with Firestore's native patterns
 
+### Dependencies
+
+- **firebase-admin**: Compatible with v12.7.0 and later v12.x versions. **Note**: v13.x is not currently supported due to TypeScript/ESLint compatibility issues encountered during testing. See [issue tracking](https://github.com/InfoLoungeLLC/firestore-typed/issues) for updates on v13.x support.
+
 ## [0.1.0] - 2025-07-25
 
 ### Added

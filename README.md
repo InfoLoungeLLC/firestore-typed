@@ -45,6 +45,8 @@ This package requires the following peer dependencies:
 npm install firebase-admin typia
 ```
 
+**firebase-admin compatibility**: This package supports firebase-admin v12.7.0 and later v12.x versions. firebase-admin v13.x is not currently supported due to TypeScript/ESLint compatibility issues.
+
 ### Typia Transform Configuration
 
 **Important**: Typia requires TypeScript transform plugin configuration to work properly. Use `ts-patch` for the easiest setup.

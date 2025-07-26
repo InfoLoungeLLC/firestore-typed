@@ -25,7 +25,7 @@
   "author": "Info Lounge Corporation",
   "license": "MIT",
   "peerDependencies": {
-    "firebase-admin": ">=13.4.0",
+    "firebase-admin": ">=12.7.0 <13.0.0",
     "typia": ">=5.3.0"
   },
   "devDependencies": {
