@@ -1,4 +1,4 @@
-import { firestoreTyped } from '../index'
+import { firestoreTyped, getFirestoreTyped } from '../index'
 import { FirestoreTypedValidationError } from '../errors/errors'
 
 jest.mock('firebase-admin/firestore', () => {
@@ -234,6 +234,67 @@ describe('FirestoreTyped', () => {
         validateOnRead: true,
         validateOnWrite: true,
       })
+    })
+  })
+
+  describe('getFirestoreTyped Function', () => {
+    it('should create a FirestoreTyped instance with default Firestore', () => {
+      const db = getFirestoreTyped()
+      expect(db).toBeDefined()
+      expect(db.getOptions()).toEqual({
+        validateOnRead: false,
+        validateOnWrite: true,
+      })
+    })
+
+    it('should create a FirestoreTyped instance with custom options', () => {
+      const db = getFirestoreTyped(undefined, {
+        validateOnRead: true,
+        validateOnWrite: false,
+      })
+
+      expect(db.getOptions()).toEqual({
+        validateOnRead: true,
+        validateOnWrite: false,
+      })
+    })
+
+    it('should create a FirestoreTyped instance with custom Firestore instance', () => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { createFirebaseAdminMock } = require('../core/__tests__/__helpers__/firebase-mock.helper')
+      const mockFirebaseAdmin = createFirebaseAdminMock()
+      const customFirestore = mockFirebaseAdmin.getFirestore()
+
+      const db = getFirestoreTyped(customFirestore)
+      expect(db).toBeDefined()
+      expect(db.native).toBe(customFirestore)
+    })
+
+    it('should work with both custom Firestore and options', () => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { createFirebaseAdminMock } = require('../core/__tests__/__helpers__/firebase-mock.helper')
+      const mockFirebaseAdmin = createFirebaseAdminMock()
+      const customFirestore = mockFirebaseAdmin.getFirestore()
+
+      const db = getFirestoreTyped(customFirestore, {
+        validateOnRead: true,
+        validateOnWrite: false,
+      })
+
+      expect(db.native).toBe(customFirestore)
+      expect(db.getOptions()).toEqual({
+        validateOnRead: true,
+        validateOnWrite: false,
+      })
+    })
+
+    it('should work identically to deprecated firestoreTyped function for backward compatibility', () => {
+      const options = { validateOnRead: true, validateOnWrite: false }
+      
+      const dbOld = firestoreTyped(options)
+      const dbNew = getFirestoreTyped(undefined, options)
+
+      expect(dbOld.getOptions()).toEqual(dbNew.getOptions())
     })
   })
 })
