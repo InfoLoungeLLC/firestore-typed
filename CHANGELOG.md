@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.1] - 2025-07-26
+
+### Fixed
+
+- **Release Workflow**: Added `deployments: write` permission to fix GitHub Actions deployment creation error
+- **Version**: Bumped package version to 0.2.1
+
+### Internal
+
+- Fixed GitHub Actions permissions issue that prevented successful deployment tracking during npm publish
+
 ## [0.2.0] - 2025-07-26
 
 ### Changed
