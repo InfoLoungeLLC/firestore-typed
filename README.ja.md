@@ -96,14 +96,16 @@ npx ts-node your-file.ts
 
 ```typescript
 // ❌ 生のFirestore - バリデーションなし、ランタイムエラーの可能性
-await firestore.collection('users').doc('123').set({
+const db = getFirestore()
+await db.collection('users').doc('123').set({
   name: 123, // 間違った型だがランタイムまでエラーにならない
   email: null // 必須フィールドがない
 })
 
 // ✅ FirestoreTyped - 自動バリデーションでエラーを防止
-const db = firestoreTyped<UserEntity>(userValidator)
-await db.collection('users').doc('123').set({
+const db = firestoreTyped()
+const users = db.collection<UserEntity>('users', userValidator)
+await users.doc('123').set({
   name: 'John', // ランタイムでバリデーション
   email: 'john@example.com' // すべてのフィールドがチェックされる
 })
@@ -127,14 +129,14 @@ interface UserEntity {
 // 2. validatorを作成（必須 - これがデータを安全にする）
 const userEntityValidator = typia.createAssert<UserEntity>()
 
-// 3. 必須validator付きFirestoreTypedインスタンスを作成
-const db = firestoreTyped<UserEntity>(userEntityValidator, { 
+// 3. FirestoreTypedインスタンスを作成
+const db = firestoreTyped({ 
   validateOnWrite: true,  // デフォルト：すべての書き込みをバリデーション
   validateOnRead: false   // オプション：すべての読み取りをバリデーション
 })
 
-// 4. すべての操作が自動的にバリデーションされる
-const usersCollection = db.collection('users')
+// 4. validator付き型安全なコレクションを作成
+const usersCollection = db.collection<UserEntity>('users', userEntityValidator)
 
 // ✅ このデータは書き込み前にバリデーションされる
 await usersCollection.doc('user-001').set({
@@ -163,13 +165,13 @@ interface User {
 // validator関数を作成
 const userValidator = typia.createAssert<User>()
 
-// validatorでFirestoreTypedを初期化
-const db = firestoreTyped<User>(userValidator, {
+// FirestoreTypedを初期化
+const db = firestoreTyped({
   validateOnRead: true,
   validateOnWrite: true
 })
 
-const usersCollection = db.collection('users')
+const usersCollection = db.collection<User>('users', userValidator)
 
 // CREATE: 自動生成IDでドキュメントを追加
 const newUser = {
@@ -232,24 +234,24 @@ await usersCollection.doc('user-123').delete()
 FirestoreTypedは、内蔵バリデーション付きのFirestoreへの型安全な低レベルインターフェースを提供します。メインエントリーポイントは`firestoreTyped()`ファクトリ関数です：
 
 ```typescript
-const db = firestoreTyped<T>(validator: (data: unknown) => T, options?: FirestoreTypedOptions)
+const db = firestoreTyped(options?: FirestoreTypedOptions)
 ```
 
 ### アーキテクチャ哲学
 
-FirestoreTypedは**低レベル、バリデーター優先**のアプローチに従います：
+FirestoreTypedは**低レベル、コレクション特化型バリデーション**のアプローチに従います：
 - **型安全性**: ジェネリック型がコンパイル時の安全性を保証
-- **ランタイムバリデーション**: 内蔵バリデーターがデータ整合性を保証
+- **柔軟なバリデーション**: 異なるエンティティタイプのためのコレクション単位のバリデーター
 - **Firebase Native**: FirestoreのネイティブAPIパターンへの直接マッピング
 - **パフォーマンス重視**: 最大の型安全性で最小のオーバーヘッド
 
 ### コレクション参照
 
-コレクションは内蔵バリデーター付きの`collection()`メソッドでアクセスします：
+コレクションは型固有バリデーター付きの`collection()`メソッドでアクセスします：
 
 ```typescript
-// validatorはFirestoreTypedインスタンスで既に設定済み
-const collection = db.collection(path: string)
+// 最大の柔軟性のためコレクション毎にvalidatorを提供
+const collection = db.collection<T>(path: string, validator: (data: unknown) => T)
 ```
 
 ### ドキュメント参照
@@ -283,7 +285,7 @@ interface FirestoreTypedOptions {
 
 ### Validator設定
 
-FirestoreTypedは初期化時にvalidator関数が必要です：
+FirestoreTypedは柔軟なエンティティタイプサポートのためにコレクション単位のvalidatorを使用します：
 
 ```typescript
 // コンパイル時型生成にtypiaを使用
@@ -299,11 +301,14 @@ interface UserEntity {
 // validator関数を作成
 const userValidator = typia.createAssert<UserEntity>()
 
-// validatorでFirestoreTypedを初期化
-const db = firestoreTyped<UserEntity>(userValidator, {
+// FirestoreTypedを初期化
+const db = firestoreTyped({
   validateOnRead: true,
   validateOnWrite: true
 })
+
+// validator付き型安全なコレクションを作成
+const usersCollection = db.collection<UserEntity>('users', userValidator)
 ```
 
 ### 操作オプション
@@ -320,6 +325,14 @@ interface WriteOptions {
 ```
 
 ## CRUD操作
+
+すべてのCRUD操作にはvalidator付きで作成された型安全なコレクションが必要です：
+
+```typescript
+// セットアップ: 型安全なコレクションを作成
+const db = firestoreTyped()
+const collection = db.collection<UserEntity>('users', userValidator)
+```
 
 ### ドキュメントの作成
 
@@ -421,6 +434,10 @@ FirestoreTypedは、Firebase Firestoreの強力なクエリ機能を完全な型
 ### 基本クエリ
 
 ```typescript
+// セットアップ: 型安全なコレクションを作成
+const db = firestoreTyped()
+const usersCollection = db.collection<UserEntity>('users', userValidator)
+
 // 単一条件検索
 const johnUsers = await usersCollection
   .where('name', '==', 'John Doe')
@@ -544,8 +561,8 @@ interface UserEntity {
 }
 
 const userEntityValidator = typia.createAssert<UserEntity>()
-const db = firestoreTyped<UserEntity>(userEntityValidator)
-const usersCollection = db.collection('users')
+const db = firestoreTyped()
+const usersCollection = db.collection<UserEntity>('users', userEntityValidator)
 
 // データがUserEntityと一致しない場合、バリデーションエラーをスロー
 await usersCollection.doc('user-001').set(invalidData)
@@ -601,7 +618,8 @@ interface UserEntity {
 }
 
 const userValidator = typia.createAssert<UserEntity>()
-const db = firestoreTyped<UserEntity>(userValidator)
+const db = firestoreTyped()
+const users = db.collection<UserEntity>('users', userValidator)
 
 // これですべての制約がバリデーションされます：
 // - idは有効なUUIDフォーマットである必要
@@ -610,7 +628,7 @@ const db = firestoreTyped<UserEntity>(userValidator)
 // - ageは0-120の整数である必要
 // - phoneは正規表現パターンに一致する必要
 // - statusは許可された値のいずれかである必要
-await db.collection('users').doc('user123').set({
+await db.collection<UserEntity>('users', userValidator).doc('user123').set({
   id: '550e8400-e29b-41d4-a716-446655440000',
   name: 'John Doe',
   email: 'john@example.com',
@@ -651,7 +669,8 @@ const zodValidator = (data: unknown): UserEntity => {
   return UserSchema.parse(data) // バリデーション失敗時にスロー
 }
 
-const db = firestoreTyped<UserEntity>(zodValidator)
+const db = firestoreTyped()
+const users = db.collection<UserEntity>('users', zodValidator)
 
 // Joiの例（未検証）
 import Joi from 'joi'
@@ -669,7 +688,8 @@ const joiValidator = (data: unknown): UserEntity => {
   return value
 }
 
-const db2 = firestoreTyped<UserEntity>(joiValidator)
+const db2 = firestoreTyped()
+const users2 = db2.collection<UserEntity>('users', joiValidator)
 ```
 
 ⚠️ **重要**: これらの代替アプローチは**未検証**です。typiaとの互換性のみを検証しています。他のバリデーションライブラリを使用する場合は、十分にテストして問題を報告してください。
@@ -700,6 +720,12 @@ try {
 ```
 
 ## エラーハンドリング
+
+```typescript
+// セットアップ: 型安全なコレクションを作成
+const db = firestoreTyped()
+const usersCollection = db.collection<UserEntity>('users', userValidator)
+```
 
 ### ドキュメントが見つからない場合
 
@@ -784,10 +810,12 @@ const storeData = {
   updatedAt: new Date()
 }
 
-// 書き込み時に自動変換：
+// セットアップ: 型安全なコレクションを作成し、書き込み時に自動変換：
 // - Date → Timestamp
 // - SerializedGeoPoint → GeoPoint  
 // - SerializedDocumentReference → DocumentReference
+const db = firestoreTyped()
+const storesCollection = db.collection<StoreEntity>('stores', storeValidator)
 await storesCollection.doc('store-001').set(storeData)
 ```
 
@@ -864,6 +892,9 @@ const parentRef: ProductRef = {
 ### オプション管理
 
 ```typescript
+// デフォルトオプションで初期化
+const db = firestoreTyped()
+
 // 現在のオプションを取得
 const currentOptions = db.getOptions()
 
@@ -874,8 +905,9 @@ const strictDb = db.withOptions({ validateOnRead: true })
 ### 型安全性
 
 ```typescript
-// 型安全なドキュメント操作
-const users = db.collection('users')
+// セットアップ: 型安全なコレクションを作成
+const db = firestoreTyped()
+const users = db.collection<UserEntity>('users', userValidator)
 
 // TypeScriptが正しい型を強制
 await users.doc('user-001').set({
@@ -922,13 +954,12 @@ interface ProductEntity {
 const userValidator = typia.createAssert<UserEntity>()
 const productValidator = typia.createAssert<ProductEntity>()
 
-// 各エンティティ型に対して個別の型付きインスタンスを作成
-const usersDb = firestoreTyped<UserEntity>(userValidator)
-const users = usersDb.collection('users')
+// 複数のエンティティタイプを扱える単一のFirestoreTypedインスタンスを作成
+const db = firestoreTyped()
 
-// ドキュメント参照付きの型安全コレクション
-const productsDb = firestoreTyped<ProductEntity>(productValidator)
-const products = productsDb.collection('products')
+// それぞれのvalidatorで型安全なコレクションを作成
+const users = db.collection<UserEntity>('users', userValidator)
+const products = db.collection<ProductEntity>('products', productValidator)
 
 // 親カテゴリ参照を持つ商品の操作
 const productWithCategory: ProductEntity = {
@@ -954,9 +985,10 @@ const productWithCategory: ProductEntity = {
 FirestoreTypedは型安全性とデータ整合性のためにvalidatorが必要です：
 
 ```typescript
-// ✅ 良い例: 常にvalidatorを提供
+// ✅ 良い例: コレクション毎に常にvalidatorを提供
 const userValidator = typia.createAssert<UserEntity>()
-const db = firestoreTyped<UserEntity>(userValidator)
+const db = firestoreTyped()
+const users = db.collection<UserEntity>('users', userValidator)
 
 // ❌ 悪い例: バリデーションをスキップしない
 // これはFirestoreTypedの設計では不可能
@@ -982,6 +1014,10 @@ interface UserEntity {
 ```typescript
 import { FirestoreTypedValidationError } from '@info-lounge/firestore-typed'
 
+// セットアップ: 型安全なコレクションを作成
+const db = firestoreTyped()
+const userCollection = db.collection<UserEntity>('users', userValidator)
+
 try {
   await userCollection.doc('user-id').set(userData)
 } catch (error) {
@@ -999,10 +1035,12 @@ try {
 
 ```typescript
 // 読み取り重複操作では、読み取りバリデーション無効化を検討
-const fastDb = firestoreTyped<UserEntity>(userValidator, {
+const fastDb = firestoreTyped({
   validateOnRead: false,  // パフォーマンスのため読み取りバリデーションをスキップ
   validateOnWrite: true   // データ整合性のため書き込みバリデーションは常に有効
 })
+
+const userCollection = fastDb.collection<UserEntity>('users', userValidator)
 
 // 必要に応じて操作ごとに上書き
 const data = await userCollection.doc('user-id').get({ validateOnRead: true })
@@ -1017,17 +1055,18 @@ const allProducts = await db.queryCollectionGroup('products', (query) =>
 )
 
 // ✅ 良い例: 単一コレクション用の通常のコレクションクエリ
-const categoryProducts = await db.collection('categories/electronics/products').get()
+const categoryProducts = await db.collection<ProductEntity>('categories/electronics/products', productValidator).get()
 ```
 
 ### 6. パフォーマンス考慮事項
 
 ```typescript
 // ✅ 高頻度操作では、バリデーションオーバーヘッドを考慮
-const performanceDb = firestoreTyped<LogEntry>(logValidator, {
+const performanceDb = firestoreTyped({
   validateOnRead: false,   // 読み取り重複ログでバリデーションをスキップ
   validateOnWrite: false   // 高頻度書き込みでバリデーションをスキップ
 })
+const logs = performanceDb.collection<LogEntry>('logs', logValidator)
 
 // ✅ 複数書き込みにはバッチ操作を使用（実装予定機能）
 // const batch = db.batch() // ⚠️ まだ実装されていません
@@ -1048,21 +1087,19 @@ await batch.commit()
 
 ```typescript
 /**
- * 内蔵バリデーション付きの型付きFirestoreTypedインスタンスを作成
- * @param validator - ランタイムバリデーション関数（通常はtypia.createAssertから）
+ * 複数エンティティタイプサポートのためのFirestoreTypedインスタンスを作成
  * @param options - グローバル設定オプション
  * @returns 設定済みFirestoreTypedインスタンス
  * @example
  * ```typescript
  * import { firestoreTyped } from '@info-lounge/firestore-typed'
  * 
- * const db = firestoreTyped<UserEntity>(userValidator, options)
+ * const db = firestoreTyped(options)
  * ```
  */
-function firestoreTyped<T>(
-  validator: (data: unknown) => T, 
+function firestoreTyped(
   options?: FirestoreTypedOptions
-): FirestoreTypedInstance<T>
+): FirestoreTyped
 ```
 
 ### FirestoreTypedインスタンス
@@ -1071,18 +1108,32 @@ function firestoreTyped<T>(
 /**
  * 型安全なFirestore操作を提供するメインFirestoreTypedインスタンス
  */
-class FirestoreTypedInstance<T> {
+class FirestoreTyped {
   /**
-   * 型付きコレクション参照を取得
+   * validator付きの型付きコレクション参照を取得
    * @param path - Firestoreコレクションパス
+   * @param validator - エンティティタイプのランタイムバリデーション関数
    * @returns 型安全なコレクション参照
    * @example
    * ```typescript
-   * const usersCollection = db.collection('users')
-   * const userProductsCollection = db.collection('users/user-001/products')
+   * const usersCollection = db.collection<UserEntity>('users', userValidator)
+   * const userProductsCollection = db.collection<ProductEntity>('users/user-001/products', productValidator)
    * ```
    */
-  collection(path: string): CollectionReference<T>
+  collection<T>(path: string, validator: (data: unknown) => T): CollectionReference<T>
+
+  /**
+   * validator付きの型付きコレクショングループ参照を取得
+   * @param collectionId - 複数の親ドキュメント間でクエリするコレクショングループID
+   * @param validator - エンティティタイプのランタイムバリデーション関数
+   * @returns 型安全なコレクショングループ参照
+   * @example
+   * ```typescript
+   * const allPosts = db.collectionGroup<PostEntity>('posts', postValidator)
+   * const userPosts = allPosts.where('userId', '==', 'user123')
+   * ```
+   */
+  collectionGroup<T>(collectionId: string, validator: (data: unknown) => T): CollectionGroup<T>
 
   /**
    * 現在の設定オプションを取得
@@ -1105,7 +1156,7 @@ class FirestoreTypedInstance<T> {
    * const fastDb = db.withOptions({ validateOnWrite: false })
    * ```
    */
-  withOptions(options: Partial<FirestoreTypedOptions>): FirestoreTypedInstance<T>
+  withOptions(options: Partial<FirestoreTypedOptions>): FirestoreTyped
 
   /**
    * 高度な操作用のネイティブFirestoreインスタンスへのアクセス

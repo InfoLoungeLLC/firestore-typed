@@ -1,17 +1,19 @@
 import { getFirestore } from 'firebase-admin/firestore'
 import { FirestoreTyped } from './core/firestore-typed'
-import type { FirestoreTypedOptions, SerializedDocumentData } from './types/firestore-typed.types'
+import type { FirestoreTypedOptions } from './types/firestore-typed.types'
 
 /**
- * Creates a new firestore-typed instance with the default Firestore
+ * Creates a new firestore-typed instance with collection-level validators
  *
- * Phase 3.2: Now requires validator for type safety at the low level
+ * @example
+ * ```typescript
+ * const db = firestoreTyped();
+ * const users = db.collection<UserEntity>('users', userValidator);
+ * const products = db.collection<ProductEntity>('products', productValidator);
+ * ```
  */
-export function firestoreTyped<T extends SerializedDocumentData>(
-  validator: (data: unknown) => T,
-  options?: FirestoreTypedOptions,
-): FirestoreTyped<T> {
-  return new FirestoreTyped<T>(getFirestore(), validator, options)
+export function firestoreTyped(options?: FirestoreTypedOptions): FirestoreTyped {
+  return new FirestoreTyped(getFirestore(), options)
 }
 
 // Export all types

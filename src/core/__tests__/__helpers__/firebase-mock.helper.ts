@@ -201,7 +201,7 @@ export class MockFirestore {
     if (existingCollection) {
       return existingCollection
     }
-    
+
     const segments = path.split('/')
     const id = segments[segments.length - 1] ?? 'default'
     const newCollection = new MockCollectionReference(id, path, this)

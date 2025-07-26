@@ -19,7 +19,7 @@ describe('Firestore Converter', () => {
   // Helper to create proper Firestore instances
   const createMockTimestamp = (date: Date): Timestamp => {
     const mockObj = {
-      toDate: jest.fn().mockReturnValue(date)
+      toDate: jest.fn().mockReturnValue(date),
     }
     Object.setPrototypeOf(mockObj, Timestamp.prototype)
     return mockObj as unknown as Timestamp
@@ -28,17 +28,21 @@ describe('Firestore Converter', () => {
   const createMockGeoPoint = (latitude: number, longitude: number): GeoPoint => {
     const mockObj = {
       latitude,
-      longitude
+      longitude,
     }
     Object.setPrototypeOf(mockObj, GeoPoint.prototype)
     return mockObj as unknown as GeoPoint
   }
 
-  const createMockDocumentReference = (path: string, id: string, parentId: string): DocumentReference => {
+  const createMockDocumentReference = (
+    path: string,
+    id: string,
+    parentId: string,
+  ): DocumentReference => {
     const mockObj = {
       path,
       id,
-      parent: { id: parentId }
+      parent: { id: parentId },
     }
     Object.setPrototypeOf(mockObj, DocumentReference.prototype)
     return mockObj as unknown as DocumentReference
@@ -128,7 +132,11 @@ describe('Firestore Converter', () => {
       })
 
       it('should handle nested collection DocumentReference', () => {
-        const mockDocRef = createMockDocumentReference('users/user123/posts/post456', 'post456', 'posts')
+        const mockDocRef = createMockDocumentReference(
+          'users/user123/posts/post456',
+          'post456',
+          'posts',
+        )
 
         const result = serializeFirestoreTypes(mockDocRef) as SerializedDocumentReference
 
@@ -271,7 +279,11 @@ describe('Firestore Converter', () => {
 
         expect(result.invalid1).toEqual({ type: 'GeoPoint', latitude: 'invalid' })
         expect(result.invalid2).toEqual({ type: 'GeoPoint', longitude: 139.6503 })
-        expect(result.invalid3).toEqual({ type: 'NotGeoPoint', latitude: 35.6762, longitude: 139.6503 })
+        expect(result.invalid3).toEqual({
+          type: 'NotGeoPoint',
+          latitude: 35.6762,
+          longitude: 139.6503,
+        })
         expect(result.valid).toBeInstanceOf(GeoPoint)
       })
     })
@@ -300,8 +312,18 @@ describe('Firestore Converter', () => {
         const data = {
           invalid1: { type: 'DocumentReference', path: 123 },
           invalid2: { type: 'DocumentReference', collectionId: 'users' },
-          invalid3: { type: 'NotDocumentReference', path: 'users/user123', collectionId: 'users', documentId: 'user123' },
-          valid: { type: 'DocumentReference', path: 'users/user123', collectionId: 'users', documentId: 'user123' },
+          invalid3: {
+            type: 'NotDocumentReference',
+            path: 'users/user123',
+            collectionId: 'users',
+            documentId: 'user123',
+          },
+          valid: {
+            type: 'DocumentReference',
+            path: 'users/user123',
+            collectionId: 'users',
+            documentId: 'user123',
+          },
         }
 
         const mockDocRef = { path: 'users/user123' }
@@ -311,7 +333,12 @@ describe('Firestore Converter', () => {
 
         expect(result.invalid1).toEqual({ type: 'DocumentReference', path: 123 })
         expect(result.invalid2).toEqual({ type: 'DocumentReference', collectionId: 'users' })
-        expect(result.invalid3).toEqual({ type: 'NotDocumentReference', path: 'users/user123', collectionId: 'users', documentId: 'user123' })
+        expect(result.invalid3).toEqual({
+          type: 'NotDocumentReference',
+          path: 'users/user123',
+          collectionId: 'users',
+          documentId: 'user123',
+        })
         expect(result.valid).toBe(mockDocRef)
         expect(mockFirestore.doc).toHaveBeenCalledWith('users/user123')
       })
@@ -428,7 +455,8 @@ describe('Firestore Converter', () => {
 
     it('should handle deeply nested structures', () => {
       let deepObject: any = { value: 'deep' }
-      for (let i = 0; i < 5; i++) {  // Reduced depth to avoid stack overflow
+      for (let i = 0; i < 5; i++) {
+        // Reduced depth to avoid stack overflow
         deepObject = { nested: deepObject }
       }
 
@@ -474,7 +502,6 @@ describe('Firestore Converter', () => {
       const result = deserializeFirestoreTypes({ author: validDocRef }, mockFirestore) as any
       expect(result.author).toBe(mockDocRef)
     })
-
 
     it('should handle invalid type objects that fail type guards', () => {
       // Test invalid objects that don't pass type guard validation

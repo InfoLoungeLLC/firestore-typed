@@ -71,7 +71,7 @@ describe('CollectionReference', () => {
     collection = new CollectionReference<TestEntity>(
       mockFirebaseCollection,
       mockFirestoreTyped,
-      mockValidator
+      mockValidator,
     )
   })
 
@@ -274,10 +274,7 @@ describe('CollectionReference', () => {
 
     describe('startAt(), startAfter(), endAt(), endBefore()', () => {
       it('should support pagination methods', () => {
-        const query = collection
-          .orderBy('name')
-          .startAt('A')
-          .endAt('Z')
+        const query = collection.orderBy('name').startAt('A').endAt('Z')
 
         expect(query).toBeInstanceOf(Query)
       })
@@ -299,7 +296,7 @@ describe('CollectionReference', () => {
           path: 'users/user1/posts',
         },
         mockFirestoreTyped,
-        mockValidator
+        mockValidator,
       )
 
       expect(subcollection.path).toBe('users/user1/posts')
@@ -320,7 +317,7 @@ describe('CollectionReference', () => {
               createdAt: new Date('2024-01-01'),
               updatedAt: new Date('2024-01-01'),
             }),
-          }
+          },
         ],
       }
 

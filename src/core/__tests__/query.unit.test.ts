@@ -158,11 +158,7 @@ describe('Query', () => {
       })
 
       it('should handle complex pagination', () => {
-        const result = query
-          .orderBy('name')
-          .orderBy('age')
-          .startAt('Alice', 20)
-          .endAt('Bob', 30)
+        const result = query.orderBy('name').orderBy('age').startAt('Alice', 20).endAt('Bob', 30)
 
         expect(mockFirebaseQuery.orderBy).toHaveBeenCalledTimes(2)
         expect(mockFirebaseQuery.startAt).toHaveBeenCalledWith('Alice', 20)
@@ -276,7 +272,7 @@ describe('Query', () => {
           expect(mockValidateData).toHaveBeenCalledWith(
             expect.any(Object),
             'users/user1',
-            mockValidator
+            mockValidator,
           )
         })
 
@@ -318,7 +314,7 @@ describe('Query', () => {
       const taggedQuery = new Query<TaggedEntity>(
         mockFirebaseQuery,
         mockFirestoreTyped,
-        mockValidator
+        mockValidator,
       )
 
       taggedQuery.where('tags', 'array-contains', 'important' as any)

@@ -329,11 +329,11 @@ describe('Validator', () => {
         const mockValidator = jest.fn().mockReturnValue(inputData as any)
 
         const startTime = performance.now()
-        
+
         for (let i = 0; i < 1000; i++) {
           validateData(inputData, testPath, mockValidator)
         }
-        
+
         const endTime = performance.now()
         const duration = endTime - startTime
 

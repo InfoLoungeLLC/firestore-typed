@@ -14,8 +14,7 @@ jest.mock('firebase-admin/firestore', () => {
 describe('FirestoreTyped Core Class', () => {
   let mockFirestore: jest.Mocked<Firestore>
   let mockValidator: jest.Mock
-  let firestoreTyped: FirestoreTyped<TestEntity>
-
+  let firestoreTyped: FirestoreTyped
 
   beforeEach(() => {
     // Create mock Firestore instance
@@ -28,12 +27,12 @@ describe('FirestoreTyped Core Class', () => {
     mockValidator = jest.fn((data) => data as TestEntity)
 
     // Create FirestoreTyped instance with default options
-    firestoreTyped = new FirestoreTyped<TestEntity>(mockFirestore, mockValidator)
+    firestoreTyped = new FirestoreTyped(mockFirestore)
   })
 
   describe('Constructor', () => {
     it('should create instance with default options', () => {
-      const instance = new FirestoreTyped<TestEntity>(mockFirestore, mockValidator)
+      const instance = new FirestoreTyped(mockFirestore)
 
       expect(instance.getOptions()).toEqual({
         validateOnRead: false,
@@ -46,13 +45,13 @@ describe('FirestoreTyped Core Class', () => {
         validateOnRead: true,
         validateOnWrite: false,
       }
-      const instance = new FirestoreTyped<TestEntity>(mockFirestore, mockValidator, customOptions)
+      const instance = new FirestoreTyped(mockFirestore, customOptions)
 
       expect(instance.getOptions()).toEqual(customOptions)
     })
 
     it('should merge custom options with defaults', () => {
-      const instance = new FirestoreTyped<TestEntity>(mockFirestore, mockValidator, {
+      const instance = new FirestoreTyped(mockFirestore, {
         validateOnRead: true,
       })
 
@@ -61,27 +60,14 @@ describe('FirestoreTyped Core Class', () => {
         validateOnWrite: true, // default value preserved
       })
     })
-
-    it('should store the validator function', () => {
-      const customValidator = jest.fn()
-      const instance = new FirestoreTyped<TestEntity>(mockFirestore, customValidator)
-
-      // Accessing validator indirectly through collection creation
-      const mockCollectionRef = { id: 'test', path: 'test' }
-      mockFirestore.collection.mockReturnValue(mockCollectionRef as any)
-
-      const collection = instance.collection('test')
-      expect(collection).toBeInstanceOf(CollectionReference)
-      expect(mockFirestore.collection).toHaveBeenCalledWith('test')
-    })
   })
 
   describe('collection()', () => {
-    it('should return a CollectionReference instance', () => {
+    it('should return a CollectionReference instance with validator', () => {
       const mockCollectionRef = { id: 'users', path: 'users' }
       mockFirestore.collection.mockReturnValue(mockCollectionRef as any)
 
-      const collection = firestoreTyped.collection('users')
+      const collection = firestoreTyped.collection<TestEntity>('users', mockValidator)
 
       expect(collection).toBeInstanceOf(CollectionReference)
       expect(mockFirestore.collection).toHaveBeenCalledWith('users')
@@ -91,33 +77,63 @@ describe('FirestoreTyped Core Class', () => {
       const mockCollectionRef = { id: 'users', path: 'users' }
       mockFirestore.collection.mockReturnValue(mockCollectionRef as any)
 
-      const collection = firestoreTyped.collection('users')
+      const collection = firestoreTyped.collection<TestEntity>('users', mockValidator)
 
       // Verify the collection was created with the right FirestoreTyped instance
       expect(collection.id).toBe('users')
       expect(collection.path).toBe('users')
     })
 
-    it('should handle different collection paths', () => {
+    it('should handle different collection paths with validators', () => {
       const paths = ['users', 'posts', 'comments', 'users/user1/posts']
-      
+
       paths.forEach((path) => {
         const mockCollectionRef = { id: path.split('/').pop(), path }
         mockFirestore.collection.mockReturnValue(mockCollectionRef as any)
 
-        const collection = firestoreTyped.collection(path)
+        const collection = firestoreTyped.collection<TestEntity>(path, mockValidator)
         expect(collection).toBeInstanceOf(CollectionReference)
         expect(mockFirestore.collection).toHaveBeenCalledWith(path)
       })
     })
+
+    it('should allow different validators for different collections', () => {
+      interface UserEntity {
+        name: string
+        email: string
+      }
+
+      interface ProductEntity {
+        title: string
+        price: number
+      }
+
+      const userValidator = jest.fn((data) => data as UserEntity)
+      const productValidator = jest.fn((data) => data as ProductEntity)
+
+      const mockUserCollectionRef = { id: 'users', path: 'users' }
+      const mockProductCollectionRef = { id: 'products', path: 'products' }
+
+      mockFirestore.collection
+        .mockReturnValueOnce(mockUserCollectionRef as any)
+        .mockReturnValueOnce(mockProductCollectionRef as any)
+
+      const users = firestoreTyped.collection<UserEntity>('users', userValidator)
+      const products = firestoreTyped.collection<ProductEntity>('products', productValidator)
+
+      expect(users).toBeInstanceOf(CollectionReference)
+      expect(products).toBeInstanceOf(CollectionReference)
+      expect(mockFirestore.collection).toHaveBeenCalledWith('users')
+      expect(mockFirestore.collection).toHaveBeenCalledWith('products')
+    })
   })
 
   describe('collectionGroup()', () => {
-    it('should return a CollectionGroup instance', () => {
+    it('should return a CollectionGroup instance with validator', () => {
       const mockQuery = { where: jest.fn(), orderBy: jest.fn(), limit: jest.fn() }
       mockFirestore.collectionGroup.mockReturnValue(mockQuery as any)
 
-      const collectionGroup = firestoreTyped.collectionGroup('posts')
+      const collectionGroup = firestoreTyped.collectionGroup<TestEntity>('posts', mockValidator)
 
       expect(collectionGroup).toBeInstanceOf(CollectionGroup)
       expect(mockFirestore.collectionGroup).toHaveBeenCalledWith('posts')
@@ -127,20 +143,23 @@ describe('FirestoreTyped Core Class', () => {
       const mockQuery = { where: jest.fn(), orderBy: jest.fn(), limit: jest.fn() }
       mockFirestore.collectionGroup.mockReturnValue(mockQuery as any)
 
-      const collectionGroup = firestoreTyped.collectionGroup('posts')
+      const collectionGroup = firestoreTyped.collectionGroup<TestEntity>('posts', mockValidator)
 
       // Verify the collection group has access to the native query
       expect(collectionGroup.native).toBe(mockQuery)
     })
 
-    it('should handle different collection group IDs', () => {
+    it('should handle different collection group IDs with validators', () => {
       const collectionIds = ['posts', 'comments', 'messages', 'notifications']
-      
+
       collectionIds.forEach((collectionId) => {
         const mockQuery = { where: jest.fn(), orderBy: jest.fn(), limit: jest.fn() }
         mockFirestore.collectionGroup.mockReturnValue(mockQuery as any)
 
-        const collectionGroup = firestoreTyped.collectionGroup(collectionId)
+        const collectionGroup = firestoreTyped.collectionGroup<TestEntity>(
+          collectionId,
+          mockValidator,
+        )
         expect(collectionGroup).toBeInstanceOf(CollectionGroup)
         expect(mockFirestore.collectionGroup).toHaveBeenCalledWith(collectionId)
       })
@@ -165,7 +184,7 @@ describe('FirestoreTyped Core Class', () => {
         validateOnRead: true,
         validateOnWrite: false,
       }
-      const instance = new FirestoreTyped<TestEntity>(mockFirestore, mockValidator, customOptions)
+      const instance = new FirestoreTyped(mockFirestore, customOptions)
 
       expect(instance.getOptions()).toEqual(customOptions)
     })
@@ -193,7 +212,7 @@ describe('FirestoreTyped Core Class', () => {
 
     it('should preserve original instance options', () => {
       const originalOptions = firestoreTyped.getOptions()
-      
+
       firestoreTyped.withOptions({
         validateOnRead: true,
         validateOnWrite: false,
@@ -203,7 +222,7 @@ describe('FirestoreTyped Core Class', () => {
     })
 
     it('should support partial option updates', () => {
-      const instance = new FirestoreTyped<TestEntity>(mockFirestore, mockValidator, {
+      const instance = new FirestoreTyped(mockFirestore, {
         validateOnRead: true,
         validateOnWrite: false,
       })
@@ -234,16 +253,16 @@ describe('FirestoreTyped Core Class', () => {
       })
     })
 
-    it('should maintain same validator and firestore instance', () => {
+    it('should maintain same firestore instance', () => {
       const newInstance = firestoreTyped.withOptions({ validateOnRead: true })
 
       expect(newInstance.native).toBe(mockFirestore)
-      
-      // Verify validator is maintained by testing collection creation
+
+      // Verify collection creation works with new instance
       const mockCollectionRef = { id: 'test', path: 'test' }
       mockFirestore.collection.mockReturnValue(mockCollectionRef as any)
-      
-      const collection = newInstance.collection('test')
+
+      const collection = newInstance.collection<TestEntity>('test', mockValidator)
       expect(collection).toBeInstanceOf(CollectionReference)
     })
   })
@@ -274,7 +293,7 @@ describe('FirestoreTyped Core Class', () => {
     })
 
     it('should provide consistent options to created collections', () => {
-      const customInstance = new FirestoreTyped<TestEntity>(mockFirestore, mockValidator, {
+      const customInstance = new FirestoreTyped(mockFirestore, {
         validateOnRead: true,
         validateOnWrite: false,
       })
@@ -282,8 +301,8 @@ describe('FirestoreTyped Core Class', () => {
       const mockCollectionRef = { id: 'test', path: 'test' }
       mockFirestore.collection.mockReturnValue(mockCollectionRef as any)
 
-      const collection = customInstance.collection('test')
-      
+      const collection = customInstance.collection<TestEntity>('test', mockValidator)
+
       // Collection should receive the same options provider
       expect(collection).toBeInstanceOf(CollectionReference)
     })
@@ -291,7 +310,7 @@ describe('FirestoreTyped Core Class', () => {
 
   describe('Integration with Collection and CollectionGroup', () => {
     it('should create collections that inherit global options', () => {
-      const instance = new FirestoreTyped<TestEntity>(mockFirestore, mockValidator, {
+      const instance = new FirestoreTyped(mockFirestore, {
         validateOnRead: true,
         validateOnWrite: false,
       })
@@ -299,14 +318,14 @@ describe('FirestoreTyped Core Class', () => {
       const mockCollectionRef = { id: 'users', path: 'users' }
       mockFirestore.collection.mockReturnValue(mockCollectionRef as any)
 
-      const collection = instance.collection('users')
-      
+      const collection = instance.collection<TestEntity>('users', mockValidator)
+
       // Collection should be able to access the options through the provider
       expect(collection).toBeInstanceOf(CollectionReference)
     })
 
     it('should create collection groups that inherit global options', () => {
-      const instance = new FirestoreTyped<TestEntity>(mockFirestore, mockValidator, {
+      const instance = new FirestoreTyped(mockFirestore, {
         validateOnRead: true,
         validateOnWrite: false,
       })
@@ -314,8 +333,8 @@ describe('FirestoreTyped Core Class', () => {
       const mockQuery = { where: jest.fn(), orderBy: jest.fn(), limit: jest.fn() }
       mockFirestore.collectionGroup.mockReturnValue(mockQuery as any)
 
-      const collectionGroup = instance.collectionGroup('posts')
-      
+      const collectionGroup = instance.collectionGroup<TestEntity>('posts', mockValidator)
+
       // CollectionGroup should be able to access the options through the provider
       expect(collectionGroup).toBeInstanceOf(CollectionGroup)
     })
@@ -325,16 +344,16 @@ describe('FirestoreTyped Core Class', () => {
     it('should maintain type safety across method calls', () => {
       // This test ensures TypeScript compilation succeeds with proper types
       const mockDocRef = { id: 'user1', path: 'users/user1' }
-      const mockCollectionRef = { 
-        id: 'users', 
+      const mockCollectionRef = {
+        id: 'users',
         path: 'users',
-        doc: jest.fn().mockReturnValue(mockDocRef)
+        doc: jest.fn().mockReturnValue(mockDocRef),
       }
       mockFirestore.collection.mockReturnValue(mockCollectionRef as any)
 
-      const collection = firestoreTyped.collection('users')
+      const collection = firestoreTyped.collection<TestEntity>('users', mockValidator)
       const doc = collection.doc('user1')
-      
+
       expect(collection).toBeInstanceOf(CollectionReference)
       expect(doc.id).toBe('user1')
     })
@@ -347,37 +366,23 @@ describe('FirestoreTyped Core Class', () => {
       }
 
       const differentValidator = jest.fn((data) => data as DifferentEntity)
-      const differentInstance = new FirestoreTyped<DifferentEntity>(
-        mockFirestore,
-        differentValidator
-      )
 
       const mockCollectionRef = { id: 'articles', path: 'articles' }
       mockFirestore.collection.mockReturnValue(mockCollectionRef as any)
 
-      const collection = differentInstance.collection('articles')
+      const collection = firestoreTyped.collection<DifferentEntity>('articles', differentValidator)
       expect(collection).toBeInstanceOf(CollectionReference)
     })
   })
 
   describe('Error Handling', () => {
-    it('should handle validator errors gracefully', () => {
-      const errorValidator = jest.fn(() => {
-        throw new Error('Validation failed')
-      })
-      
-      expect(() => {
-        new FirestoreTyped<TestEntity>(mockFirestore, errorValidator)
-      }).not.toThrow() // Constructor should not throw even if validator would throw
-    })
-
     it('should handle Firestore errors in collection creation', () => {
       mockFirestore.collection.mockImplementation(() => {
         throw new Error('Firestore error')
       })
 
       expect(() => {
-        firestoreTyped.collection('test')
+        firestoreTyped.collection<TestEntity>('test', mockValidator)
       }).toThrow('Firestore error')
     })
 
@@ -387,7 +392,7 @@ describe('FirestoreTyped Core Class', () => {
       })
 
       expect(() => {
-        firestoreTyped.collectionGroup('test')
+        firestoreTyped.collectionGroup<TestEntity>('test', mockValidator)
       }).toThrow('Firestore error')
     })
   })

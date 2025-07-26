@@ -11,15 +11,11 @@ import type {
 /**
  * Main firestore-typed class that wraps Firestore with type safety and validation
  */
-export class FirestoreTyped<T extends SerializedDocumentData = SerializedDocumentData>
-  implements FirestoreTypedOptionsProvider
-{
+export class FirestoreTyped implements FirestoreTypedOptionsProvider {
   private readonly options: ResolvedFirestoreTypedOptions
-  private readonly validator: (data: unknown) => T
 
   constructor(
     private readonly firestore: Firestore,
-    validator: (data: unknown) => T,
     options: FirestoreTypedOptions = {},
   ) {
     // Set default options
@@ -28,30 +24,37 @@ export class FirestoreTyped<T extends SerializedDocumentData = SerializedDocumen
       validateOnWrite: true,
       ...options,
     }
-
-    // Store validator for type safety
-    this.validator = validator
   }
 
   /**
-   * Gets a typed CollectionReference using the internal validator
+   * Gets a typed CollectionReference with validator
+   * @param path - The collection path
+   * @param validator - The validator function for this collection
    */
-  collection(path: string): CollectionReference<T> {
+  collection<T extends SerializedDocumentData>(
+    path: string,
+    validator: (data: unknown) => T,
+  ): CollectionReference<T> {
     return new CollectionReference<T>(
       this.firestore.collection(path),
-      this, // Pass the FirestoreTyped instance instead of options
-      this.validator, // Use internal validator
+      this, // Pass the FirestoreTyped instance
+      validator,
     )
   }
 
   /**
-   * Gets a typed CollectionGroup for cross-collection queries using the internal validator
+   * Gets a typed CollectionGroup for cross-collection queries
+   * @param collectionId - The collection ID to query across
+   * @param validator - The validator function for this collection group
    */
-  collectionGroup(collectionId: string): CollectionGroup<T> {
+  collectionGroup<T extends SerializedDocumentData>(
+    collectionId: string,
+    validator: (data: unknown) => T,
+  ): CollectionGroup<T> {
     return new CollectionGroup<T>(
       this.firestore.collectionGroup(collectionId),
-      this, // Pass the FirestoreTyped instance instead of options
-      this.validator, // Use internal validator
+      this, // Pass the FirestoreTyped instance
+      validator,
     )
   }
 
@@ -65,8 +68,8 @@ export class FirestoreTyped<T extends SerializedDocumentData = SerializedDocumen
   /**
    * Updates global options (creates a new instance to maintain immutability)
    */
-  withOptions(newOptions: Partial<FirestoreTypedOptions>): FirestoreTyped<T> {
-    return new FirestoreTyped<T>(this.firestore, this.validator, {
+  withOptions(newOptions: Partial<FirestoreTypedOptions>): FirestoreTyped {
+    return new FirestoreTyped(this.firestore, {
       ...this.options,
       ...newOptions,
     })
