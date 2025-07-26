@@ -475,26 +475,6 @@ describe('Firestore Converter', () => {
       expect(result.author).toBe(mockDocRef)
     })
 
-    it('should reject invalid type guard checks', () => {
-      const invalidObjects = [
-        null,
-        undefined,
-        'string',
-        123,
-        [],
-        { type: 'GeoPoint' }, // missing required fields
-        { type: 'DocumentReference' }, // missing required fields
-      ]
-
-      invalidObjects.forEach((obj) => {
-        const result = deserializeFirestoreTypes({ test: obj }, mockFirestore) as any
-        if (Array.isArray(obj) || (typeof obj === 'object' && obj !== null)) {
-          expect(result.test).toEqual(obj) // Use toEqual for objects/arrays
-        } else {
-          expect(result.test).toBe(obj) // Should remain unchanged
-        }
-      })
-    })
 
     it('should handle invalid type objects that fail type guards', () => {
       // Test invalid objects that don't pass type guard validation

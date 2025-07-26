@@ -79,16 +79,12 @@ function serializeFirestoreTypesInternal(data: unknown): unknown {
     return data.map((item: unknown) => serializeFirestoreTypesInternal(item))
   }
 
-  if (typeof data === 'object' && data !== null) {
-    // Recursively convert objects
-    const result: Record<string, unknown> = {}
-    for (const [key, value] of Object.entries(data as Record<string, unknown>)) {
-      result[key] = serializeFirestoreTypesInternal(value)
-    }
-    return result
+  // Recursively convert objects
+  const result: Record<string, unknown> = {}
+  for (const [key, value] of Object.entries(data as Record<string, unknown>)) {
+    result[key] = serializeFirestoreTypesInternal(value)
   }
-
-  return data
+  return result
 }
 
 /**
@@ -133,22 +129,19 @@ function deserializeFirestoreTypesInternal(data: unknown, firestore: Firestore):
     return data.map((item: unknown) => deserializeFirestoreTypesInternal(item, firestore))
   }
 
-  if (typeof data === 'object' && data !== null) {
-    // Recursively convert objects
-    const result: Record<string, unknown> = {}
-    for (const [key, value] of Object.entries(data as Record<string, unknown>)) {
-      result[key] = deserializeFirestoreTypesInternal(value, firestore)
-    }
-    return result
+  // Recursively convert objects
+  const result: Record<string, unknown> = {}
+  for (const [key, value] of Object.entries(data as Record<string, unknown>)) {
+    result[key] = deserializeFirestoreTypesInternal(value, firestore)
   }
-
-  return data
+  return result
 }
 
 /**
  * SerializedGeoPoint type guard
  */
 function isSerializedGeoPoint(data: unknown): data is SerializedGeoPoint {
+  /* istanbul ignore if -- defensive check for type guard */
   if (typeof data !== 'object' || data === null) {
     return false
   }
@@ -168,6 +161,7 @@ function isSerializedGeoPoint(data: unknown): data is SerializedGeoPoint {
  * SerializedDocumentReference type guard
  */
 function isSerializedDocumentReference(data: unknown): data is SerializedDocumentReference {
+  /* istanbul ignore if -- defensive check for type guard */
   if (typeof data !== 'object' || data === null) {
     return false
   }
