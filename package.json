@@ -3,10 +3,18 @@
   "version": "0.4.0",
   "description": "Type-safe, low-level wrapper for Firebase Firestore with enhanced validation and developer experience",
   "main": "dist/index.js",
+  "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
-    "build:watch": "tsc --watch",
+    "build": "tsdown",
+    "build:watch": "tsdown --watch",
     "format": "prettier --write \"src/**/*.ts\"",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -37,6 +45,7 @@
     "jest": "^30.0.5",
     "prettier": "^3.6.2",
     "ts-jest": "^29.4.0",
+    "tsdown": "^0.13.0",
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.38.0"
   },

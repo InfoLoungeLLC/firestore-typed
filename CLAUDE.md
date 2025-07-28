@@ -6,8 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Build
 ```bash
-npm run build         # Compile TypeScript to JavaScript
-npm run build:watch   # Watch mode for development
+npm run build         # Compile TypeScript to JavaScript using tsdown
+npm run build:watch   # Watch mode for development using tsdown
 ```
 
 ### Testing
