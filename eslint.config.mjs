@@ -13,12 +13,13 @@ export default tseslint.config(
       globals: {
         ...globals.node,
       },
-      sourceType: 'commonjs',
+      sourceType: 'module',
       parserOptions: {
         projectService: {
           allowDefaultProject: ['*.ts', '*.js', '*.mjs'],
         },
         tsconfigRootDir: import.meta.dirname,
+        ecmaVersion: 'latest',
       },
     },
   },
