@@ -3,7 +3,8 @@ import { serializeFirestoreTypes, deserializeFirestoreTypes } from '../../utils/
 import { validateData } from '../../utils/validator'
 import { DocumentNotFoundError, DocumentAlreadyExistsError } from '../../errors/errors'
 import type { FirestoreTypedOptionsProvider } from '../../types/firestore-typed.types'
-import { TestEntity, createTestEntity } from './__helpers__/test-entities.helper'
+import type { TestEntity } from './__helpers__/test-entities.helper'
+import { createTestEntity } from './__helpers__/test-entities.helper'
 
 // Mock dependencies
 jest.mock('../../utils/firestore-converter')

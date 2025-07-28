@@ -2,6 +2,8 @@
 import {
   serializeFirestoreTypes,
   deserializeFirestoreTypes,
+} from '../firestore-converter'
+import type {
   SerializedGeoPoint,
   SerializedDocumentReference,
 } from '../firestore-converter'
