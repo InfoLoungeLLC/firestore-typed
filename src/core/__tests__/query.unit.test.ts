@@ -2,7 +2,7 @@ import { Query } from '../query'
 import { serializeFirestoreTypes } from '../../utils/firestore-converter'
 import { validateData } from '../../utils/validator'
 import type { FirestoreTypedOptionsProvider } from '../../types/firestore-typed.types'
-import { TestEntity } from './__helpers__/test-entities.helper'
+import type { TestEntity } from './__helpers__/test-entities.helper'
 
 // Mock dependencies
 jest.mock('../../utils/firestore-converter')

@@ -3,7 +3,7 @@ import { FirestoreTyped } from '../firestore-typed'
 import { CollectionReference } from '../collection'
 import { CollectionGroup } from '../collection-group'
 import type { Firestore } from 'firebase-admin/firestore'
-import { TestEntity } from './__helpers__/test-entities.helper'
+import type { TestEntity } from './__helpers__/test-entities.helper'
 
 jest.mock('firebase-admin/firestore', () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
