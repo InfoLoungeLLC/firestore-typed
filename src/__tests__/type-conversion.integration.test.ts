@@ -1,4 +1,4 @@
-import { vi } from 'vitest'
+import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { getFirestoreTyped } from '../index'
 import { deserializeFirestoreTypes } from '../utils/firestore-converter'
 import { createMockFirestore } from '../core/__tests__/__helpers__/firebase-mock.helper'

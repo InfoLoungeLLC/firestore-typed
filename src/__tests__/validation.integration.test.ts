@@ -1,4 +1,4 @@
-import { vi } from 'vitest'
+import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { getFirestoreTyped } from '../index'
 import { FirestoreTypedValidationError } from '../errors/errors'
 

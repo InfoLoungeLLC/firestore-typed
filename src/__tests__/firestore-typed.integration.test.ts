@@ -1,4 +1,4 @@
-import { vi } from 'vitest'
+import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { firestoreTyped, getFirestoreTyped } from '../index'
 import { FirestoreTypedValidationError } from '../errors/errors'
 import { createFirebaseAdminMock } from '../core/__tests__/__helpers__/firebase-mock.helper'

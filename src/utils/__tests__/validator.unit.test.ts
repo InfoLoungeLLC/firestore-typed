@@ -1,4 +1,4 @@
-import { vi } from 'vitest'
+import { vi, describe, it, expect } from 'vitest'
 import { validateData } from '../validator'
 import { FirestoreTypedValidationError } from '../../errors/errors'
 

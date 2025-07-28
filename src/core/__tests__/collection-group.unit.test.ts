@@ -1,4 +1,4 @@
-import { vi, type Mock, type MockedFunction } from 'vitest'
+import { vi, describe, it, expect, beforeEach, type Mock, type MockedFunction } from 'vitest'
 import { CollectionGroup } from '../collection-group'
 import { Query } from '../query'
 import { serializeFirestoreTypes } from '../../utils/firestore-converter'

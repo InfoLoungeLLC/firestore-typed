@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/unbound-method */
-import { vi, type Mocked } from 'vitest'
+import { vi, describe, it, expect, beforeEach, type Mocked } from 'vitest'
 import { serializeFirestoreTypes, deserializeFirestoreTypes } from '../firestore-converter'
 import type { SerializedGeoPoint, SerializedDocumentReference } from '../firestore-converter'
 import { Timestamp, GeoPoint, DocumentReference, Firestore } from 'firebase-admin/firestore'
