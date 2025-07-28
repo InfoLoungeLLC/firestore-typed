@@ -1,4 +1,4 @@
-import { firestoreTyped } from '../index'
+import { getFirestoreTyped } from '../index'
 import { deserializeFirestoreTypes } from '../utils/firestore-converter'
 import { createMockFirestore } from '../core/__tests__/__helpers__/firebase-mock.helper'
 import type { SerializedGeoPoint, SerializedDocumentReference } from '../utils/firestore-converter'
@@ -152,11 +152,11 @@ describe('FirestoreTyped Type Conversion', () => {
   })
 
   describe('Integration with FirestoreTyped', () => {
-    let db: ReturnType<typeof firestoreTyped>
+    let db: ReturnType<typeof getFirestoreTyped>
     let collection: ReturnType<typeof db.collection<LocationEntity>>
 
     beforeEach(() => {
-      db = firestoreTyped()
+      db = getFirestoreTyped()
       collection = db.collection<LocationEntity>('locations', mockValidator)
     })
 

@@ -1,4 +1,4 @@
-import { firestoreTyped } from '../index'
+import { getFirestoreTyped } from '../index'
 import { FirestoreTypedValidationError } from '../errors/errors'
 
 jest.mock('firebase-admin/firestore', () => {
@@ -60,11 +60,11 @@ describe('FirestoreTyped Validation', () => {
   }
 
   describe('Write Validation', () => {
-    let db: ReturnType<typeof firestoreTyped>
+    let db: ReturnType<typeof getFirestoreTyped>
     let collection: ReturnType<typeof db.collection<UserEntity>>
 
     beforeEach(() => {
-      db = firestoreTyped({
+      db = getFirestoreTyped(undefined, {
         validateOnWrite: true,
       })
       collection = db.collection<UserEntity>('users', strictValidator)
@@ -258,7 +258,7 @@ describe('FirestoreTyped Validation', () => {
 
   describe('Read Validation', () => {
     it('should validate data on read when validateOnRead is true', async () => {
-      const db = firestoreTyped({
+      const db = getFirestoreTyped(undefined, {
         validateOnRead: true,
         validateOnWrite: false,
       })
@@ -272,7 +272,7 @@ describe('FirestoreTyped Validation', () => {
     })
 
     it('should skip validation on read when validateOnRead is false', async () => {
-      const db = firestoreTyped({
+      const db = getFirestoreTyped(undefined, {
         validateOnRead: false,
       })
       const collection = db.collection<UserEntity>('users', strictValidator)
@@ -284,7 +284,7 @@ describe('FirestoreTyped Validation', () => {
 
   describe('Operation-level Validation Override', () => {
     it('should override global validateOnWrite setting', async () => {
-      const db = firestoreTyped({
+      const db = getFirestoreTyped(undefined, {
         validateOnWrite: true,
       })
       const collection = db.collection<UserEntity>('users', strictValidator)
@@ -299,7 +299,7 @@ describe('FirestoreTyped Validation', () => {
     })
 
     it('should override global validateOnRead setting', async () => {
-      const db = firestoreTyped({
+      const db = getFirestoreTyped(undefined, {
         validateOnRead: false,
         validateOnWrite: false,
       })

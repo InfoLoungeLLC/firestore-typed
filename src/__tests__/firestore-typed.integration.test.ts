@@ -38,7 +38,7 @@ describe('FirestoreTyped', () => {
 
   describe('Factory Function', () => {
     it('should create a FirestoreTyped instance with default options', () => {
-      const db = firestoreTyped()
+      const db = getFirestoreTyped()
 
       expect(db).toBeDefined()
       expect(db.getOptions()).toEqual({
@@ -48,7 +48,7 @@ describe('FirestoreTyped', () => {
     })
 
     it('should create a FirestoreTyped instance with custom options', () => {
-      const db = firestoreTyped({
+      const db = getFirestoreTyped(undefined, {
         validateOnRead: true,
         validateOnWrite: false,
       })
@@ -61,11 +61,11 @@ describe('FirestoreTyped', () => {
   })
 
   describe('Collection Operations', () => {
-    let db: ReturnType<typeof firestoreTyped>
+    let db: ReturnType<typeof getFirestoreTyped>
     let collection: ReturnType<typeof db.collection<TestEntity>>
 
     beforeEach(() => {
-      db = firestoreTyped()
+      db = getFirestoreTyped()
       collection = db.collection<TestEntity>('test-entities', mockValidator)
     })
 
@@ -105,7 +105,7 @@ describe('FirestoreTyped', () => {
       })
 
       it('should skip validation when validateOnWrite is false', async () => {
-        const dbNoValidation = firestoreTyped({
+        const dbNoValidation = getFirestoreTyped(undefined, {
           validateOnWrite: false,
         })
         const collectionNoValidation = dbNoValidation.collection<TestEntity>(
@@ -182,7 +182,7 @@ describe('FirestoreTyped', () => {
       })
 
       it('should validate data after reading when validateOnRead is true', async () => {
-        const dbWithReadValidation = firestoreTyped({
+        const dbWithReadValidation = getFirestoreTyped(undefined, {
           validateOnRead: true,
         })
         const collectionWithValidation = dbWithReadValidation.collection<TestEntity>(
@@ -217,7 +217,7 @@ describe('FirestoreTyped', () => {
 
   describe('Options Management', () => {
     it('should create new instance with modified options using withOptions()', () => {
-      const db = firestoreTyped({
+      const db = getFirestoreTyped(undefined, {
         validateOnRead: false,
         validateOnWrite: true,
       })
