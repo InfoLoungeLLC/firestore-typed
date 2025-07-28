@@ -5,6 +5,50 @@
 このフォーマットは[Keep a Changelog](https://keepachangelog.com/en/1.0.0/)に基づいており、
 このプロジェクトは[セマンティックバージョニング](https://semver.org/spec/v2.0.0.html)に準拠しています。
 
+## [0.4.1] - 2025-07-28
+
+### 修正
+
+- **テスト**: テストファイル内の非推奨な`firestoreTyped()`呼び出しを全て`getFirestoreTyped()`に更新
+- **コード品質**: テストスイートを新しいファクトリ関数を使用するよう移行し、一貫性を向上
+
+### 内部
+
+- テストファイル全体で推奨される`getFirestoreTyped()`関数を使用
+- 非推奨な`firestoreTyped()`関数の後方互換性テストは維持
+
+## [0.4.0] - 2025-07-28
+
+### 追加
+
+- **新しいファクトリ関数**: Firebase命名規則との一貫性のため`getFirestoreTyped()`関数を追加
+- **カスタムFirestoreインスタンスサポート**: `getFirestoreTyped()`はマルチプロジェクトシナリオ用に第一引数としてオプショナルなFirestoreインスタンスを受け取り可能
+
+### 変更
+
+- **ファクトリ関数**: `firestoreTyped()`は`getFirestoreTyped()`に変更され、非推奨となりました
+- **API強化**: カスタムFirestoreインスタンスとデータベースのサポートを強化
+
+### 例
+
+```typescript
+// デフォルトのFirestoreインスタンスを使用
+const db = getFirestoreTyped();
+
+// カスタムFirestoreインスタンスを使用
+const customApp = initializeApp(customConfig, 'custom');
+const customFirestore = getFirestore(customApp);
+const customDb = getFirestoreTyped(customFirestore);
+
+// オプション付き
+const dbWithOptions = getFirestoreTyped(undefined, { validateOnRead: true });
+```
+
+### 非推奨
+
+- `firestoreTyped()`関数は非推奨ですが、後方互換性のため利用可能です
+- 全てのテストファイルを新しい`getFirestoreTyped()`関数を使用するよう更新
+
 ## [0.3.1] - 2025-07-26
 
 ### 修正
