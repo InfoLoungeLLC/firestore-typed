@@ -223,10 +223,10 @@ describe('CollectionReference', () => {
 
       // Validation should not be called
       expect(mockValidateData).not.toHaveBeenCalled()
-      
+
       // But serialization should still occur
       expect(mockSerializeFirestoreTypes).toHaveBeenCalledTimes(2)
-      
+
       // And data should still be returned (this exercises line 86: (convertedData as T))
       expect(result.docs).toHaveLength(2)
       expect(result.docs[0]?.data).toBeDefined()
@@ -238,10 +238,10 @@ describe('CollectionReference', () => {
 
       // Validation should be called (this exercises line 85)
       expect(mockValidateData).toHaveBeenCalledTimes(2)
-      
+
       // Serialization should also occur
       expect(mockSerializeFirestoreTypes).toHaveBeenCalledTimes(2)
-      
+
       // And data should still be returned
       expect(result.docs).toHaveLength(2)
       expect(result.docs[0]?.data).toBeDefined()

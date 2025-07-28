@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Test Coverage**: Improved test coverage for conditional branches in validation logic
 - **Code Quality**: Enhanced test suite to cover edge cases in collection and document operations
 - **Documentation**: Added descriptive comments to coverage ignore statements for defensive programming
-- **Dependencies**: Updated typia peer dependency to >=5.5.10 and resolved type checking compatibility issues
+- **Dependencies**: Updated typia peer dependency to ^9.6.0 (from >=5.3.0) with full backward compatibility maintained
 
 ### Internal
 

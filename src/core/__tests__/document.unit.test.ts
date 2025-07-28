@@ -223,10 +223,10 @@ describe('DocumentReference', () => {
 
         // Validation should be called
         expect(mockValidateData).toHaveBeenCalledWith(testData, 'users/test-id', mockValidator)
-        
+
         // Serialization should also occur
         expect(mockDeserializeFirestoreTypes).toHaveBeenCalled()
-        
+
         // And the set operation should be called
         expect(mockFirebaseDoc.set).toHaveBeenCalled()
       })
@@ -345,10 +345,10 @@ describe('DocumentReference', () => {
 
       // Validation should not be called (this exercises line 119: (mergedData as T))
       expect(mockValidateData).not.toHaveBeenCalled()
-      
+
       // But deserialization should still occur
       expect(mockDeserializeFirestoreTypes).toHaveBeenCalled()
-      
+
       // And the set operation should be called
       expect(mockFirebaseDoc.set).toHaveBeenCalled()
     })
@@ -377,10 +377,10 @@ describe('DocumentReference', () => {
         'users/test-id',
         mockValidator,
       )
-      
+
       // Deserialization should also occur
       expect(mockDeserializeFirestoreTypes).toHaveBeenCalled()
-      
+
       // And the set operation should be called
       expect(mockFirebaseDoc.set).toHaveBeenCalled()
     })
@@ -398,7 +398,7 @@ describe('DocumentReference', () => {
 
       // Should still work and merge with empty object
       expect(mockFirebaseDoc.set).toHaveBeenCalled()
-      
+
       // The merged data should be just the partial data since existing was null
       expect(mockDeserializeFirestoreTypes).toHaveBeenCalledWith(
         partialData, // Since existingData was null, mergedData is just partialData
