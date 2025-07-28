@@ -6,5 +6,6 @@ export default defineConfig([
     platform: 'node',
     format: ['cjs', 'esm'],
     dts: true,
+    sourcemap: true,
   },
 ])
