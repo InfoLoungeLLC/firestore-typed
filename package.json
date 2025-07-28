@@ -2,6 +2,7 @@
   "name": "@info-lounge/firestore-typed",
   "version": "0.4.2",
   "description": "Type-safe, low-level wrapper for Firebase Firestore with enhanced validation and developer experience",
+  "type": "module",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
