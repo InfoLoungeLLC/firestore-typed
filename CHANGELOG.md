@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.2] - 2025-07-28
+
+### Changed
+
+- **Testing Framework**: Migrated from Jest to Vitest for improved performance and modern tooling
+- **Build System**: Updated to use Vitest with v8 coverage provider for faster test execution
+
+### Fixed
+
+- **Test Coverage**: Improved test coverage for conditional branches in validation logic
+- **Code Quality**: Enhanced test suite to cover edge cases in collection and document operations
+- **Documentation**: Added descriptive comments to coverage ignore statements for defensive programming
+
+### Internal
+
+- Replaced Jest with Vitest configuration and test utilities
+- Updated all test files to use Vitest imports (`vi`, `describe`, `it`, `expect`)
+- Migrated from `jest.mock()` to `vi.mock()` for mocking
+- Added comprehensive tests for `validateOnRead: false` and `validateOnWrite: false` code paths
+- Added test coverage for document merge operations with null existing data
+- Removed redundant test cases to reduce code duplication
+- Updated c8 ignore comments with defensive programming context
+
 ## [0.4.1] - 2025-07-28
 
 ### Fixed
