@@ -1,3 +1,4 @@
+import { vi, describe, it, expect } from 'vitest'
 import {
   FirestoreTypedValidationError,
   DocumentNotFoundError,
@@ -39,7 +40,7 @@ describe('Error Classes', () => {
 
     it('should set proper stack trace when Error.captureStackTrace is available', () => {
       const originalCaptureStackTrace = Error.captureStackTrace
-      const mockCaptureStackTrace = jest.fn()
+      const mockCaptureStackTrace = vi.fn()
       Error.captureStackTrace = mockCaptureStackTrace
 
       const error = new FirestoreTypedValidationError(testMessage, testPath)
@@ -116,7 +117,7 @@ describe('Error Classes', () => {
 
     it('should set proper stack trace when Error.captureStackTrace is available', () => {
       const originalCaptureStackTrace = Error.captureStackTrace
-      const mockCaptureStackTrace = jest.fn()
+      const mockCaptureStackTrace = vi.fn()
       Error.captureStackTrace = mockCaptureStackTrace
 
       const error = new DocumentNotFoundError(testPath)
@@ -191,7 +192,7 @@ describe('Error Classes', () => {
 
     it('should set proper stack trace when Error.captureStackTrace is available', () => {
       const originalCaptureStackTrace = Error.captureStackTrace
-      const mockCaptureStackTrace = jest.fn()
+      const mockCaptureStackTrace = vi.fn()
       Error.captureStackTrace = mockCaptureStackTrace
 
       const error = new DocumentAlreadyExistsError(testPath)
