@@ -232,7 +232,9 @@ export class MockDocumentReferenceForTypeConversion {
 
 // Common jest.mock configuration for firebase-admin/firestore
 export const createFirebaseAdminMock = () => ({
-  getFirestore: jest.fn(() => createMockFirestore()),
+  getFirestore: jest.fn(
+    () => createMockFirestore() as unknown as import('firebase-admin/firestore').Firestore,
+  ),
   Timestamp: MockTimestamp,
   GeoPoint: MockGeoPoint,
   DocumentReference: MockDocumentReferenceForTypeConversion,

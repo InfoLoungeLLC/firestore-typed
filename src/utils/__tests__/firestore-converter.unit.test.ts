@@ -1,12 +1,6 @@
 /* eslint-disable @typescript-eslint/unbound-method */
-import {
-  serializeFirestoreTypes,
-  deserializeFirestoreTypes,
-} from '../firestore-converter'
-import type {
-  SerializedGeoPoint,
-  SerializedDocumentReference,
-} from '../firestore-converter'
+import { serializeFirestoreTypes, deserializeFirestoreTypes } from '../firestore-converter'
+import type { SerializedGeoPoint, SerializedDocumentReference } from '../firestore-converter'
 import { Timestamp, GeoPoint, DocumentReference, Firestore } from 'firebase-admin/firestore'
 
 describe('Firestore Converter', () => {

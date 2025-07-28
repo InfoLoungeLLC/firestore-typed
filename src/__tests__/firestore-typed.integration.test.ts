@@ -1,5 +1,6 @@
 import { firestoreTyped, getFirestoreTyped } from '../index'
 import { FirestoreTypedValidationError } from '../errors/errors'
+import { createFirebaseAdminMock } from '../core/__tests__/__helpers__/firebase-mock.helper'
 
 jest.mock('firebase-admin/firestore', () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -260,8 +261,6 @@ describe('FirestoreTyped', () => {
     })
 
     it('should create a FirestoreTyped instance with custom Firestore instance', () => {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const { createFirebaseAdminMock } = require('../core/__tests__/__helpers__/firebase-mock.helper')
       const mockFirebaseAdmin = createFirebaseAdminMock()
       const customFirestore = mockFirebaseAdmin.getFirestore()
 
@@ -271,8 +270,6 @@ describe('FirestoreTyped', () => {
     })
 
     it('should work with both custom Firestore and options', () => {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const { createFirebaseAdminMock } = require('../core/__tests__/__helpers__/firebase-mock.helper')
       const mockFirebaseAdmin = createFirebaseAdminMock()
       const customFirestore = mockFirebaseAdmin.getFirestore()
 
@@ -290,7 +287,7 @@ describe('FirestoreTyped', () => {
 
     it('should work identically to deprecated firestoreTyped function for backward compatibility', () => {
       const options = { validateOnRead: true, validateOnWrite: false }
-      
+
       const dbOld = firestoreTyped(options)
       const dbNew = getFirestoreTyped(undefined, options)
 
