@@ -1,10 +1,5 @@
-import {
-  Timestamp,
-  GeoPoint,
-  DocumentReference,
-  Firestore,
-  DocumentData,
-} from 'firebase-admin/firestore'
+import { Timestamp, GeoPoint, DocumentReference, Firestore } from 'firebase-admin/firestore'
+import type { DocumentData } from 'firebase-admin/firestore'
 import type { SerializedDocumentData } from '../types/firestore-typed.types'
 
 /**

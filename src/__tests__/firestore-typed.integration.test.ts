@@ -1,5 +1,6 @@
 import { firestoreTyped, getFirestoreTyped } from '../index'
 import { FirestoreTypedValidationError } from '../errors/errors'
+import { createFirebaseAdminMock } from '../core/__tests__/__helpers__/firebase-mock.helper'
 
 jest.mock('firebase-admin/firestore', () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -37,7 +38,7 @@ describe('FirestoreTyped', () => {
 
   describe('Factory Function', () => {
     it('should create a FirestoreTyped instance with default options', () => {
-      const db = firestoreTyped()
+      const db = getFirestoreTyped()
 
       expect(db).toBeDefined()
       expect(db.getOptions()).toEqual({
@@ -47,7 +48,7 @@ describe('FirestoreTyped', () => {
     })
 
     it('should create a FirestoreTyped instance with custom options', () => {
-      const db = firestoreTyped({
+      const db = getFirestoreTyped(undefined, {
         validateOnRead: true,
         validateOnWrite: false,
       })
@@ -60,11 +61,11 @@ describe('FirestoreTyped', () => {
   })
 
   describe('Collection Operations', () => {
-    let db: ReturnType<typeof firestoreTyped>
+    let db: ReturnType<typeof getFirestoreTyped>
     let collection: ReturnType<typeof db.collection<TestEntity>>
 
     beforeEach(() => {
-      db = firestoreTyped()
+      db = getFirestoreTyped()
       collection = db.collection<TestEntity>('test-entities', mockValidator)
     })
 
@@ -104,7 +105,7 @@ describe('FirestoreTyped', () => {
       })
 
       it('should skip validation when validateOnWrite is false', async () => {
-        const dbNoValidation = firestoreTyped({
+        const dbNoValidation = getFirestoreTyped(undefined, {
           validateOnWrite: false,
         })
         const collectionNoValidation = dbNoValidation.collection<TestEntity>(
@@ -181,7 +182,7 @@ describe('FirestoreTyped', () => {
       })
 
       it('should validate data after reading when validateOnRead is true', async () => {
-        const dbWithReadValidation = firestoreTyped({
+        const dbWithReadValidation = getFirestoreTyped(undefined, {
           validateOnRead: true,
         })
         const collectionWithValidation = dbWithReadValidation.collection<TestEntity>(
@@ -216,7 +217,7 @@ describe('FirestoreTyped', () => {
 
   describe('Options Management', () => {
     it('should create new instance with modified options using withOptions()', () => {
-      const db = firestoreTyped({
+      const db = getFirestoreTyped(undefined, {
         validateOnRead: false,
         validateOnWrite: true,
       })
@@ -260,8 +261,6 @@ describe('FirestoreTyped', () => {
     })
 
     it('should create a FirestoreTyped instance with custom Firestore instance', () => {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const { createFirebaseAdminMock } = require('../core/__tests__/__helpers__/firebase-mock.helper')
       const mockFirebaseAdmin = createFirebaseAdminMock()
       const customFirestore = mockFirebaseAdmin.getFirestore()
 
@@ -271,8 +270,6 @@ describe('FirestoreTyped', () => {
     })
 
     it('should work with both custom Firestore and options', () => {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const { createFirebaseAdminMock } = require('../core/__tests__/__helpers__/firebase-mock.helper')
       const mockFirebaseAdmin = createFirebaseAdminMock()
       const customFirestore = mockFirebaseAdmin.getFirestore()
 
@@ -290,7 +287,7 @@ describe('FirestoreTyped', () => {
 
     it('should work identically to deprecated firestoreTyped function for backward compatibility', () => {
       const options = { validateOnRead: true, validateOnWrite: false }
-      
+
       const dbOld = firestoreTyped(options)
       const dbNew = getFirestoreTyped(undefined, options)
 

@@ -1,18 +1,27 @@
 {
   "name": "@info-lounge/firestore-typed",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Type-safe, low-level wrapper for Firebase Firestore with enhanced validation and developer experience",
   "main": "dist/index.js",
+  "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
-    "build:watch": "tsc --watch",
+    "build": "tsdown",
+    "build:watch": "tsdown --watch",
     "format": "prettier --write \"src/**/*.ts\"",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "lint": "eslint src/**/*.ts",
-    "lint:fix": "eslint src/**/*.ts --fix"
+    "lint:fix": "eslint src/**/*.ts --fix",
+    "typecheck": "tsc --noEmit"
   },
   "keywords": [
     "firebase",
@@ -29,14 +38,15 @@
     "typia": ">=5.3.0"
   },
   "devDependencies": {
-    "@eslint/js": "^9.31.0",
+    "@eslint/js": "^9.32.0",
     "@types/jest": "^30.0.0",
-    "eslint": "^9.31.0",
+    "eslint": "^9.32.0",
     "eslint-config-prettier": "^10.1.8",
     "globals": "^16.3.0",
     "jest": "^30.0.5",
     "prettier": "^3.6.2",
     "ts-jest": "^29.4.0",
+    "tsdown": "^0.13.0",
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.38.0"
   },

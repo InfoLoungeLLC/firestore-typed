@@ -5,6 +5,50 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.1] - 2025-07-28
+
+### Fixed
+
+- **Tests**: Updated all deprecated `firestoreTyped()` calls to `getFirestoreTyped()` in test files
+- **Code Quality**: Improved consistency by migrating test suite to use the new factory function
+
+### Internal
+
+- Test files now use the recommended `getFirestoreTyped()` function throughout
+- Maintained backward compatibility test for the deprecated `firestoreTyped()` function
+
+## [0.4.0] - 2025-07-28
+
+### Added
+
+- **New Factory Function**: Added `getFirestoreTyped()` function for consistency with Firebase naming conventions
+- **Custom Firestore Instance Support**: `getFirestoreTyped()` now accepts an optional Firestore instance as the first parameter for multi-project scenarios
+
+### Changed
+
+- **Factory Function**: `firestoreTyped()` is now deprecated in favor of `getFirestoreTyped()`
+- **API Enhancement**: Enhanced support for custom Firestore instances and databases
+
+### Example
+
+```typescript
+// Using default Firestore instance
+const db = getFirestoreTyped();
+
+// Using custom Firestore instance
+const customApp = initializeApp(customConfig, 'custom');
+const customFirestore = getFirestore(customApp);
+const customDb = getFirestoreTyped(customFirestore);
+
+// With options
+const dbWithOptions = getFirestoreTyped(undefined, { validateOnRead: true });
+```
+
+### Deprecated
+
+- `firestoreTyped()` function is deprecated but remains available for backward compatibility
+- All test files updated to use the new `getFirestoreTyped()` function
+
 ## [0.3.1] - 2025-07-26
 
 ### Fixed

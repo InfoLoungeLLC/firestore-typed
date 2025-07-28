@@ -12,18 +12,18 @@ import type { FirestoreTypedOptions } from './types/firestore-typed.types'
  * // Using default Firestore instance
  * const db = getFirestoreTyped();
  * const users = db.collection<UserEntity>('users', userValidator);
- * 
+ *
  * // Using custom Firestore instance
  * const customFirestore = getFirestore(customApp);
  * const customDb = getFirestoreTyped(customFirestore);
- * 
+ *
  * // With options
  * const dbWithOptions = getFirestoreTyped(undefined, { validateOnRead: true });
  * ```
  */
 export function getFirestoreTyped(
   firestore?: Firestore,
-  options?: FirestoreTypedOptions
+  options?: FirestoreTypedOptions,
 ): FirestoreTyped {
   return new FirestoreTyped(firestore ?? getFirestore(), options)
 }
