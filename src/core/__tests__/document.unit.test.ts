@@ -210,6 +210,26 @@ describe('DocumentReference', () => {
 
         expect(mockValidateData).not.toHaveBeenCalled()
       })
+
+      it('should validate when validateOnWrite is true via options', async () => {
+        // First set global validateOnWrite to false
+        mockFirestoreTyped.getOptions = vi.fn().mockReturnValue({
+          validateOnRead: false,
+          validateOnWrite: false,
+        })
+
+        // Then explicitly pass validateOnWrite: true via options to ensure the true branch is taken
+        await docRef.set(testData, { validateOnWrite: true })
+
+        // Validation should be called
+        expect(mockValidateData).toHaveBeenCalledWith(testData, 'users/test-id', mockValidator)
+        
+        // Serialization should also occur
+        expect(mockDeserializeFirestoreTypes).toHaveBeenCalled()
+        
+        // And the set operation should be called
+        expect(mockFirebaseDoc.set).toHaveBeenCalled()
+      })
     })
 
     describe('failIfExists option', () => {
@@ -310,6 +330,80 @@ describe('DocumentReference', () => {
         {},
       )
       expect(mockFirebaseDoc.set).toHaveBeenCalledWith(convertedData)
+    })
+
+    it('should skip validation when validateOnWrite is false via options', async () => {
+      mockFirebaseDoc.get.mockResolvedValue({
+        exists: true,
+        id: 'test-id',
+        ref: mockFirebaseDoc,
+        data: () => testData,
+      })
+
+      // Explicitly pass validateOnWrite: false via options to ensure the false branch is taken
+      await docRef.merge(partialData, { validateOnWrite: false })
+
+      // Validation should not be called (this exercises line 119: (mergedData as T))
+      expect(mockValidateData).not.toHaveBeenCalled()
+      
+      // But deserialization should still occur
+      expect(mockDeserializeFirestoreTypes).toHaveBeenCalled()
+      
+      // And the set operation should be called
+      expect(mockFirebaseDoc.set).toHaveBeenCalled()
+    })
+
+    it('should validate when validateOnWrite is true via options', async () => {
+      // First set global validateOnWrite to false
+      mockFirestoreTyped.getOptions = vi.fn().mockReturnValue({
+        validateOnRead: false,
+        validateOnWrite: false,
+      })
+
+      mockFirebaseDoc.get.mockResolvedValue({
+        exists: true,
+        id: 'test-id',
+        ref: mockFirebaseDoc,
+        data: () => testData,
+      })
+
+      // Then explicitly pass validateOnWrite: true via options to ensure the true branch is taken
+      await docRef.merge(partialData, { validateOnWrite: true })
+
+      // Validation should be called (this exercises line 118)
+      const expectedMergedData = { ...testData, ...partialData }
+      expect(mockValidateData).toHaveBeenCalledWith(
+        expectedMergedData,
+        'users/test-id',
+        mockValidator,
+      )
+      
+      // Deserialization should also occur
+      expect(mockDeserializeFirestoreTypes).toHaveBeenCalled()
+      
+      // And the set operation should be called
+      expect(mockFirebaseDoc.set).toHaveBeenCalled()
+    })
+
+    it('should handle document with no existing data (null/undefined)', async () => {
+      // Mock snapshot with null data to test the || {} fallback (line 111)
+      mockFirebaseDoc.get.mockResolvedValue({
+        exists: true,
+        id: 'test-id',
+        ref: mockFirebaseDoc,
+        data: () => null, // This will trigger the || {} fallback
+      })
+
+      await docRef.merge(partialData)
+
+      // Should still work and merge with empty object
+      expect(mockFirebaseDoc.set).toHaveBeenCalled()
+      
+      // The merged data should be just the partial data since existing was null
+      expect(mockDeserializeFirestoreTypes).toHaveBeenCalledWith(
+        partialData, // Since existingData was null, mergedData is just partialData
+        {},
+      )
     })
   })
 

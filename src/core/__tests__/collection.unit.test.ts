@@ -217,6 +217,36 @@ describe('CollectionReference', () => {
       })
     })
 
+    it('should skip validation when validateOnRead is false', async () => {
+      // Explicitly pass validateOnRead: false via options to ensure the false branch is taken
+      const result = await collection.get({ validateOnRead: false })
+
+      // Validation should not be called
+      expect(mockValidateData).not.toHaveBeenCalled()
+      
+      // But serialization should still occur
+      expect(mockSerializeFirestoreTypes).toHaveBeenCalledTimes(2)
+      
+      // And data should still be returned (this exercises line 86: (convertedData as T))
+      expect(result.docs).toHaveLength(2)
+      expect(result.docs[0]?.data).toBeDefined()
+    })
+
+    it('should validate when validateOnRead is true via options', async () => {
+      // Explicitly pass validateOnRead: true via options to ensure the true branch is taken
+      const result = await collection.get({ validateOnRead: true })
+
+      // Validation should be called (this exercises line 85)
+      expect(mockValidateData).toHaveBeenCalledTimes(2)
+      
+      // Serialization should also occur
+      expect(mockSerializeFirestoreTypes).toHaveBeenCalledTimes(2)
+      
+      // And data should still be returned
+      expect(result.docs).toHaveLength(2)
+      expect(result.docs[0]?.data).toBeDefined()
+    })
+
     it('should handle empty collection', async () => {
       mockFirebaseCollection.get.mockResolvedValue({ docs: [] })
 
