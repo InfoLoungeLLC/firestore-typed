@@ -1,3 +1,4 @@
+import { vi } from 'vitest'
 import { validateData } from '../validator'
 import { FirestoreTypedValidationError } from '../../errors/errors'
 
@@ -21,7 +22,7 @@ describe('Validator', () => {
           isActive: true,
         }
 
-        const mockValidator = jest.fn().mockReturnValue(inputData as TestEntity)
+        const mockValidator = vi.fn().mockReturnValue(inputData as TestEntity)
 
         const result = validateData(inputData, testPath, mockValidator)
 
@@ -38,7 +39,7 @@ describe('Validator', () => {
           isActive: false,
         }
 
-        const mockValidator = jest.fn().mockReturnValue(transformedData)
+        const mockValidator = vi.fn().mockReturnValue(transformedData)
 
         const result = validateData(inputData, testPath, mockValidator)
 
@@ -58,7 +59,7 @@ describe('Validator', () => {
         ]
 
         testCases.forEach(({ input, expected }) => {
-          const mockValidator = jest.fn().mockReturnValue(expected as any)
+          const mockValidator = vi.fn().mockReturnValue(expected as any)
           const result = validateData(input, testPath, mockValidator)
 
           expect(mockValidator).toHaveBeenCalledWith(input)
@@ -72,7 +73,7 @@ describe('Validator', () => {
         const inputData = { invalid: 'data' }
         const originalError = new Error('Validation failed: missing required field')
 
-        const mockValidator = jest.fn().mockImplementation(() => {
+        const mockValidator = vi.fn().mockImplementation(() => {
           throw originalError
         })
 
@@ -87,13 +88,13 @@ describe('Validator', () => {
         const inputData = { invalid: 'data' }
         const originalError = new Error('Type validation failed')
 
-        const mockValidator = jest.fn().mockImplementation(() => {
+        const mockValidator = vi.fn().mockImplementation(() => {
           throw originalError
         })
 
         try {
           validateData(inputData, testPath, mockValidator)
-          fail('Expected error to be thrown')
+          expect.fail('Expected error to be thrown')
         } catch (error) {
           expect(error).toBeInstanceOf(FirestoreTypedValidationError)
           const wrappedError = error as FirestoreTypedValidationError
@@ -107,13 +108,13 @@ describe('Validator', () => {
         const inputData = { invalid: 'data' }
         const stringError = 'String error message'
 
-        const mockValidator = jest.fn().mockImplementation(() => {
+        const mockValidator = vi.fn().mockImplementation(() => {
           throw stringError
         })
 
         try {
           validateData(inputData, testPath, mockValidator)
-          fail('Expected error to be thrown')
+          expect.fail('Expected error to be thrown')
         } catch (error) {
           expect(error).toBeInstanceOf(FirestoreTypedValidationError)
           const wrappedError = error as FirestoreTypedValidationError
@@ -125,13 +126,13 @@ describe('Validator', () => {
         const inputData = { invalid: 'data' }
         const objectError = { code: 'VALIDATION_FAILED', details: 'Field missing' }
 
-        const mockValidator = jest.fn().mockImplementation(() => {
+        const mockValidator = vi.fn().mockImplementation(() => {
           throw objectError
         })
 
         try {
           validateData(inputData, testPath, mockValidator)
-          fail('Expected error to be thrown')
+          expect.fail('Expected error to be thrown')
         } catch (error) {
           expect(error).toBeInstanceOf(FirestoreTypedValidationError)
           const wrappedError = error as FirestoreTypedValidationError
@@ -142,16 +143,16 @@ describe('Validator', () => {
       it('should handle null/undefined errors thrown by validator', () => {
         const inputData = { invalid: 'data' }
 
-        const nullValidator = jest.fn().mockImplementation(() => {
+        const nullValidator = vi.fn().mockImplementation(() => {
           throw null
         })
-        const undefinedValidator = jest.fn().mockImplementation(() => {
+        const undefinedValidator = vi.fn().mockImplementation(() => {
           throw undefined
         })
 
         try {
           validateData(inputData, testPath, nullValidator)
-          fail('Expected error to be thrown')
+          expect.fail('Expected error to be thrown')
         } catch (error) {
           expect(error).toBeInstanceOf(FirestoreTypedValidationError)
           const wrappedError = error as FirestoreTypedValidationError
@@ -160,7 +161,7 @@ describe('Validator', () => {
 
         try {
           validateData(inputData, testPath, undefinedValidator)
-          fail('Expected error to be thrown')
+          expect.fail('Expected error to be thrown')
         } catch (error) {
           expect(error).toBeInstanceOf(FirestoreTypedValidationError)
           const wrappedError = error as FirestoreTypedValidationError
@@ -179,13 +180,13 @@ describe('Validator', () => {
         ]
 
         paths.forEach((path) => {
-          const mockValidator = jest.fn().mockImplementation(() => {
+          const mockValidator = vi.fn().mockImplementation(() => {
             throw new Error('Validation error')
           })
 
           try {
             validateData({}, path, mockValidator)
-            fail('Expected error to be thrown')
+            expect.fail('Expected error to be thrown')
           } catch (error) {
             expect(error).toBeInstanceOf(FirestoreTypedValidationError)
             const wrappedError = error as FirestoreTypedValidationError
@@ -207,13 +208,13 @@ describe('Validator', () => {
         ]
 
         specialPaths.forEach((path) => {
-          const mockValidator = jest.fn().mockImplementation(() => {
+          const mockValidator = vi.fn().mockImplementation(() => {
             throw new Error('Validation error')
           })
 
           try {
             validateData({}, path, mockValidator)
-            fail('Expected error to be thrown')
+            expect.fail('Expected error to be thrown')
           } catch (error) {
             expect(error).toBeInstanceOf(FirestoreTypedValidationError)
             const wrappedError = error as FirestoreTypedValidationError
@@ -226,7 +227,7 @@ describe('Validator', () => {
     describe('Validator Function Behavior', () => {
       it('should call validator function exactly once', () => {
         const inputData = { test: 'data' }
-        const mockValidator = jest.fn().mockReturnValue(inputData as any)
+        const mockValidator = vi.fn().mockReturnValue(inputData as any)
 
         validateData(inputData, testPath, mockValidator)
 
@@ -236,7 +237,7 @@ describe('Validator', () => {
 
       it('should not modify validator function calls on error', () => {
         const inputData = { test: 'data' }
-        const mockValidator = jest.fn().mockImplementation(() => {
+        const mockValidator = vi.fn().mockImplementation(() => {
           throw new Error('Validation failed')
         })
 
@@ -259,7 +260,7 @@ describe('Validator', () => {
         const inputData = { id: 'test', active: true }
         const transformedData: DifferentEntity = { uuid: 'test', status: 'active' }
 
-        const mockValidator = jest.fn().mockReturnValue(transformedData)
+        const mockValidator = vi.fn().mockReturnValue(transformedData)
 
         const result = validateData(inputData, testPath, mockValidator)
 
@@ -273,7 +274,7 @@ describe('Validator', () => {
         const falsyValues = [false, 0, '', null, undefined]
 
         falsyValues.forEach((falsyValue) => {
-          const mockValidator = jest.fn().mockReturnValue(falsyValue as any)
+          const mockValidator = vi.fn().mockReturnValue(falsyValue as any)
           const result = validateData({}, testPath, mockValidator)
 
           expect(result).toBe(falsyValue)
@@ -301,7 +302,7 @@ describe('Validator', () => {
           },
         }
 
-        const mockValidator = jest.fn().mockReturnValue(complexData as any)
+        const mockValidator = vi.fn().mockReturnValue(complexData as any)
         const result = validateData(complexData, testPath, mockValidator)
 
         expect(result).toBe(complexData)
@@ -310,7 +311,7 @@ describe('Validator', () => {
 
       it('should handle validators that modify input during validation', () => {
         const inputData = { count: 5 }
-        const mockValidator = jest.fn().mockImplementation((data: any) => {
+        const mockValidator = vi.fn().mockImplementation((data: any) => {
           data.count += 1 // Modify input
           return data
         })
@@ -326,7 +327,7 @@ describe('Validator', () => {
     describe('Performance Considerations', () => {
       it('should not add significant overhead for simple validation', () => {
         const inputData = { id: 'test' }
-        const mockValidator = jest.fn().mockReturnValue(inputData as any)
+        const mockValidator = vi.fn().mockReturnValue(inputData as any)
 
         const startTime = performance.now()
 

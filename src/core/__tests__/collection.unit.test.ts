@@ -1,3 +1,4 @@
+import { vi, type Mock, type MockedFunction } from 'vitest'
 import { CollectionReference } from '../collection'
 import { DocumentReference } from '../document'
 import { Query } from '../query'
@@ -8,34 +9,33 @@ import type { TestEntity } from './__helpers__/test-entities.helper'
 import { createTestEntity } from './__helpers__/test-entities.helper'
 
 // Mock dependencies
-jest.mock('../../utils/firestore-converter')
-jest.mock('../../utils/validator')
+vi.mock('../../utils/firestore-converter')
+vi.mock('../../utils/validator')
 
-jest.mock('firebase-admin/firestore', () => {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const mockHelper = require('./__helpers__/firebase-mock.helper')
+vi.mock('firebase-admin/firestore', async () => {
+  const mockHelper = await import('./__helpers__/firebase-mock.helper')
   return mockHelper.createFirebaseAdminMock()
 })
 
-const mockDeserializeFirestoreTypes = deserializeFirestoreTypes as jest.MockedFunction<
+const mockDeserializeFirestoreTypes = deserializeFirestoreTypes as MockedFunction<
   typeof deserializeFirestoreTypes
 >
-const mockSerializeFirestoreTypes = serializeFirestoreTypes as jest.MockedFunction<
+const mockSerializeFirestoreTypes = serializeFirestoreTypes as MockedFunction<
   typeof serializeFirestoreTypes
 >
-const mockValidateData = validateData as jest.MockedFunction<typeof validateData>
+const mockValidateData = validateData as MockedFunction<typeof validateData>
 
 describe('CollectionReference', () => {
   let mockFirebaseCollection: any
   let mockFirestoreTyped: FirestoreTypedOptionsProvider
-  let mockValidator: jest.Mock
+  let mockValidator: Mock
   let collection: CollectionReference<TestEntity>
 
   const testData = createTestEntity({ status: 'active' })
 
   beforeEach(() => {
     // Reset mocks
-    jest.clearAllMocks()
+    vi.clearAllMocks()
     mockDeserializeFirestoreTypes.mockImplementation((data) => data)
     mockSerializeFirestoreTypes.mockImplementation((data) => data)
     mockValidateData.mockImplementation((data) => data as any)
@@ -45,28 +45,28 @@ describe('CollectionReference', () => {
       id: 'users',
       path: 'users',
       firestore: {},
-      doc: jest.fn(),
-      add: jest.fn(),
-      where: jest.fn().mockReturnThis(),
-      orderBy: jest.fn().mockReturnThis(),
-      limit: jest.fn().mockReturnThis(),
-      startAt: jest.fn().mockReturnThis(),
-      startAfter: jest.fn().mockReturnThis(),
-      endAt: jest.fn().mockReturnThis(),
-      endBefore: jest.fn().mockReturnThis(),
-      get: jest.fn(),
+      doc: vi.fn(),
+      add: vi.fn(),
+      where: vi.fn().mockReturnThis(),
+      orderBy: vi.fn().mockReturnThis(),
+      limit: vi.fn().mockReturnThis(),
+      startAt: vi.fn().mockReturnThis(),
+      startAfter: vi.fn().mockReturnThis(),
+      endAt: vi.fn().mockReturnThis(),
+      endBefore: vi.fn().mockReturnThis(),
+      get: vi.fn(),
     }
 
     // Create mock FirestoreTyped options provider
     mockFirestoreTyped = {
-      getOptions: jest.fn().mockReturnValue({
+      getOptions: vi.fn().mockReturnValue({
         validateOnRead: false,
         validateOnWrite: true,
       }),
     }
 
     // Create mock validator
-    mockValidator = jest.fn((data) => data as TestEntity)
+    mockValidator = vi.fn((data) => data as TestEntity)
 
     // Create CollectionReference instance
     collection = new CollectionReference<TestEntity>(

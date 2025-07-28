@@ -1,10 +1,10 @@
+import { vi } from 'vitest'
 import { firestoreTyped, getFirestoreTyped } from '../index'
 import { FirestoreTypedValidationError } from '../errors/errors'
 import { createFirebaseAdminMock } from '../core/__tests__/__helpers__/firebase-mock.helper'
 
-jest.mock('firebase-admin/firestore', () => {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const mockHelper = require('../core/__tests__/__helpers__/firebase-mock.helper')
+vi.mock('firebase-admin/firestore', async () => {
+  const mockHelper = await import('../core/__tests__/__helpers__/firebase-mock.helper')
   return mockHelper.createFirebaseAdminMock()
 })
 
@@ -94,7 +94,7 @@ describe('FirestoreTyped', () => {
 
         try {
           await collection.add(invalidData)
-          fail('Should have thrown an error')
+          expect.fail('Should have thrown an error')
         } catch (error) {
           expect(error).toBeInstanceOf(FirestoreTypedValidationError)
           const validationError = error as FirestoreTypedValidationError
@@ -264,7 +264,7 @@ describe('FirestoreTyped', () => {
       const mockFirebaseAdmin = createFirebaseAdminMock()
       const customFirestore = mockFirebaseAdmin.getFirestore()
 
-      const db = getFirestoreTyped(customFirestore)
+      const db = getFirestoreTyped(customFirestore as any)
       expect(db).toBeDefined()
       expect(db.native).toBe(customFirestore)
     })
@@ -273,7 +273,7 @@ describe('FirestoreTyped', () => {
       const mockFirebaseAdmin = createFirebaseAdminMock()
       const customFirestore = mockFirebaseAdmin.getFirestore()
 
-      const db = getFirestoreTyped(customFirestore, {
+      const db = getFirestoreTyped(customFirestore as any, {
         validateOnRead: true,
         validateOnWrite: false,
       })

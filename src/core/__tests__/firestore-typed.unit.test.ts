@@ -1,30 +1,30 @@
 /* eslint-disable @typescript-eslint/unbound-method */
+import { vi, type Mock, type Mocked } from 'vitest'
 import { FirestoreTyped } from '../firestore-typed'
 import { CollectionReference } from '../collection'
 import { CollectionGroup } from '../collection-group'
 import type { Firestore } from 'firebase-admin/firestore'
 import type { TestEntity } from './__helpers__/test-entities.helper'
 
-jest.mock('firebase-admin/firestore', () => {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const mockHelper = require('./__helpers__/firebase-mock.helper')
+vi.mock('firebase-admin/firestore', async () => {
+  const mockHelper = await import('./__helpers__/firebase-mock.helper')
   return mockHelper.createFirebaseAdminMock()
 })
 
 describe('FirestoreTyped Core Class', () => {
-  let mockFirestore: jest.Mocked<Firestore>
-  let mockValidator: jest.Mock
+  let mockFirestore: Mocked<Firestore>
+  let mockValidator: Mock
   let firestoreTyped: FirestoreTyped
 
   beforeEach(() => {
     // Create mock Firestore instance
     mockFirestore = {
-      collection: jest.fn(),
-      collectionGroup: jest.fn(),
+      collection: vi.fn(),
+      collectionGroup: vi.fn(),
     } as any
 
     // Create mock validator
-    mockValidator = jest.fn((data) => data as TestEntity)
+    mockValidator = vi.fn((data) => data as TestEntity)
 
     // Create FirestoreTyped instance with default options
     firestoreTyped = new FirestoreTyped(mockFirestore)
@@ -108,8 +108,8 @@ describe('FirestoreTyped Core Class', () => {
         price: number
       }
 
-      const userValidator = jest.fn((data) => data as UserEntity)
-      const productValidator = jest.fn((data) => data as ProductEntity)
+      const userValidator = vi.fn((data) => data as UserEntity)
+      const productValidator = vi.fn((data) => data as ProductEntity)
 
       const mockUserCollectionRef = { id: 'users', path: 'users' }
       const mockProductCollectionRef = { id: 'products', path: 'products' }
@@ -130,7 +130,7 @@ describe('FirestoreTyped Core Class', () => {
 
   describe('collectionGroup()', () => {
     it('should return a CollectionGroup instance with validator', () => {
-      const mockQuery = { where: jest.fn(), orderBy: jest.fn(), limit: jest.fn() }
+      const mockQuery = { where: vi.fn(), orderBy: vi.fn(), limit: vi.fn() }
       mockFirestore.collectionGroup.mockReturnValue(mockQuery as any)
 
       const collectionGroup = firestoreTyped.collectionGroup<TestEntity>('posts', mockValidator)
@@ -140,7 +140,7 @@ describe('FirestoreTyped Core Class', () => {
     })
 
     it('should pass correct parameters to CollectionGroup constructor', () => {
-      const mockQuery = { where: jest.fn(), orderBy: jest.fn(), limit: jest.fn() }
+      const mockQuery = { where: vi.fn(), orderBy: vi.fn(), limit: vi.fn() }
       mockFirestore.collectionGroup.mockReturnValue(mockQuery as any)
 
       const collectionGroup = firestoreTyped.collectionGroup<TestEntity>('posts', mockValidator)
@@ -153,7 +153,7 @@ describe('FirestoreTyped Core Class', () => {
       const collectionIds = ['posts', 'comments', 'messages', 'notifications']
 
       collectionIds.forEach((collectionId) => {
-        const mockQuery = { where: jest.fn(), orderBy: jest.fn(), limit: jest.fn() }
+        const mockQuery = { where: vi.fn(), orderBy: vi.fn(), limit: vi.fn() }
         mockFirestore.collectionGroup.mockReturnValue(mockQuery as any)
 
         const collectionGroup = firestoreTyped.collectionGroup<TestEntity>(
@@ -330,7 +330,7 @@ describe('FirestoreTyped Core Class', () => {
         validateOnWrite: false,
       })
 
-      const mockQuery = { where: jest.fn(), orderBy: jest.fn(), limit: jest.fn() }
+      const mockQuery = { where: vi.fn(), orderBy: vi.fn(), limit: vi.fn() }
       mockFirestore.collectionGroup.mockReturnValue(mockQuery as any)
 
       const collectionGroup = instance.collectionGroup<TestEntity>('posts', mockValidator)
@@ -347,7 +347,7 @@ describe('FirestoreTyped Core Class', () => {
       const mockCollectionRef = {
         id: 'users',
         path: 'users',
-        doc: jest.fn().mockReturnValue(mockDocRef),
+        doc: vi.fn().mockReturnValue(mockDocRef),
       }
       mockFirestore.collection.mockReturnValue(mockCollectionRef as any)
 
@@ -365,7 +365,7 @@ describe('FirestoreTyped Core Class', () => {
         published: boolean
       }
 
-      const differentValidator = jest.fn((data) => data as DifferentEntity)
+      const differentValidator = vi.fn((data) => data as DifferentEntity)
 
       const mockCollectionRef = { id: 'articles', path: 'articles' }
       mockFirestore.collection.mockReturnValue(mockCollectionRef as any)

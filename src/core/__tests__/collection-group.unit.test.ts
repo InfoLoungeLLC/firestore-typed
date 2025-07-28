@@ -1,3 +1,4 @@
+import { vi, type Mock, type MockedFunction } from 'vitest'
 import { CollectionGroup } from '../collection-group'
 import { Query } from '../query'
 import { serializeFirestoreTypes } from '../../utils/firestore-converter'
@@ -6,54 +7,53 @@ import type { FirestoreTypedOptionsProvider } from '../../types/firestore-typed.
 import type { TestPostEntity } from './__helpers__/test-entities.helper'
 
 // Mock dependencies
-jest.mock('../../utils/firestore-converter')
-jest.mock('../../utils/validator')
+vi.mock('../../utils/firestore-converter')
+vi.mock('../../utils/validator')
 
-jest.mock('firebase-admin/firestore', () => {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const mockHelper = require('./__helpers__/firebase-mock.helper')
+vi.mock('firebase-admin/firestore', async () => {
+  const mockHelper = await import('./__helpers__/firebase-mock.helper')
   return mockHelper.createFirebaseAdminMock()
 })
 
-const mockSerializeFirestoreTypes = serializeFirestoreTypes as jest.MockedFunction<
+const mockSerializeFirestoreTypes = serializeFirestoreTypes as MockedFunction<
   typeof serializeFirestoreTypes
 >
-const mockValidateData = validateData as jest.MockedFunction<typeof validateData>
+const mockValidateData = validateData as MockedFunction<typeof validateData>
 
 describe('CollectionGroup', () => {
   let mockFirebaseQuery: any
   let mockFirestoreTyped: FirestoreTypedOptionsProvider
-  let mockValidator: jest.Mock
+  let mockValidator: Mock
   let collectionGroup: CollectionGroup<TestPostEntity>
 
   beforeEach(() => {
     // Reset mocks
-    jest.clearAllMocks()
+    vi.clearAllMocks()
     mockSerializeFirestoreTypes.mockImplementation((data) => data)
     mockValidateData.mockImplementation((data) => data as any)
 
     // Create mock Firebase Query (for collection group)
     mockFirebaseQuery = {
-      where: jest.fn().mockReturnThis(),
-      orderBy: jest.fn().mockReturnThis(),
-      limit: jest.fn().mockReturnThis(),
-      startAt: jest.fn().mockReturnThis(),
-      startAfter: jest.fn().mockReturnThis(),
-      endAt: jest.fn().mockReturnThis(),
-      endBefore: jest.fn().mockReturnThis(),
-      get: jest.fn(),
+      where: vi.fn().mockReturnThis(),
+      orderBy: vi.fn().mockReturnThis(),
+      limit: vi.fn().mockReturnThis(),
+      startAt: vi.fn().mockReturnThis(),
+      startAfter: vi.fn().mockReturnThis(),
+      endAt: vi.fn().mockReturnThis(),
+      endBefore: vi.fn().mockReturnThis(),
+      get: vi.fn(),
     }
 
     // Create mock FirestoreTyped options provider
     mockFirestoreTyped = {
-      getOptions: jest.fn().mockReturnValue({
+      getOptions: vi.fn().mockReturnValue({
         validateOnRead: false,
         validateOnWrite: true,
       }),
     }
 
     // Create mock validator
-    mockValidator = jest.fn((data) => data as TestPostEntity)
+    mockValidator = vi.fn((data) => data as TestPostEntity)
 
     // Create CollectionGroup instance
     collectionGroup = new CollectionGroup<TestPostEntity>(
@@ -203,7 +203,7 @@ describe('CollectionGroup', () => {
       })
 
       it('should validate when validateOnRead is true globally', async () => {
-        mockFirestoreTyped.getOptions = jest.fn().mockReturnValue({
+        mockFirestoreTyped.getOptions = vi.fn().mockReturnValue({
           validateOnRead: true,
           validateOnWrite: true,
         })

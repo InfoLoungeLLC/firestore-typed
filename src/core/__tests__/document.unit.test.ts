@@ -1,3 +1,4 @@
+import { vi, type Mock, type MockedFunction } from 'vitest'
 import { DocumentReference } from '../document'
 import { serializeFirestoreTypes, deserializeFirestoreTypes } from '../../utils/firestore-converter'
 import { validateData } from '../../utils/validator'
@@ -7,34 +8,33 @@ import type { TestEntity } from './__helpers__/test-entities.helper'
 import { createTestEntity } from './__helpers__/test-entities.helper'
 
 // Mock dependencies
-jest.mock('../../utils/firestore-converter')
-jest.mock('../../utils/validator')
+vi.mock('../../utils/firestore-converter')
+vi.mock('../../utils/validator')
 
-jest.mock('firebase-admin/firestore', () => {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const mockHelper = require('./__helpers__/firebase-mock.helper')
+vi.mock('firebase-admin/firestore', async () => {
+  const mockHelper = await import('./__helpers__/firebase-mock.helper')
   return mockHelper.createFirebaseAdminMock()
 })
 
-const mockSerializeFirestoreTypes = serializeFirestoreTypes as jest.MockedFunction<
+const mockSerializeFirestoreTypes = serializeFirestoreTypes as MockedFunction<
   typeof serializeFirestoreTypes
 >
-const mockDeserializeFirestoreTypes = deserializeFirestoreTypes as jest.MockedFunction<
+const mockDeserializeFirestoreTypes = deserializeFirestoreTypes as MockedFunction<
   typeof deserializeFirestoreTypes
 >
-const mockValidateData = validateData as jest.MockedFunction<typeof validateData>
+const mockValidateData = validateData as MockedFunction<typeof validateData>
 
 describe('DocumentReference', () => {
   let mockFirebaseDoc: any
   let mockFirestoreTyped: FirestoreTypedOptionsProvider
-  let mockValidator: jest.Mock
+  let mockValidator: Mock
   let docRef: DocumentReference<TestEntity>
 
   const testData = createTestEntity()
 
   beforeEach(() => {
     // Reset mocks
-    jest.clearAllMocks()
+    vi.clearAllMocks()
     mockSerializeFirestoreTypes.mockImplementation((data) => data)
     mockDeserializeFirestoreTypes.mockImplementation((data) => data)
     mockValidateData.mockImplementation((data) => data as any)
@@ -44,22 +44,22 @@ describe('DocumentReference', () => {
       id: 'test-id',
       path: 'users/test-id',
       firestore: {},
-      get: jest.fn(),
-      set: jest.fn(),
-      delete: jest.fn(),
-      update: jest.fn(),
+      get: vi.fn(),
+      set: vi.fn(),
+      delete: vi.fn(),
+      update: vi.fn(),
     }
 
     // Create mock FirestoreTyped options provider
     mockFirestoreTyped = {
-      getOptions: jest.fn().mockReturnValue({
+      getOptions: vi.fn().mockReturnValue({
         validateOnRead: false,
         validateOnWrite: true,
       }),
     }
 
     // Create mock validator
-    mockValidator = jest.fn((data) => data as TestEntity)
+    mockValidator = vi.fn((data) => data as TestEntity)
 
     // Create DocumentReference instance
     docRef = new DocumentReference<TestEntity>(mockFirebaseDoc, mockFirestoreTyped, mockValidator)
@@ -138,7 +138,7 @@ describe('DocumentReference', () => {
       })
 
       it('should validate when validateOnRead is true globally', async () => {
-        mockFirestoreTyped.getOptions = jest.fn().mockReturnValue({
+        mockFirestoreTyped.getOptions = vi.fn().mockReturnValue({
           validateOnRead: true,
           validateOnWrite: true,
         })
@@ -195,7 +195,7 @@ describe('DocumentReference', () => {
       })
 
       it('should skip validation when validateOnWrite is false globally', async () => {
-        mockFirestoreTyped.getOptions = jest.fn().mockReturnValue({
+        mockFirestoreTyped.getOptions = vi.fn().mockReturnValue({
           validateOnRead: false,
           validateOnWrite: false,
         })

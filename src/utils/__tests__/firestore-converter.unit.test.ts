@@ -1,21 +1,22 @@
 /* eslint-disable @typescript-eslint/unbound-method */
+import { vi, type Mocked } from 'vitest'
 import { serializeFirestoreTypes, deserializeFirestoreTypes } from '../firestore-converter'
 import type { SerializedGeoPoint, SerializedDocumentReference } from '../firestore-converter'
 import { Timestamp, GeoPoint, DocumentReference, Firestore } from 'firebase-admin/firestore'
 
 describe('Firestore Converter', () => {
-  let mockFirestore: jest.Mocked<Firestore>
+  let mockFirestore: Mocked<Firestore>
 
   beforeEach(() => {
     mockFirestore = {
-      doc: jest.fn(),
+      doc: vi.fn(),
     } as any
   })
 
   // Helper to create proper Firestore instances
   const createMockTimestamp = (date: Date): Timestamp => {
     const mockObj = {
-      toDate: jest.fn().mockReturnValue(date),
+      toDate: vi.fn().mockReturnValue(date),
     }
     Object.setPrototypeOf(mockObj, Timestamp.prototype)
     return mockObj as unknown as Timestamp
