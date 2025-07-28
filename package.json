@@ -63,5 +63,9 @@
   "bugs": {
     "url": "https://github.com/InfoLoungeLLC/firestore-typed/issues"
   },
-  "homepage": "https://github.com/InfoLoungeLLC/firestore-typed#readme"
+  "homepage": "https://github.com/InfoLoungeLLC/firestore-typed#readme",
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/InfoLoungeLLC"
+  }
 }
