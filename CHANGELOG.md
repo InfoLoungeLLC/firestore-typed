@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Test Coverage**: Improved test coverage for conditional branches in validation logic
 - **Code Quality**: Enhanced test suite to cover edge cases in collection and document operations
 - **Documentation**: Added descriptive comments to coverage ignore statements for defensive programming
+- **Dependencies**: Updated typia peer dependency to >=5.5.10 and resolved type checking compatibility issues
 
 ### Internal
 
@@ -27,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added test coverage for document merge operations with null existing data
 - Removed redundant test cases to reduce code duplication
 - Updated c8 ignore comments with defensive programming context
+- Ensured @google-cloud/firestore optional dependency is properly available for TypeScript type checking
 
 ## [0.4.1] - 2025-07-28
 
