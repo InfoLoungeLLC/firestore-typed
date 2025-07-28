@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.4.2] - 2025-07-28
 
+### Added
+
+- **Funding Support**: Added GitHub Sponsors funding information to package.json for InfoLoungeLLC organization
+
 ### Changed
 
 - **Testing Framework**: Migrated from Jest to Vitest for improved performance and modern tooling
