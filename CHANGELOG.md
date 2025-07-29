@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Testing Framework**: Migrated from Jest to Vitest for improved performance and modern tooling
 - **Build System**: Updated to use Vitest with v8 coverage provider for faster test execution
+- **Code Quality**: Updated ESLint configuration and moved settings to top-level for better development experience
 
 ### Fixed
 
@@ -22,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Code Quality**: Enhanced test suite to cover edge cases in collection and document operations
 - **Documentation**: Added descriptive comments to coverage ignore statements for defensive programming
 - **Dependencies**: Updated typia peer dependency to ^9.6.0 (from >=5.3.0) with full backward compatibility maintained
+- **Linting**: Fixed ESLint configuration issues and applied consistent code formatting
 
 ### Internal
 
@@ -33,6 +35,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed redundant test cases to reduce code duplication
 - Updated c8 ignore comments with defensive programming context
 - Ensured @google-cloud/firestore optional dependency is properly available for TypeScript type checking
+- Moved ESLint configuration to project root for improved IDE integration
+- Applied Prettier formatting across entire codebase for consistency
+- Restricted Codecov coverage uploads to main and develop branches only in CI workflow
 
 ## [0.4.1] - 2025-07-28
 
