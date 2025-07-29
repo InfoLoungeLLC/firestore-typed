@@ -230,9 +230,11 @@ export class MockDocumentReferenceForTypeConversion {
   ) {}
 }
 
-// Common jest.mock configuration for firebase-admin/firestore
+import { vi } from 'vitest'
+
+// Common vi.mock configuration for firebase-admin/firestore
 export const createFirebaseAdminMock = () => ({
-  getFirestore: jest.fn(
+  getFirestore: vi.fn(
     () => createMockFirestore() as unknown as import('firebase-admin/firestore').Firestore,
   ),
   Timestamp: MockTimestamp,

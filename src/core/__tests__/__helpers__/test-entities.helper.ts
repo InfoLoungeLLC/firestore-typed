@@ -1,4 +1,5 @@
 // Common test entities and data for unit tests
+import { vi, type Mock } from 'vitest'
 
 export interface TestEntity {
   id: string
@@ -44,13 +45,13 @@ export const createTestPostEntity = (overrides: Partial<TestPostEntity> = {}): T
 
 // Common mock setup utilities
 export const createBasicMockImplementations = () => ({
-  mockSerializeFirestoreTypes: jest.fn((data) => data),
-  mockDeserializeFirestoreTypes: jest.fn((data) => data),
-  mockValidateData: jest.fn((data) => data),
+  mockSerializeFirestoreTypes: vi.fn((data) => data),
+  mockDeserializeFirestoreTypes: vi.fn((data) => data),
+  mockValidateData: vi.fn((data) => data),
 })
 
-export const resetAllMocks = (...mocks: jest.Mock[]) => {
-  jest.clearAllMocks()
+export const resetAllMocks = (...mocks: Mock[]) => {
+  vi.clearAllMocks()
   mocks.forEach((mock) => {
     if (mock.mockImplementation) {
       mock.mockImplementation((data) => data)

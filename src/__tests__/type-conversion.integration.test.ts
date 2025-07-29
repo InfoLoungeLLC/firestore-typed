@@ -1,3 +1,4 @@
+import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { getFirestoreTyped } from '../index'
 import { deserializeFirestoreTypes } from '../utils/firestore-converter'
 import { createMockFirestore } from '../core/__tests__/__helpers__/firebase-mock.helper'
@@ -5,9 +6,8 @@ import type { SerializedGeoPoint, SerializedDocumentReference } from '../utils/f
 
 // Types are only used in test assertions, not direct imports needed
 
-jest.mock('firebase-admin/firestore', () => {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const mockHelper = require('../core/__tests__/__helpers__/firebase-mock.helper')
+vi.mock('firebase-admin/firestore', async () => {
+  const mockHelper = await import('../core/__tests__/__helpers__/firebase-mock.helper')
   return mockHelper.createFirebaseAdminMock()
 })
 
@@ -206,7 +206,7 @@ describe('FirestoreTyped Type Conversion', () => {
       }
 
       // This should handle all nested conversions
-      await collection.doc('complex-001').set(complexData as any)
+      await expect(collection.doc('complex-001').set(complexData as any)).resolves.not.toThrow()
     })
   })
 })

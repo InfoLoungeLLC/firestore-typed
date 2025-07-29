@@ -1,3 +1,4 @@
+import { vi, describe, it, expect } from 'vitest'
 import {
   FirestoreTypedValidationError,
   DocumentNotFoundError,
@@ -38,8 +39,8 @@ describe('Error Classes', () => {
     })
 
     it('should set proper stack trace when Error.captureStackTrace is available', () => {
-      const originalCaptureStackTrace = Error.captureStackTrace
-      const mockCaptureStackTrace = jest.fn()
+      const originalCaptureStackTrace = Error.captureStackTrace?.bind(Error)
+      const mockCaptureStackTrace = vi.fn()
       Error.captureStackTrace = mockCaptureStackTrace
 
       const error = new FirestoreTypedValidationError(testMessage, testPath)
@@ -47,12 +48,11 @@ describe('Error Classes', () => {
       expect(mockCaptureStackTrace).toHaveBeenCalledWith(error, FirestoreTypedValidationError)
 
       // Restore original function
-      Error.captureStackTrace = originalCaptureStackTrace
+      if (originalCaptureStackTrace) Error.captureStackTrace = originalCaptureStackTrace
     })
 
     it('should handle missing Error.captureStackTrace gracefully', () => {
-      const originalCaptureStackTrace = Error.captureStackTrace
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const originalCaptureStackTrace = Error.captureStackTrace?.bind(Error)
       delete (Error as any).captureStackTrace
 
       expect(() => {
@@ -60,7 +60,7 @@ describe('Error Classes', () => {
       }).not.toThrow()
 
       // Restore original function
-      Error.captureStackTrace = originalCaptureStackTrace
+      if (originalCaptureStackTrace) Error.captureStackTrace = originalCaptureStackTrace
     })
 
     it('should preserve all properties when thrown and caught', () => {
@@ -115,8 +115,8 @@ describe('Error Classes', () => {
     })
 
     it('should set proper stack trace when Error.captureStackTrace is available', () => {
-      const originalCaptureStackTrace = Error.captureStackTrace
-      const mockCaptureStackTrace = jest.fn()
+      const originalCaptureStackTrace = Error.captureStackTrace?.bind(Error)
+      const mockCaptureStackTrace = vi.fn()
       Error.captureStackTrace = mockCaptureStackTrace
 
       const error = new DocumentNotFoundError(testPath)
@@ -124,12 +124,11 @@ describe('Error Classes', () => {
       expect(mockCaptureStackTrace).toHaveBeenCalledWith(error, DocumentNotFoundError)
 
       // Restore original function
-      Error.captureStackTrace = originalCaptureStackTrace
+      if (originalCaptureStackTrace) Error.captureStackTrace = originalCaptureStackTrace
     })
 
     it('should handle missing Error.captureStackTrace gracefully', () => {
-      const originalCaptureStackTrace = Error.captureStackTrace
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const originalCaptureStackTrace = Error.captureStackTrace?.bind(Error)
       delete (Error as any).captureStackTrace
 
       expect(() => {
@@ -137,7 +136,7 @@ describe('Error Classes', () => {
       }).not.toThrow()
 
       // Restore original function
-      Error.captureStackTrace = originalCaptureStackTrace
+      if (originalCaptureStackTrace) Error.captureStackTrace = originalCaptureStackTrace
     })
 
     it('should preserve all properties when thrown and caught', () => {
@@ -190,8 +189,8 @@ describe('Error Classes', () => {
     })
 
     it('should set proper stack trace when Error.captureStackTrace is available', () => {
-      const originalCaptureStackTrace = Error.captureStackTrace
-      const mockCaptureStackTrace = jest.fn()
+      const originalCaptureStackTrace = Error.captureStackTrace?.bind(Error)
+      const mockCaptureStackTrace = vi.fn()
       Error.captureStackTrace = mockCaptureStackTrace
 
       const error = new DocumentAlreadyExistsError(testPath)
@@ -199,12 +198,11 @@ describe('Error Classes', () => {
       expect(mockCaptureStackTrace).toHaveBeenCalledWith(error, DocumentAlreadyExistsError)
 
       // Restore original function
-      Error.captureStackTrace = originalCaptureStackTrace
+      if (originalCaptureStackTrace) Error.captureStackTrace = originalCaptureStackTrace
     })
 
     it('should handle missing Error.captureStackTrace gracefully', () => {
-      const originalCaptureStackTrace = Error.captureStackTrace
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const originalCaptureStackTrace = Error.captureStackTrace?.bind(Error)
       delete (Error as any).captureStackTrace
 
       expect(() => {
@@ -212,7 +210,7 @@ describe('Error Classes', () => {
       }).not.toThrow()
 
       // Restore original function
-      Error.captureStackTrace = originalCaptureStackTrace
+      if (originalCaptureStackTrace) Error.captureStackTrace = originalCaptureStackTrace
     })
 
     it('should preserve all properties when thrown and caught', () => {

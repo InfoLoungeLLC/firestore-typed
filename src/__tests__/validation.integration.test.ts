@@ -1,9 +1,9 @@
+import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { getFirestoreTyped } from '../index'
 import { FirestoreTypedValidationError } from '../errors/errors'
 
-jest.mock('firebase-admin/firestore', () => {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const mockHelper = require('../core/__tests__/__helpers__/firebase-mock.helper')
+vi.mock('firebase-admin/firestore', async () => {
+  const mockHelper = await import('../core/__tests__/__helpers__/firebase-mock.helper')
   return mockHelper.createFirebaseAdminMock()
 })
 
@@ -86,7 +86,7 @@ describe('FirestoreTyped Validation', () => {
     it('should reject null data', async () => {
       try {
         await collection.add(null as any)
-        fail('Should have thrown an error')
+        expect.fail('Should have thrown an error')
       } catch (error) {
         expect(error).toBeInstanceOf(FirestoreTypedValidationError)
         const validationError = error as FirestoreTypedValidationError
@@ -101,7 +101,7 @@ describe('FirestoreTyped Validation', () => {
     it('should reject undefined data', async () => {
       try {
         await collection.add(undefined as any)
-        fail('Should have thrown an error')
+        expect.fail('Should have thrown an error')
       } catch (error) {
         expect(error).toBeInstanceOf(FirestoreTypedValidationError)
         const validationError = error as FirestoreTypedValidationError
@@ -121,7 +121,7 @@ describe('FirestoreTyped Validation', () => {
 
       try {
         await collection.add(invalidUser as any)
-        fail('Should have thrown an error')
+        expect.fail('Should have thrown an error')
       } catch (error) {
         expect(error).toBeInstanceOf(FirestoreTypedValidationError)
         const validationError = error as FirestoreTypedValidationError
@@ -144,7 +144,7 @@ describe('FirestoreTyped Validation', () => {
 
       try {
         await collection.add(invalidUser)
-        fail('Should have thrown an error')
+        expect.fail('Should have thrown an error')
       } catch (error) {
         expect(error).toBeInstanceOf(FirestoreTypedValidationError)
         const validationError = error as FirestoreTypedValidationError
@@ -171,7 +171,7 @@ describe('FirestoreTyped Validation', () => {
 
       try {
         await collection.add(invalidUser)
-        fail('Should have thrown an error')
+        expect.fail('Should have thrown an error')
       } catch (error) {
         expect(error).toBeInstanceOf(FirestoreTypedValidationError)
         const validationError = error as FirestoreTypedValidationError
@@ -198,7 +198,7 @@ describe('FirestoreTyped Validation', () => {
 
       try {
         await collection.add(invalidUser)
-        fail('Should have thrown an error')
+        expect.fail('Should have thrown an error')
       } catch (error) {
         expect(error).toBeInstanceOf(FirestoreTypedValidationError)
         const validationError = error as FirestoreTypedValidationError
@@ -221,7 +221,7 @@ describe('FirestoreTyped Validation', () => {
 
       try {
         await collection.add(invalidUser)
-        fail('Should have thrown an error')
+        expect.fail('Should have thrown an error')
       } catch (error) {
         expect(error).toBeInstanceOf(FirestoreTypedValidationError)
         const validationError = error as FirestoreTypedValidationError
@@ -248,7 +248,7 @@ describe('FirestoreTyped Validation', () => {
 
       try {
         await collection.add(invalidUser as any)
-        fail('Should have thrown an error')
+        expect.fail('Should have thrown an error')
       } catch (error) {
         expect(error).toBeInstanceOf(FirestoreTypedValidationError)
         expect((error as FirestoreTypedValidationError).message).toContain('Validation failed')
@@ -295,7 +295,9 @@ describe('FirestoreTyped Validation', () => {
       }
 
       // Should not throw because we override validation
-      await collection.doc('test').set(invalidUser as any, { validateOnWrite: false })
+      await expect(
+        collection.doc('test').set(invalidUser as any, { validateOnWrite: false }),
+      ).resolves.not.toThrow()
     })
 
     it('should override global validateOnRead setting', async () => {

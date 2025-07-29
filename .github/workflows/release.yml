@@ -93,12 +93,9 @@ jobs:
           echo "Release notes extracted for version $VERSION"
 
       - name: Create GitHub Release
-        uses: actions/create-release@v1
+        run: |
+          gh release create ${{ steps.package-version.outputs.tag }} \
+            --title "Release ${{ steps.package-version.outputs.tag }}" \
+            --notes-file release_notes.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ steps.package-version.outputs.tag }}
-          release_name: Release ${{ steps.package-version.outputs.tag }}
-          body_path: release_notes.md
-          draft: false
-          prerelease: false

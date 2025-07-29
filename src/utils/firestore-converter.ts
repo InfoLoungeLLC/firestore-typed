@@ -136,7 +136,7 @@ function deserializeFirestoreTypesInternal(data: unknown, firestore: Firestore):
  * SerializedGeoPoint type guard
  */
 function isSerializedGeoPoint(data: unknown): data is SerializedGeoPoint {
-  /* istanbul ignore if -- defensive check for type guard */
+  /* c8 ignore next 3 -- defensive programming: type guard for invalid input */
   if (typeof data !== 'object' || data === null) {
     return false
   }
@@ -156,7 +156,7 @@ function isSerializedGeoPoint(data: unknown): data is SerializedGeoPoint {
  * SerializedDocumentReference type guard
  */
 function isSerializedDocumentReference(data: unknown): data is SerializedDocumentReference {
-  /* istanbul ignore if -- defensive check for type guard */
+  /* c8 ignore next 3 -- defensive programming: type guard for invalid input */
   if (typeof data !== 'object' || data === null) {
     return false
   }

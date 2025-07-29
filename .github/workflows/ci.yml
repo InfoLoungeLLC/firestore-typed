@@ -4,14 +4,14 @@ on:
   push:
     branches: [ main, develop ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, develop ]
 
 jobs:
   test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [18.x, 20.x, 22.x]
+        node-version: [20.x, 22.x]
     
     steps:
       - name: Checkout
@@ -40,7 +40,7 @@ jobs:
         run: npm run typecheck
 
       - name: Upload coverage to Codecov
-        if: matrix.node-version == '22.x'
+        if: matrix.node-version == '22.x' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
