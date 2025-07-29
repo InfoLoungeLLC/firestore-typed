@@ -109,6 +109,7 @@ describe('Validator', () => {
         const stringError = 'String error message'
 
         const mockValidator = vi.fn().mockImplementation(() => {
+          // eslint-disable-next-line @typescript-eslint/only-throw-error
           throw stringError
         })
 
@@ -127,6 +128,7 @@ describe('Validator', () => {
         const objectError = { code: 'VALIDATION_FAILED', details: 'Field missing' }
 
         const mockValidator = vi.fn().mockImplementation(() => {
+          // eslint-disable-next-line @typescript-eslint/only-throw-error
           throw objectError
         })
 
@@ -144,9 +146,11 @@ describe('Validator', () => {
         const inputData = { invalid: 'data' }
 
         const nullValidator = vi.fn().mockImplementation(() => {
+          // eslint-disable-next-line @typescript-eslint/only-throw-error
           throw null
         })
         const undefinedValidator = vi.fn().mockImplementation(() => {
+          // eslint-disable-next-line @typescript-eslint/only-throw-error
           throw undefined
         })
 

@@ -2,6 +2,7 @@
 import eslint from '@eslint/js'
 import globals from 'globals'
 import tseslint from 'typescript-eslint'
+import vitestPlugin from '@vitest/eslint-plugin'
 import prettierConfig from 'eslint-config-prettier'
 
 export default tseslint.config(
@@ -11,11 +12,12 @@ export default tseslint.config(
     languageOptions: {
       globals: {
         ...globals.node,
-        ...globals.jest,
       },
       sourceType: 'commonjs',
       parserOptions: {
-        projectService: true,
+        projectService: {
+          allowDefaultProject: ['*.ts', '*.js', '*.mjs'],
+        },
         tsconfigRootDir: import.meta.dirname,
       },
     },
@@ -29,7 +31,11 @@ export default tseslint.config(
   },
   {
     files: ['**/__tests__/**', '**/*.test.ts', '**/*.spec.ts'],
+    plugins: {
+      vitest: vitestPlugin,
+    },
     rules: {
+      ...vitestPlugin.configs.recommended.rules,
       '@typescript-eslint/no-unsafe-assignment': 'off',
       '@typescript-eslint/no-unsafe-call': 'off',
       '@typescript-eslint/no-unsafe-member-access': 'off',
@@ -37,7 +43,12 @@ export default tseslint.config(
       '@typescript-eslint/no-unsafe-return': 'off',
       '@typescript-eslint/no-explicit-any': 'off',
     },
+    languageOptions: {
+      globals: {
+        ...vitestPlugin.environments.env.globals,
+      },
+    },
   },
   // Prettier configuration (disables conflicting rules)
-  prettierConfig
+  prettierConfig,
 )
