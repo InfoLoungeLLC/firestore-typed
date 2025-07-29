@@ -295,7 +295,7 @@ describe('FirestoreTyped Validation', () => {
       }
 
       // Should not throw because we override validation
-      await collection.doc('test').set(invalidUser as any, { validateOnWrite: false })
+      await expect(collection.doc('test').set(invalidUser as any, { validateOnWrite: false })).resolves.not.toThrow()
     })
 
     it('should override global validateOnRead setting', async () => {

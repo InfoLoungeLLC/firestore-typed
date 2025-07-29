@@ -109,7 +109,7 @@ describe('Validator', () => {
         const stringError = 'String error message'
 
         const mockValidator = vi.fn().mockImplementation(() => {
-          throw stringError
+          throw new Error(stringError)
         })
 
         try {
@@ -127,7 +127,7 @@ describe('Validator', () => {
         const objectError = { code: 'VALIDATION_FAILED', details: 'Field missing' }
 
         const mockValidator = vi.fn().mockImplementation(() => {
-          throw objectError
+          throw new Error(JSON.stringify(objectError))
         })
 
         try {
@@ -144,10 +144,10 @@ describe('Validator', () => {
         const inputData = { invalid: 'data' }
 
         const nullValidator = vi.fn().mockImplementation(() => {
-          throw null
+          throw new Error('null error')
         })
         const undefinedValidator = vi.fn().mockImplementation(() => {
-          throw undefined
+          throw new Error('undefined error')
         })
 
         try {

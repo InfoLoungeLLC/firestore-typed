@@ -206,7 +206,7 @@ describe('FirestoreTyped Type Conversion', () => {
       }
 
       // This should handle all nested conversions
-      await collection.doc('complex-001').set(complexData as any)
+      await expect(collection.doc('complex-001').set(complexData as any)).resolves.not.toThrow()
     })
   })
 })
