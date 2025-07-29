@@ -15,7 +15,9 @@ export default tseslint.config(
       },
       sourceType: 'commonjs',
       parserOptions: {
-        projectService: true,
+        projectService: {
+          allowDefaultProject: ['*.ts', '*.js', '*.mjs'],
+        },
         tsconfigRootDir: import.meta.dirname,
       },
     },
@@ -48,5 +50,5 @@ export default tseslint.config(
     },
   },
   // Prettier configuration (disables conflicting rules)
-  prettierConfig
+  prettierConfig,
 )

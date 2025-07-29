@@ -19,8 +19,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "lint": "eslint \"src/**/*.ts\"",
-    "lint:fix": "eslint \"src/**/*.ts\" --fix",
+    "lint": "eslint \"src/**/*.ts\" \"*.{ts,js,mjs}\"",
+    "lint:fix": "eslint \"src/**/*.ts\" \"*.{ts,js,mjs}\" --fix",
     "typecheck": "tsc --noEmit"
   },
   "keywords": [
