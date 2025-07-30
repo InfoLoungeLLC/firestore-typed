@@ -31,11 +31,14 @@ jobs:
       - name: Run linter
         run: npm run lint
 
+      - name: Check formatting
+        run: npm run format:check
+
+      - name: Type check
+        run: npm run typecheck
+
       - name: Run tests with coverage
         run: npm run test:coverage
-
-      - name: Build
-        run: npm run typecheck
 
       - name: Upload coverage to Codecov
         if: matrix.node-version == '22.x' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
