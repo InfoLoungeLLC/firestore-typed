@@ -44,7 +44,9 @@ describe('CollectionReference', () => {
     vi.clearAllMocks()
     mockDeserializeFirestoreTypes.mockImplementation((data: any) => data)
     mockSerializeFirestoreTypes.mockImplementation((data: any) => data)
-    mockValidateData.mockImplementation((_data: any, _path: any, validator: any) => validator(_data))
+    mockValidateData.mockImplementation((_data: any, _path: any, validator: any) =>
+      validator(_data),
+    )
 
     // Create mock Firebase CollectionReference
     mockFirebaseCollection = {

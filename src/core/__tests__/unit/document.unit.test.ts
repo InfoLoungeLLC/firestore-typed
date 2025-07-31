@@ -43,7 +43,9 @@ describe('DocumentReference', () => {
     vi.clearAllMocks()
     mockSerializeFirestoreTypes.mockImplementation((data: any) => data)
     mockDeserializeFirestoreTypes.mockImplementation((data: any) => data)
-    mockValidateData.mockImplementation((_data: any, _path: any, validator: any) => validator(_data))
+    mockValidateData.mockImplementation((_data: any, _path: any, validator: any) =>
+      validator(_data),
+    )
 
     // Create mock Firebase DocumentReference
     mockFirebaseDoc = {
