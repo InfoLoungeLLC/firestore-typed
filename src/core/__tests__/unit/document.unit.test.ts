@@ -1,6 +1,9 @@
 import { vi, describe, it, expect, beforeEach, type Mock } from 'vitest'
 import { DocumentReference } from '../../document'
-import { serializeFirestoreTypes, deserializeFirestoreTypes } from '../../../utils/firestore-converter'
+import {
+  serializeFirestoreTypes,
+  deserializeFirestoreTypes,
+} from '../../../utils/firestore-converter'
 import { validateData } from '../../../utils/validator'
 import { DocumentNotFoundError, DocumentAlreadyExistsError } from '../../../errors/errors'
 import type { FirestoreTypedOptionsProvider } from '../../../types/firestore-typed.types'

@@ -2,7 +2,10 @@ import { vi, describe, it, expect, beforeEach, type Mock } from 'vitest'
 import { CollectionReference } from '../../collection'
 import { DocumentReference } from '../../document'
 import { Query } from '../../query'
-import { deserializeFirestoreTypes, serializeFirestoreTypes } from '../../../utils/firestore-converter'
+import {
+  deserializeFirestoreTypes,
+  serializeFirestoreTypes,
+} from '../../../utils/firestore-converter'
 import { validateData } from '../../../utils/validator'
 import type { FirestoreTypedOptionsProvider } from '../../../types/firestore-typed.types'
 import {
