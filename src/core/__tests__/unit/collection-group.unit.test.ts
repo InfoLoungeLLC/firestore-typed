@@ -1,17 +1,17 @@
 import { vi, describe, it, expect, beforeEach, type Mock, type MockedFunction } from 'vitest'
-import { CollectionGroup } from '../collection-group'
-import { Query } from '../query'
-import { serializeFirestoreTypes } from '../../utils/firestore-converter'
-import { validateData } from '../../utils/validator'
-import type { FirestoreTypedOptionsProvider } from '../../types/firestore-typed.types'
-import type { TestPostEntity } from './__helpers__/test-entities.helper'
+import { CollectionGroup } from '../../collection-group'
+import { Query } from '../../query'
+import { serializeFirestoreTypes } from '../../../utils/firestore-converter'
+import { validateData } from '../../../utils/validator'
+import type { FirestoreTypedOptionsProvider } from '../../../types/firestore-typed.types'
+import type { TestPostEntity } from '../__helpers__/test-entities.helper'
 
 // Mock dependencies
-vi.mock('../../utils/firestore-converter')
-vi.mock('../../utils/validator')
+vi.mock('../../../utils/firestore-converter')
+vi.mock('../../../utils/validator')
 
 vi.mock('firebase-admin/firestore', async () => {
-  const mockHelper = await import('./__helpers__/firebase-mock.helper')
+  const mockHelper = await import('../__helpers__/firebase-mock.helper')
   return mockHelper.createFirebaseAdminMock()
 })
 
