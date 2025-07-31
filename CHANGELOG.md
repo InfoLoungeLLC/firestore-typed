@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2025-07-31
+
+### Changed
+
+- **Development Environment**: Migrated to ES modules for development by adding `"type": "module"` to package.json
+- **Build Configuration**: Updated TypeScript configuration to use ESNext modules for development while maintaining dual CommonJS/ESM build output
+- **Configuration Files**: Converted Prettier configuration from CommonJS to ES module format
+- **CI Workflow**: Enhanced GitHub Actions workflow with:
+  - Added npm cache for faster CI runs
+  - Added formatting check step
+  - Reorganized step order for better error visibility
+  - Made lint, format check, and type check steps non-blocking with `continue-on-error`
+
+### Fixed
+
+- **Documentation**: Added Japanese documentation files (README.ja.md, CHANGELOG.ja.md) to npm package distribution
+
+### Internal
+
+- Updated development tooling to support ES modules
+- Improved CI pipeline efficiency with caching
+- Enhanced code quality checks in continuous integration
+
 ## [0.4.2] - 2025-07-28
 
 ### Added
