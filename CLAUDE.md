@@ -12,10 +12,19 @@ npm run build:watch   # Watch mode for development using tsdown
 
 ### Testing
 ```bash
-npm test             # Run all tests
-npm run test:watch   # Watch mode for development
-npm test -- path/to/test.ts  # Run specific test file
-npm run test:coverage # Generate coverage report
+npm test                    # Run unit/integration tests only (excludes emulator tests)
+npm run test:watch          # Watch mode for unit/integration tests
+npm run test:coverage       # Generate coverage report (excludes emulator tests)
+npm run test:emulator       # Run Firebase emulator tests only
+npm run test:emulator:watch # Watch mode for emulator tests
+npm test -- path/to/test.ts # Run specific test file
+```
+
+### Firebase Emulator (for emulator tests)
+```bash
+npm run emulators:start     # Start Firebase emulator (required for emulator tests)
+# Emulator UI available at http://localhost:4000
+# Firestore emulator runs on port 8080
 ```
 
 ### Linting & Formatting
@@ -23,6 +32,8 @@ npm run test:coverage # Generate coverage report
 npm run lint         # Check for linting errors
 npm run lint:fix     # Auto-fix linting errors
 npm run format       # Format code with Prettier
+npm run format:check # Check if code is properly formatted
+npm run typecheck    # Run TypeScript type checking without emitting files
 ```
 
 ## Code Architecture
@@ -65,10 +76,44 @@ src/
 - `SerializedDocumentReference<TCollection, TDocument>` → `DocumentReference`
 
 ### Testing Strategy
-- **Unit Tests**: Mock Firebase SDK, test individual components
-- **Integration Tests**: Test with real Firestore operations
-- Test files use `.test.ts` or `.spec.ts` suffix
+The codebase uses a three-tiered testing approach:
+
+#### Test Types and Structure
+- **Unit Tests**: Mock Firebase SDK, test individual components in isolation
+  - Located in `__tests__/unit/` subdirectories
+  - Use `.unit.test.ts` naming convention
+  - Run with `npm test` (default, fast execution)
+
+- **Integration Tests**: Test interactions between components with mocked Firebase
+  - Located in root `__tests__/` directories  
+  - Use `.integration.test.ts` naming convention
+  - Run with `npm test` (included in default test suite)
+
+- **Emulator Tests**: Test with real Firebase Firestore emulator
+  - Located in `__tests__/emulator/` subdirectories
+  - Use `.emulator.test.ts` naming convention  
+  - Run with `npm run test:emulator` (requires Firebase emulator)
+  - **Separate execution**: Excluded from default `npm test` for CI/CD compatibility
+
+#### Test Organization
+```
+src/
+├── core/__tests__/
+│   ├── unit/                    # Unit tests with mocked Firebase
+│   │   ├── *.unit.test.ts
+│   └── emulator/                # Real Firestore emulator tests
+│       ├── *.emulator.test.ts
+├── utils/__tests__/unit/        # Utility function unit tests
+├── errors/__tests__/unit/       # Error class unit tests
+└── __tests__/                   # Integration tests
+    ├── *.integration.test.ts
+```
+
+#### Key Testing Utilities
 - Helper files in `__tests__/__helpers__/` directories
+- Shared test entities and validators in `test-entities.helper.ts`
+- Firebase emulator setup/teardown in `emulator-setup.helper.ts`
+- Mock factory functions in `firebase-mock.helper.ts`
 
 ### TypeScript Configuration Notes
 - Target: ES2023
@@ -79,3 +124,23 @@ src/
 
 ### Validation Library
 Primary support for typia validators, but accepts any function with signature `(data: unknown) => T` that throws on validation failure.
+
+## Firebase Emulator Configuration
+
+### Setup
+- Firebase emulator configuration in `firebase.json`
+- Firestore emulator runs on port 8080
+- Emulator UI available at http://localhost:4000
+- Dedicated vitest configuration in `vitest.emulator.config.ts`
+
+### Emulator Test Architecture
+- **Isolation**: Each test cleans up its own data using try/finally blocks
+- **Unique Collections**: Tests use timestamped collection names to avoid conflicts
+- **Real I/O Operations**: Tests actual Firestore write/read operations, not mocks
+- **Automatic Cleanup**: Recursive deletion handles subcollections properly
+
+### When to Use Emulator Tests
+- Testing real Firestore operations (CRUD, queries, transactions)
+- Validating collection group queries across multiple collections
+- Testing complex document structures and relationships
+- Verifying type conversion with actual Firestore data serialization
