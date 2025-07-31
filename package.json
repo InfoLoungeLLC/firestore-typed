@@ -62,7 +62,9 @@
   "files": [
     "dist/**/*",
     "README.md",
-    "CHANGELOG.md"
+    "README.ja.md",
+    "CHANGELOG.md",
+    "CHANGELOG.ja.md"
   ],
   "repository": {
     "type": "git",
