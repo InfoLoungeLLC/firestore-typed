@@ -1,4 +1,4 @@
-import { vi, describe, it, expect, beforeEach, type Mock } from 'vitest'
+import { vi, describe, it, expect, beforeEach, type Mock, type MockedFunction } from 'vitest'
 import { CollectionReference } from '../../collection'
 import { DocumentReference } from '../../document'
 import { Query } from '../../query'
@@ -23,9 +23,13 @@ vi.mock('firebase-admin/firestore', async () => {
   return mockHelper.createFirebaseAdminMock()
 })
 
-const mockDeserializeFirestoreTypes = deserializeFirestoreTypes
-const mockSerializeFirestoreTypes = serializeFirestoreTypes
-const mockValidateData = validateData
+const mockDeserializeFirestoreTypes = deserializeFirestoreTypes as MockedFunction<
+  typeof deserializeFirestoreTypes
+>
+const mockSerializeFirestoreTypes = serializeFirestoreTypes as MockedFunction<
+  typeof serializeFirestoreTypes
+>
+const mockValidateData = validateData as MockedFunction<typeof validateData>
 
 describe('CollectionReference', () => {
   let mockFirebaseCollection: any
@@ -38,9 +42,9 @@ describe('CollectionReference', () => {
   beforeEach(() => {
     // Reset mocks
     vi.clearAllMocks()
-    mockDeserializeFirestoreTypes.mockImplementation((data) => data)
-    mockSerializeFirestoreTypes.mockImplementation((data) => data)
-    mockValidateData.mockImplementation((data) => data)
+    mockDeserializeFirestoreTypes.mockImplementation((data: any) => data)
+    mockSerializeFirestoreTypes.mockImplementation((data: any) => data)
+    mockValidateData.mockImplementation((_data: any, _path: any, validator: any) => validator(_data))
 
     // Create mock Firebase CollectionReference
     mockFirebaseCollection = {

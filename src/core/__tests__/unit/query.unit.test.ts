@@ -1,4 +1,4 @@
-import { vi, describe, it, expect, beforeEach, type Mock } from 'vitest'
+import { vi, describe, it, expect, beforeEach, type Mock, type MockedFunction } from 'vitest'
 import { Query } from '../../query'
 import { serializeFirestoreTypes } from '../../../utils/firestore-converter'
 import { validateData } from '../../../utils/validator'
@@ -19,8 +19,10 @@ vi.mock('firebase-admin/firestore', async () => {
   return mockHelper.createFirebaseAdminMock()
 })
 
-const mockSerializeFirestoreTypes = serializeFirestoreTypes
-const mockValidateData = validateData
+const mockSerializeFirestoreTypes = serializeFirestoreTypes as MockedFunction<
+  typeof serializeFirestoreTypes
+>
+const mockValidateData = validateData as MockedFunction<typeof validateData>
 
 describe('Query', () => {
   let mockFirebaseQuery: any
@@ -31,8 +33,8 @@ describe('Query', () => {
   beforeEach(() => {
     // Reset mocks
     vi.clearAllMocks()
-    mockSerializeFirestoreTypes.mockImplementation((data) => data)
-    mockValidateData.mockImplementation((data) => data)
+    mockSerializeFirestoreTypes.mockImplementation((data: any) => data)
+    mockValidateData.mockImplementation((_data: any, _path: any, validator: any) => validator(_data))
 
     // Create mock Firebase Query
     mockFirebaseQuery = {
