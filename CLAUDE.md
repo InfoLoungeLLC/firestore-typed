@@ -10,6 +10,8 @@ npm run build         # Compile TypeScript to JavaScript using tsdown
 npm run build:watch   # Watch mode for development using tsdown
 ```
 
+Note: This project uses tsdown instead of traditional tsc for faster builds and modern output formats (CommonJS and ESM).
+
 ### Testing
 ```bash
 npm test                    # Run unit/integration tests only (excludes emulator tests)
@@ -18,6 +20,11 @@ npm run test:coverage       # Generate coverage report (excludes emulator tests)
 npm run test:emulator       # Run Firebase emulator tests only
 npm run test:emulator:watch # Watch mode for emulator tests
 npm test -- path/to/test.ts # Run specific test file
+
+# Run specific test pattern
+npm test -- --grep "pattern"
+# Run tests in a specific directory
+npm test -- src/core/__tests__/unit/
 ```
 
 ### Firebase Emulator (for emulator tests)
@@ -66,9 +73,18 @@ src/
 └── index.ts                # Public API exports
 ```
 
+### Public API
+```typescript
+// Main entry point (recommended)
+import { getFirestoreTyped } from '@info-lounge/firestore-typed'
+
+// Core classes available for advanced usage
+import { FirestoreTyped, CollectionReference, DocumentReference, Query, CollectionGroup } from '@info-lounge/firestore-typed'
+```
+
 ### Data Flow
 1. **Write Operations**: User Data → Validation → Type Conversion → Firestore
-2. **Read Operations**: Firestore → Type Conversion → Validation (optional) → User Data
+2. **Read Operations**: Firestore → Type Conversion → Validation → User Data
 
 ### Important Type Conversions
 - `Date` → `Timestamp` (loses nanosecond precision)
@@ -116,10 +132,10 @@ src/
 - Mock factory functions in `firebase-mock.helper.ts`
 
 ### TypeScript Configuration Notes
-- Target: ES2023
-- Module: CommonJS
+- Target: ESNext
+- Module: ESNext with bundler resolution
 - Strict mode enabled
-- `noUncheckedIndexedAccess`: true (requires explicit undefined checks)
+- Build tool: tsdown (replaces traditional tsc compilation)
 - Currently **NOT** configured for typia transforms (users must set up ts-patch)
 
 ### Validation Library
