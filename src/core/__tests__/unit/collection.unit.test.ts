@@ -1,19 +1,25 @@
 import { vi, describe, it, expect, beforeEach, type Mock, type MockedFunction } from 'vitest'
-import { CollectionReference } from '../collection'
-import { DocumentReference } from '../document'
-import { Query } from '../query'
-import { deserializeFirestoreTypes, serializeFirestoreTypes } from '../../utils/firestore-converter'
-import { validateData } from '../../utils/validator'
-import type { FirestoreTypedOptionsProvider } from '../../types/firestore-typed.types'
-import type { TestEntity } from './__helpers__/test-entities.helper'
-import { createTestEntity } from './__helpers__/test-entities.helper'
+import { CollectionReference } from '../../collection'
+import { DocumentReference } from '../../document'
+import { Query } from '../../query'
+import {
+  deserializeFirestoreTypes,
+  serializeFirestoreTypes,
+} from '../../../utils/firestore-converter'
+import { validateData } from '../../../utils/validator'
+import type { FirestoreTypedOptionsProvider } from '../../../types/firestore-typed.types'
+import {
+  type TestEntity,
+  createTestEntity,
+  createTestEntityValidator,
+} from '../__helpers__/test-entities.helper'
 
 // Mock dependencies
-vi.mock('../../utils/firestore-converter')
-vi.mock('../../utils/validator')
+vi.mock('../../../utils/firestore-converter')
+vi.mock('../../../utils/validator')
 
 vi.mock('firebase-admin/firestore', async () => {
-  const mockHelper = await import('./__helpers__/firebase-mock.helper')
+  const mockHelper = await import('../__helpers__/firebase-mock.helper')
   return mockHelper.createFirebaseAdminMock()
 })
 
@@ -36,9 +42,11 @@ describe('CollectionReference', () => {
   beforeEach(() => {
     // Reset mocks
     vi.clearAllMocks()
-    mockDeserializeFirestoreTypes.mockImplementation((data) => data)
-    mockSerializeFirestoreTypes.mockImplementation((data) => data)
-    mockValidateData.mockImplementation((data) => data as any)
+    mockDeserializeFirestoreTypes.mockImplementation((data: any) => data)
+    mockSerializeFirestoreTypes.mockImplementation((data: any) => data)
+    mockValidateData.mockImplementation((_data: any, _path: any, validator: any) =>
+      validator(_data),
+    )
 
     // Create mock Firebase CollectionReference
     mockFirebaseCollection = {
@@ -66,7 +74,7 @@ describe('CollectionReference', () => {
     }
 
     // Create mock validator
-    mockValidator = vi.fn((data) => data as TestEntity)
+    mockValidator = createTestEntityValidator()
 
     // Create CollectionReference instance
     collection = new CollectionReference<TestEntity>(

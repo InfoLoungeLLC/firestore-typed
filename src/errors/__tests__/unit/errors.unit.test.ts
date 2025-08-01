@@ -3,7 +3,7 @@ import {
   FirestoreTypedValidationError,
   DocumentNotFoundError,
   DocumentAlreadyExistsError,
-} from '../errors'
+} from '../../errors'
 
 describe('Error Classes', () => {
   describe('FirestoreTypedValidationError', () => {

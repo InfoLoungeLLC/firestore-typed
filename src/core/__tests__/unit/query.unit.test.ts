@@ -1,16 +1,21 @@
 import { vi, describe, it, expect, beforeEach, type Mock, type MockedFunction } from 'vitest'
-import { Query } from '../query'
-import { serializeFirestoreTypes } from '../../utils/firestore-converter'
-import { validateData } from '../../utils/validator'
-import type { FirestoreTypedOptionsProvider } from '../../types/firestore-typed.types'
-import type { TestEntity } from './__helpers__/test-entities.helper'
+import { Query } from '../../query'
+import { serializeFirestoreTypes } from '../../../utils/firestore-converter'
+import { validateData } from '../../../utils/validator'
+import type { FirestoreTypedOptionsProvider } from '../../../types/firestore-typed.types'
+import {
+  type TestEntity,
+  createTestEntityValidator,
+  type TaggedEntity,
+  createTaggedEntityValidator,
+} from '../__helpers__/test-entities.helper'
 
 // Mock dependencies
-vi.mock('../../utils/firestore-converter')
-vi.mock('../../utils/validator')
+vi.mock('../../../utils/firestore-converter')
+vi.mock('../../../utils/validator')
 
 vi.mock('firebase-admin/firestore', async () => {
-  const mockHelper = await import('./__helpers__/firebase-mock.helper')
+  const mockHelper = await import('../__helpers__/firebase-mock.helper')
   return mockHelper.createFirebaseAdminMock()
 })
 
@@ -28,8 +33,10 @@ describe('Query', () => {
   beforeEach(() => {
     // Reset mocks
     vi.clearAllMocks()
-    mockSerializeFirestoreTypes.mockImplementation((data) => data)
-    mockValidateData.mockImplementation((data) => data as any)
+    mockSerializeFirestoreTypes.mockImplementation((data: any) => data)
+    mockValidateData.mockImplementation((_data: any, _path: any, validator: any) =>
+      validator(_data),
+    )
 
     // Create mock Firebase Query
     mockFirebaseQuery = {
@@ -52,7 +59,7 @@ describe('Query', () => {
     }
 
     // Create mock validator
-    mockValidator = vi.fn((data) => data as TestEntity)
+    mockValidator = createTestEntityValidator()
 
     // Create Query instance
     query = new Query<TestEntity>(mockFirebaseQuery, mockFirestoreTyped, mockValidator)
@@ -307,14 +314,11 @@ describe('Query', () => {
 
     it('should handle array contains queries', () => {
       // Simulating a tags array field
-      interface TaggedEntity extends TestEntity {
-        tags: string[]
-      }
-
+      const taggedValidator = createTaggedEntityValidator()
       const taggedQuery = new Query<TaggedEntity>(
         mockFirebaseQuery,
         mockFirestoreTyped,
-        mockValidator,
+        taggedValidator,
       )
 
       taggedQuery.where('tags', 'array-contains', 'important' as any)

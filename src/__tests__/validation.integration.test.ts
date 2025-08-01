@@ -15,7 +15,6 @@ describe('FirestoreTyped Validation', () => {
     status: 'active' | 'inactive'
     createdAt: Date
   }
-
   const strictValidator = (data: unknown): UserEntity => {
     const obj = data as any
 

@@ -26,9 +26,12 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
+    "test:emulator": "vitest run --config vitest.emulator.config.ts",
+    "test:emulator:watch": "vitest --config vitest.emulator.config.ts",
     "lint": "eslint \"src/**/*.ts\" \"*.{ts,js,mjs}\"",
     "lint:fix": "eslint \"src/**/*.ts\" \"*.{ts,js,mjs}\" --fix",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "emulators:start": "firebase emulators:start --project demo-firestore-typed"
   },
   "keywords": [
     "firebase",
