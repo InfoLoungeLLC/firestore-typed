@@ -49,8 +49,16 @@ npm install @info-lounge/firestore-typed
 This package requires the following peer dependencies:
 
 ```bash
-npm install firebase-admin typia
+# Required
+npm install firebase-admin
+
+# Choose one validation library (or both):
+npm install typia     # Recommended for best performance
+# OR
+npm install zod       # Alternative validation library
 ```
+
+**Note**: You must install either `typia` or `zod` (or both) as a validation library. The package will work with either one.
 
 
 ### Typia Transform Configuration

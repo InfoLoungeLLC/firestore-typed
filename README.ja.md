@@ -49,8 +49,16 @@ npm install @info-lounge/firestore-typed
 このパッケージには以下のpeer dependenciesが必要です：
 
 ```bash
-npm install firebase-admin typia
+# 必須
+npm install firebase-admin
+
+# バリデーションライブラリを選択（または両方）：
+npm install typia     # パフォーマンス重視（推奨）
+# または
+npm install zod       # 代替バリデーションライブラリ
 ```
+
+**注意**: バリデーションライブラリとして`typia`または`zod`（または両方）をインストールする必要があります。パッケージはどちらでも動作します。
 
 ### Typia Transform設定
 
