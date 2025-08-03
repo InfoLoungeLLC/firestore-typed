@@ -1,15 +1,13 @@
-# @info-lounge/firestore-typed
+# @info-lounge/firestore-typed – ランタイムバリデーション付きの型安全なFirestoreラッパー
 
 [![npm version](https://badge.fury.io/js/@info-lounge%2Ffirestore-typed.svg)](https://badge.fury.io/js/@info-lounge%2Ffirestore-typed)
 [![npm downloads](https://img.shields.io/npm/dm/@info-lounge/firestore-typed.svg)](https://www.npmjs.com/package/@info-lounge/firestore-typed)
 [![codecov](https://codecov.io/gh/InfoLoungeLLC/firestore-typed/branch/main/graph/badge.svg)](https://codecov.io/gh/InfoLoungeLLC/firestore-typed)
 [![license](https://img.shields.io/npm/l/@info-lounge/firestore-typed.svg)](https://github.com/InfoLoungeLLC/firestore-typed/blob/main/LICENSE)
 
-> ⚠️ **実験的リリース**: このパッケージは現在ベータ版です。将来のリリースでAPIが変更される可能性があります。本番環境での使用には注意してください。
+**必須ランタイムバリデーション**付きFirebase Firestoreの型安全な低レベルラッパーです。このパッケージは、**読み書き操作時にtypiaValidatorを用いてすべてのデータがバリデーションされることを保証**し、包括的な型安全性、データ整合性、改善された開発者体験をFirestore操作に提供します。
 
 > **[English README here / 英語版READMEはこちら →](README.md)**
-
-**必須ランタイムバリデーション**付きFirebase Firestoreの型安全な低レベルラッパーです。このパッケージは、**読み書き操作時にtypiaValidatorを用いてすべてのデータがバリデーションされることを保証**し、包括的な型安全性、データ整合性、改善された開発者体験をFirestore操作に提供します。
 
 ## 利用例 - なぜFirestoreTypedを使うのか？
 
@@ -40,6 +38,8 @@ await users.doc('123').set({
 })
 // データがUserと一致しない場合バリデーションエラーをスロー
 ```
+
+> ⚠️ **実験的リリース**: このパッケージは現在ベータ版です。将来のリリースでAPIが変更される可能性があります。本番環境での使用には注意してください。
 
 ## 主要機能
 
