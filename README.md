@@ -739,12 +739,12 @@ await db.collection<UserEntity>('users', userValidator).doc('user123').set({
 
 This provides much more precise validation than basic TypeScript types alone.
 
-### Alternative Validation Libraries (Untested)
+### Alternative Validation Libraries
 
-**Note**: FirestoreTyped accepts any validator function with signature `(data: unknown) => T`. While primarily tested with typia, other validation libraries should theoretically work:
+**Note**: FirestoreTyped accepts any validator function with signature `(data: unknown) => T`. Besides typia, we have also verified compatibility with Zod:
 
 ```typescript
-// Zod example (untested)
+// Zod example
 import { z } from 'zod'
 
 const UserSchema = z.object({
@@ -781,7 +781,7 @@ const db2 = getFirestoreTyped()
 const users2 = db2.collection<UserEntity>('users', joiValidator)
 ```
 
-⚠️ **Important**: These alternative approaches are **untested**. We have only verified compatibility with typia. If you use other validation libraries, please test thoroughly and report any issues.
+⚠️ **Important**: We have verified compatibility with **typia** and **Zod**. Other validation libraries like Joi should work in theory but have not been verified. Please test thoroughly and report any issues.
 
 ### Validation Control
 

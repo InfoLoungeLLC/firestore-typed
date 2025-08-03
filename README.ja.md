@@ -737,12 +737,12 @@ await db.collection<UserEntity>('users', userValidator).doc('user123').set({
 
 これにより、基本的なTypeScript型だけでは実現できない、はるかに精密なバリデーションが可能になります。
 
-### 代替バリデーションライブラリ（未検証）
+### 代替バリデーションライブラリ
 
-**注意**: FirestoreTypedは`(data: unknown) => T`シグネチャのあらゆるvalidator関数を受け入れます。主にtypiaでテストされていますが、理論的には他のバリデーションライブラリも動作するはずです：
+**注意**: FirestoreTypedは`(data: unknown) => T`シグネチャのあらゆるvalidator関数を受け入れます。typiaの他に、Zodとの互換性も検証済みです：
 
 ```typescript
-// Zodの例（未検証）
+// Zodの例
 import { z } from 'zod'
 
 const UserSchema = z.object({
@@ -779,7 +779,7 @@ const db2 = getFirestoreTyped()
 const users2 = db2.collection<UserEntity>('users', joiValidator)
 ```
 
-⚠️ **重要**: これらの代替アプローチは**未検証**です。typiaとの互換性のみを検証しています。他のバリデーションライブラリを使用する場合は、十分にテストして問題を報告してください。
+⚠️ **重要**: **typia**と**Zod**との互換性は検証済みです。Joiなどの他のバリデーションライブラリは理論的に互換性がありますが検証されていません。十分にテストして問題を報告してください。
 
 ### バリデーション制御
 
