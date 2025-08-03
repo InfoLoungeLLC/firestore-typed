@@ -52,7 +52,7 @@ describe('CollectionReference with Typia validators', () => {
     collection = new CollectionReference(
       mockFirebaseCollection,
       mockFirestoreTyped,
-      validateTestEntity
+      validateTestEntity,
     )
   })
 
@@ -60,7 +60,7 @@ describe('CollectionReference with Typia validators', () => {
     it('should successfully add valid data', async () => {
       const validData = createTestEntity()
       const mockDocRef = { id: 'new-doc-id' }
-      
+
       mockFirebaseCollection.add.mockResolvedValue(mockDocRef)
 
       const result = await collection.add(validData)
