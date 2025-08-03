@@ -51,21 +51,20 @@ await users.doc('123').set({
 
 ## Table of Contents
 
-1. [Quick Example - Why Use FirestoreTyped?](#quick-example---why-use-firestoretyped)
-2. [Installation](#installation)
-3. [Quick Start](#quick-start)
-4. [Core Architecture](#core-architecture)
-5. [Configuration](#configuration)
-6. [CRUD Operations](#crud-operations)
-7. [Query Builder](#query-builder)
-8. [Validation](#validation)
-9. [Automatic Type Conversion](#automatic-type-conversion)
-10. [Type-Safe Document References](#type-safe-document-references)
-11. [Error Handling](#error-handling)
-12. [Performance](#performance)
-13. [Best Practices](#best-practices)
-14. [Advanced Usage](#advanced-usage)
-15. [API Reference](#api-reference)
+1. [Installation](#installation)
+2. [Quick Start](#quick-start)
+3. [Core Architecture](#core-architecture)
+4. [Configuration](#configuration)
+5. [CRUD Operations](#crud-operations)
+6. [Query Builder](#query-builder)
+7. [Validation](#validation)
+8. [Automatic Type Conversion](#automatic-type-conversion)
+9. [Type-Safe Document References](#type-safe-document-references)
+10. [Error Handling](#error-handling)
+11. [Performance](#performance)
+12. [Best Practices](#best-practices)
+13. [Advanced Usage](#advanced-usage)
+14. [API Reference](#api-reference)
 
 ## Installation
 
