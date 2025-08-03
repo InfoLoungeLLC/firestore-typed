@@ -5,11 +5,41 @@
 [![codecov](https://codecov.io/gh/InfoLoungeLLC/firestore-typed/branch/main/graph/badge.svg)](https://codecov.io/gh/InfoLoungeLLC/firestore-typed)
 [![license](https://img.shields.io/npm/l/@info-lounge/firestore-typed.svg)](https://github.com/InfoLoungeLLC/firestore-typed/blob/main/LICENSE)
 
-> **[日本語のREADMEはこちら / Japanese README here →](README.ja.md)**
-
 > ⚠️ **EXPERIMENTAL RELEASE**: This package is currently in beta. APIs may change in future releases. Use with caution in production environments.
 
+> **[日本語のREADMEはこちら / Japanese README here →](README.ja.md)**
+
 A type-safe, low-level wrapper for Firebase Firestore with **mandatory runtime validation**. This package ensures that **all data is validated using typia validators during both read and write operations**, providing comprehensive type safety, data integrity, and improved developer experience for Firestore operations.
+
+## Quick Example - Why Use FirestoreTyped?
+
+```typescript
+// ❌ Raw Firestore - No validation, runtime errors possible
+const db = getFirestore()
+await db.collection('users').doc('123').set({
+  name: 123,      // Wrong type but no error until runtime
+  email: null     // Missing required field
+})
+
+// ✅ FirestoreTyped - Automatic validation prevents errors
+import { getFirestoreTyped } from '@info-lounge/firestore-typed'
+import typia from 'typia'
+
+interface User {
+  name: string
+  email: string
+}
+
+const userValidator = typia.createAssert<User>()
+const db = getFirestoreTyped()
+const users = db.collection<User>('users', userValidator)
+
+await users.doc('123').set({
+  name: 'John',              // ✓ Validated at runtime
+  email: 'john@example.com'  // ✓ All fields checked
+})
+// Throws validation error if data doesn't match User interface
+```
 
 ## Key Features
 
@@ -21,20 +51,21 @@ A type-safe, low-level wrapper for Firebase Firestore with **mandatory runtime v
 
 ## Table of Contents
 
-1. [Installation](#installation)
-2. [Quick Start](#quick-start)
-3. [Core Architecture](#core-architecture)
-4. [Configuration](#configuration)
-5. [CRUD Operations](#crud-operations)
-6. [Query Builder](#query-builder)
-7. [Validation](#validation)
-8. [Automatic Type Conversion](#automatic-type-conversion)
-9. [Type-Safe Document References](#type-safe-document-references)
-10. [Error Handling](#error-handling)
-11. [Performance](#performance)
-12. [Best Practices](#best-practices)
-13. [Advanced Usage](#advanced-usage)
-14. [API Reference](#api-reference)
+1. [Quick Example - Why Use FirestoreTyped?](#quick-example---why-use-firestoretyped)
+2. [Installation](#installation)
+3. [Quick Start](#quick-start)
+4. [Core Architecture](#core-architecture)
+5. [Configuration](#configuration)
+6. [CRUD Operations](#crud-operations)
+7. [Query Builder](#query-builder)
+8. [Validation](#validation)
+9. [Automatic Type Conversion](#automatic-type-conversion)
+10. [Type-Safe Document References](#type-safe-document-references)
+11. [Error Handling](#error-handling)
+12. [Performance](#performance)
+13. [Best Practices](#best-practices)
+14. [Advanced Usage](#advanced-usage)
+15. [API Reference](#api-reference)
 
 ## Installation
 

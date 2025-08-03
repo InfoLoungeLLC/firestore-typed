@@ -5,11 +5,41 @@
 [![codecov](https://codecov.io/gh/InfoLoungeLLC/firestore-typed/branch/main/graph/badge.svg)](https://codecov.io/gh/InfoLoungeLLC/firestore-typed)
 [![license](https://img.shields.io/npm/l/@info-lounge/firestore-typed.svg)](https://github.com/InfoLoungeLLC/firestore-typed/blob/main/LICENSE)
 
-> **[English README here / 英語版READMEはこちら →](README.md)**
-
 > ⚠️ **実験的リリース**: このパッケージは現在ベータ版です。将来のリリースでAPIが変更される可能性があります。本番環境での使用には注意してください。
 
+> **[English README here / 英語版READMEはこちら →](README.md)**
+
 **必須ランタイムバリデーション**付きFirebase Firestoreの型安全な低レベルラッパーです。このパッケージは、**読み書き操作時にtypiaValidatorを用いてすべてのデータがバリデーションされることを保証**し、包括的な型安全性、データ整合性、改善された開発者体験をFirestore操作に提供します。
+
+## 利用例 - なぜFirestoreTypedを使うのか？
+
+```typescript
+// ❌ 生のFirestore - バリデーションなし、ランタイムエラーの可能性
+const db = getFirestore()
+await db.collection('users').doc('123').set({
+  name: 123,      // 間違った型だがランタイムまでエラーにならない
+  email: null     // 必須フィールドがない
+})
+
+// ✅ FirestoreTyped - 自動バリデーションでエラーを防止
+import { getFirestoreTyped } from '@info-lounge/firestore-typed'
+import typia from 'typia'
+
+interface User {
+  name: string
+  email: string
+}
+
+const userValidator = typia.createAssert<User>()
+const db = getFirestoreTyped()
+const users = db.collection<User>('users', userValidator)
+
+await users.doc('123').set({
+  name: 'John',              // ✓ ランタイムでバリデーション
+  email: 'john@example.com'  // ✓ すべてのフィールドがチェックされる
+})
+// データがUserと一致しない場合バリデーションエラーをスロー
+```
 
 ## 主要機能
 
@@ -21,20 +51,21 @@
 
 ## 目次
 
-1. [インストール](#インストール)
-2. [クイックスタート](#クイックスタート)
-3. [コアアーキテクチャ](#コアアーキテクチャ)
-4. [設定](#設定)
-5. [CRUD操作](#crud操作)
-6. [クエリビルダー](#クエリビルダー)
-7. [バリデーション](#バリデーション)
-8. [自動型変換](#自動型変換)
-9. [型安全なドキュメント参照](#型安全なドキュメント参照)
-10. [エラーハンドリング](#エラーハンドリング)
-11. [パフォーマンス](#パフォーマンス)
-12. [ベストプラクティス](#ベストプラクティス)
-13. [高度な使い方](#高度な使い方)
-14. [APIリファレンス](#apiリファレンス)
+1. [利用例 - なぜFirestoreTypedを使うのか？](#利用例---なぜfirestoretypedを使うのか)
+2. [インストール](#インストール)
+3. [クイックスタート](#クイックスタート)
+4. [コアアーキテクチャ](#コアアーキテクチャ)
+5. [設定](#設定)
+6. [CRUD操作](#crud操作)
+7. [クエリビルダー](#クエリビルダー)
+8. [バリデーション](#バリデーション)
+9. [自動型変換](#自動型変換)
+10. [型安全なドキュメント参照](#型安全なドキュメント参照)
+11. [エラーハンドリング](#エラーハンドリング)
+12. [パフォーマンス](#パフォーマンス)
+13. [ベストプラクティス](#ベストプラクティス)
+14. [高度な使い方](#高度な使い方)
+15. [APIリファレンス](#apiリファレンス)
 
 ## インストール
 
