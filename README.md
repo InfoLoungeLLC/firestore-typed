@@ -5,6 +5,8 @@
 [![codecov](https://codecov.io/gh/InfoLoungeLLC/firestore-typed/branch/main/graph/badge.svg)](https://codecov.io/gh/InfoLoungeLLC/firestore-typed)
 [![license](https://img.shields.io/npm/l/@info-lounge/firestore-typed.svg)](https://github.com/InfoLoungeLLC/firestore-typed/blob/main/LICENSE)
 
+> **[日本語のREADMEはこちら / Japanese README here →](README.ja.md)**
+
 > ⚠️ **EXPERIMENTAL RELEASE**: This package is currently in beta. APIs may change in future releases. Use with caution in production environments.
 
 A type-safe, low-level wrapper for Firebase Firestore with **mandatory runtime validation**. This package ensures that **all data is validated using typia validators during both read and write operations**, providing comprehensive type safety, data integrity, and improved developer experience for Firestore operations.
