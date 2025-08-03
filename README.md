@@ -1,5 +1,9 @@
 # @info-lounge/firestore-typed
 
+[![npm version](https://badge.fury.io/js/@info-lounge%2Ffirestore-typed.svg)](https://badge.fury.io/js/@info-lounge%2Ffirestore-typed)
+[![npm downloads](https://img.shields.io/npm/dm/@info-lounge/firestore-typed.svg)](https://www.npmjs.com/package/@info-lounge/firestore-typed)
+[![license](https://img.shields.io/npm/l/@info-lounge/firestore-typed.svg)](https://github.com/InfoLoungeLLC/firestore-typed/blob/main/LICENSE)
+
 > ⚠️ **EXPERIMENTAL RELEASE**: This package is currently in beta. APIs may change in future releases. Use with caution in production environments.
 
 A type-safe, low-level wrapper for Firebase Firestore with **mandatory runtime validation**. This package ensures that **all data is validated using typia validators during both read and write operations**, providing comprehensive type safety, data integrity, and improved developer experience for Firestore operations.

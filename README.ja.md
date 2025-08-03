@@ -1,5 +1,9 @@
 # @info-lounge/firestore-typed
 
+[![npm version](https://badge.fury.io/js/@info-lounge%2Ffirestore-typed.svg)](https://badge.fury.io/js/@info-lounge%2Ffirestore-typed)
+[![npm downloads](https://img.shields.io/npm/dm/@info-lounge/firestore-typed.svg)](https://www.npmjs.com/package/@info-lounge/firestore-typed)
+[![license](https://img.shields.io/npm/l/@info-lounge/firestore-typed.svg)](https://github.com/InfoLoungeLLC/firestore-typed/blob/main/LICENSE)
+
 > ⚠️ **実験的リリース**: このパッケージは現在ベータ版です。将来のリリースでAPIが変更される可能性があります。本番環境での使用には注意してください。
 
 **必須ランタイムバリデーション**付きFirebase Firestoreの型安全な低レベルラッパーです。このパッケージは、**読み書き操作時にtypiaValidatorを用いてすべてのデータがバリデーションされることを保証**し、包括的な型安全性、データ整合性、改善された開発者体験をFirestore操作に提供します。
