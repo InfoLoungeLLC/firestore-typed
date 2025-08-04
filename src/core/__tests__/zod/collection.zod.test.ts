@@ -8,7 +8,7 @@ import {
   type UserProfile,
   type Order,
   type AnalyticsEvent,
-} from '../__helpers__/zod-schemas.helper'
+} from '../../../__tests__/__helpers__/zod-schemas.helper'
 
 // Mock Firebase modules
 vi.mock('firebase-admin/firestore', () => ({

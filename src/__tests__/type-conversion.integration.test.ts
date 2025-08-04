@@ -1,13 +1,13 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { getFirestoreTyped } from '../index'
 import { deserializeFirestoreTypes } from '../utils/firestore-converter'
-import { createMockFirestore } from '../core/__tests__/__helpers__/firebase-mock.helper'
+import { createMockFirestore } from './__helpers__/firebase-mock.helper'
 import type { SerializedGeoPoint, SerializedDocumentReference } from '../utils/firestore-converter'
 
 // Types are only used in test assertions, not direct imports needed
 
 vi.mock('firebase-admin/firestore', async () => {
-  const mockHelper = await import('../core/__tests__/__helpers__/firebase-mock.helper')
+  const mockHelper = await import('./__helpers__/firebase-mock.helper')
   return mockHelper.createFirebaseAdminMock()
 })
 

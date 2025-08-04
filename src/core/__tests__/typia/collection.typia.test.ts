@@ -1,9 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { CollectionReference } from '../../collection'
 import type { FirestoreTypedOptionsProvider } from '../../../types/firestore-typed.types'
-import { createTestEntity, type TestEntity } from '../__helpers__/test-entities.helper'
+import {
+  createTestEntity,
+  type TestEntity,
+} from '../../../__tests__/__helpers__/test-entities.helper'
 // Import generated typia validators
-import { validateTestEntity } from '../__helpers__/typia-validators/__generated__/test-entity-validators.helper'
+import { validateTestEntity } from '../../../__tests__/__helpers__/typia-validators/__generated__/test-entity-validators.helper'
 
 // Mock Firebase modules
 vi.mock('firebase-admin/firestore', () => ({

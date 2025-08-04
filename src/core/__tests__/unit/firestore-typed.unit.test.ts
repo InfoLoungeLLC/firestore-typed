@@ -11,10 +11,10 @@ import {
   createProductEntityValidator,
   type ArticleEntity,
   createArticleEntityValidator,
-} from '../__helpers__/test-entities.helper'
+} from '../../../__tests__/__helpers__/test-entities.helper'
 
 vi.mock('firebase-admin/firestore', async () => {
-  const mockHelper = await import('../__helpers__/firebase-mock.helper')
+  const mockHelper = await import('../../../__tests__/__helpers__/firebase-mock.helper')
   return mockHelper.createFirebaseAdminMock()
 })
 
