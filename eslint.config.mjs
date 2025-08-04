@@ -9,6 +9,9 @@ export default tseslint.config(
   eslint.configs.recommended,
   ...tseslint.configs.recommendedTypeChecked,
   {
+    ignores: ['**/__generated__/**'],
+  },
+  {
     languageOptions: {
       globals: {
         ...globals.node,

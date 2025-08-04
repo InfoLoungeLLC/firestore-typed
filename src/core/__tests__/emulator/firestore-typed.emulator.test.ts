@@ -4,11 +4,11 @@ import {
   setupEmulator,
   teardownEmulator,
   type EmulatorSetup,
-} from '../__helpers__/emulator-setup.helper'
+} from '../../../__tests__/__helpers__/emulator-setup.helper'
 import {
   createSimpleTestEntity,
   createSimpleTestEntityValidator,
-} from '../__helpers__/test-entities.helper'
+} from '../../../__tests__/__helpers__/test-entities.helper'
 
 describe('FirestoreTyped Core Class (Emulator)', () => {
   let emulator: EmulatorSetup

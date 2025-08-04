@@ -1,8 +1,45 @@
-# @info-lounge/firestore-typed
+# @info-lounge/firestore-typed – Type-safe Firestore wrapper with runtime validation
 
-> ⚠️ **EXPERIMENTAL RELEASE**: This package is currently in beta. APIs may change in future releases. Use with caution in production environments.
+[![npm version](https://badge.fury.io/js/@info-lounge%2Ffirestore-typed.svg)](https://badge.fury.io/js/@info-lounge%2Ffirestore-typed)
+[![npm downloads](https://img.shields.io/npm/dm/@info-lounge/firestore-typed.svg)](https://www.npmjs.com/package/@info-lounge/firestore-typed)
+[![codecov](https://codecov.io/gh/InfoLoungeLLC/firestore-typed/branch/main/graph/badge.svg)](https://codecov.io/gh/InfoLoungeLLC/firestore-typed)
+[![license](https://img.shields.io/npm/l/@info-lounge/firestore-typed.svg)](https://github.com/InfoLoungeLLC/firestore-typed/blob/main/LICENSE)
 
 A type-safe, low-level wrapper for Firebase Firestore with **mandatory runtime validation**. This package ensures that **all data is validated using typia validators during both read and write operations**, providing comprehensive type safety, data integrity, and improved developer experience for Firestore operations.
+
+> **[日本語のREADMEはこちら / Japanese README here →](README.ja.md)**
+
+## Quick Example - Why Use FirestoreTyped?
+
+```typescript
+// ❌ Raw Firestore - No validation, runtime errors possible
+const db = getFirestore()
+await db.collection('users').doc('123').set({
+  name: 123,      // Wrong type but no error until runtime
+  email: null     // Missing required field
+})
+
+// ✅ FirestoreTyped - Automatic validation prevents errors
+import { getFirestoreTyped } from '@info-lounge/firestore-typed'
+import typia from 'typia'
+
+interface User {
+  name: string
+  email: string
+}
+
+const userValidator = typia.createAssert<User>()
+const db = getFirestoreTyped()
+const users = db.collection<User>('users', userValidator)
+
+await users.doc('123').set({
+  name: 'John',              // ✓ Validated at runtime
+  email: 'john@example.com'  // ✓ All fields checked
+})
+// Throws validation error if data doesn't match User interface
+```
+
+> ⚠️ **EXPERIMENTAL RELEASE**: This package is currently in beta. APIs may change in future releases. Use with caution in production environments.
 
 ## Key Features
 
@@ -42,8 +79,16 @@ npm install @info-lounge/firestore-typed
 This package requires the following peer dependencies:
 
 ```bash
-npm install firebase-admin typia
+# Required
+npm install firebase-admin
+
+# Choose one validation library (or both):
+npm install typia     # Recommended for best performance
+# OR
+npm install zod       # Alternative validation library
 ```
+
+**Note**: You must install either `typia` or `zod` (or both) as a validation library. The package will work with either one.
 
 
 ### Typia Transform Configuration
@@ -694,12 +739,12 @@ await db.collection<UserEntity>('users', userValidator).doc('user123').set({
 
 This provides much more precise validation than basic TypeScript types alone.
 
-### Alternative Validation Libraries (Untested)
+### Alternative Validation Libraries
 
-**Note**: FirestoreTyped accepts any validator function with signature `(data: unknown) => T`. While primarily tested with typia, other validation libraries should theoretically work:
+**Note**: FirestoreTyped accepts any validator function with signature `(data: unknown) => T`. Besides typia, we have also verified compatibility with Zod:
 
 ```typescript
-// Zod example (untested)
+// Zod example
 import { z } from 'zod'
 
 const UserSchema = z.object({
@@ -736,7 +781,7 @@ const db2 = getFirestoreTyped()
 const users2 = db2.collection<UserEntity>('users', joiValidator)
 ```
 
-⚠️ **Important**: These alternative approaches are **untested**. We have only verified compatibility with typia. If you use other validation libraries, please test thoroughly and report any issues.
+⚠️ **Important**: We have verified compatibility with **typia** and **Zod**. Other validation libraries like Joi should work in theory but have not been verified. Please test thoroughly and report any issues.
 
 ### Validation Control
 

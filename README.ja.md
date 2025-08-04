@@ -1,8 +1,45 @@
-# @info-lounge/firestore-typed
+# @info-lounge/firestore-typed – ランタイムバリデーション付きの型安全なFirestoreラッパー
 
-> ⚠️ **実験的リリース**: このパッケージは現在ベータ版です。将来のリリースでAPIが変更される可能性があります。本番環境での使用には注意してください。
+[![npm version](https://badge.fury.io/js/@info-lounge%2Ffirestore-typed.svg)](https://badge.fury.io/js/@info-lounge%2Ffirestore-typed)
+[![npm downloads](https://img.shields.io/npm/dm/@info-lounge/firestore-typed.svg)](https://www.npmjs.com/package/@info-lounge/firestore-typed)
+[![codecov](https://codecov.io/gh/InfoLoungeLLC/firestore-typed/branch/main/graph/badge.svg)](https://codecov.io/gh/InfoLoungeLLC/firestore-typed)
+[![license](https://img.shields.io/npm/l/@info-lounge/firestore-typed.svg)](https://github.com/InfoLoungeLLC/firestore-typed/blob/main/LICENSE)
 
 **必須ランタイムバリデーション**付きFirebase Firestoreの型安全な低レベルラッパーです。このパッケージは、**読み書き操作時にtypiaValidatorを用いてすべてのデータがバリデーションされることを保証**し、包括的な型安全性、データ整合性、改善された開発者体験をFirestore操作に提供します。
+
+> **[English README here / 英語版READMEはこちら →](README.md)**
+
+## 利用例 - なぜFirestoreTypedを使うのか？
+
+```typescript
+// ❌ 生のFirestore - バリデーションなし、ランタイムエラーの可能性
+const db = getFirestore()
+await db.collection('users').doc('123').set({
+  name: 123,      // 間違った型だがランタイムまでエラーにならない
+  email: null     // 必須フィールドがない
+})
+
+// ✅ FirestoreTyped - 自動バリデーションでエラーを防止
+import { getFirestoreTyped } from '@info-lounge/firestore-typed'
+import typia from 'typia'
+
+interface User {
+  name: string
+  email: string
+}
+
+const userValidator = typia.createAssert<User>()
+const db = getFirestoreTyped()
+const users = db.collection<User>('users', userValidator)
+
+await users.doc('123').set({
+  name: 'John',              // ✓ ランタイムでバリデーション
+  email: 'john@example.com'  // ✓ すべてのフィールドがチェックされる
+})
+// データがUserと一致しない場合バリデーションエラーをスロー
+```
+
+> ⚠️ **実験的リリース**: このパッケージは現在ベータ版です。将来のリリースでAPIが変更される可能性があります。本番環境での使用には注意してください。
 
 ## 主要機能
 
@@ -42,8 +79,16 @@ npm install @info-lounge/firestore-typed
 このパッケージには以下のpeer dependenciesが必要です：
 
 ```bash
-npm install firebase-admin typia
+# 必須
+npm install firebase-admin
+
+# バリデーションライブラリを選択（または両方）：
+npm install typia     # パフォーマンス重視（推奨）
+# または
+npm install zod       # 代替バリデーションライブラリ
 ```
+
+**注意**: バリデーションライブラリとして`typia`または`zod`（または両方）をインストールする必要があります。パッケージはどちらでも動作します。
 
 ### Typia Transform設定
 
@@ -692,12 +737,12 @@ await db.collection<UserEntity>('users', userValidator).doc('user123').set({
 
 これにより、基本的なTypeScript型だけでは実現できない、はるかに精密なバリデーションが可能になります。
 
-### 代替バリデーションライブラリ（未検証）
+### 代替バリデーションライブラリ
 
-**注意**: FirestoreTypedは`(data: unknown) => T`シグネチャのあらゆるvalidator関数を受け入れます。主にtypiaでテストされていますが、理論的には他のバリデーションライブラリも動作するはずです：
+**注意**: FirestoreTypedは`(data: unknown) => T`シグネチャのあらゆるvalidator関数を受け入れます。typiaの他に、Zodとの互換性も検証済みです：
 
 ```typescript
-// Zodの例（未検証）
+// Zodの例
 import { z } from 'zod'
 
 const UserSchema = z.object({
@@ -734,7 +779,7 @@ const db2 = getFirestoreTyped()
 const users2 = db2.collection<UserEntity>('users', joiValidator)
 ```
 
-⚠️ **重要**: これらの代替アプローチは**未検証**です。typiaとの互換性のみを検証しています。他のバリデーションライブラリを使用する場合は、十分にテストして問題を報告してください。
+⚠️ **重要**: **typia**と**Zod**との互換性は検証済みです。Joiなどの他のバリデーションライブラリは理論的に互換性がありますが検証されていません。十分にテストして問題を報告してください。
 
 ### バリデーション制御
 

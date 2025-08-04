@@ -35,3 +35,6 @@ lerna-debug.log*
 
 # Package
 *.tgz
+
+# Generated files
+src/**/__generated__/

@@ -27,6 +27,8 @@ npm test -- --grep "pattern"
 npm test -- src/core/__tests__/unit/
 ```
 
+**Note**: Tests automatically run `typia:generate` before execution to generate validator code. The `typia:postprocess` step is a temporary workaround for [typia issue #1625](https://github.com/samchon/typia/issues/1625).
+
 ### Firebase Emulator (for emulator tests)
 ```bash
 npm run emulators:start     # Start Firebase emulator (required for emulator tests)
@@ -47,6 +49,8 @@ npm run typecheck    # Run TypeScript type checking without emitting files
 
 ### Core Concept
 FirestoreTyped is a type-safe wrapper for Firebase Firestore that **mandates runtime validation** for all operations. Unlike raw Firestore, every piece of data must be validated using a validator function (typically typia).
+
+**Key Differentiator**: While raw Firestore allows any data structure, FirestoreTyped requires a validator function for each collection, ensuring data integrity at runtime.
 
 ### Key Design Principles
 1. **Validator-First Architecture**: All instances require a validator function at initialization
@@ -139,7 +143,7 @@ src/
 - Currently **NOT** configured for typia transforms (users must set up ts-patch)
 
 ### Validation Library
-Primary support for typia validators, but accepts any function with signature `(data: unknown) => T` that throws on validation failure.
+Primary support for typia validators, but accepts any function with signature `(data: unknown) => T` that throws on validation failure. Zod is also tested and verified to work as an alternative validation library.
 
 ## Firebase Emulator Configuration
 
@@ -160,3 +164,22 @@ Primary support for typia validators, but accepts any function with signature `(
 - Validating collection group queries across multiple collections
 - Testing complex document structures and relationships
 - Verifying type conversion with actual Firestore data serialization
+
+## Development Workflow
+
+### Common Patterns
+
+#### Adding a New Validator Type
+1. Create the type interface in your code
+2. Create the validator using typia: `typia.createAssert<YourType>()`
+3. Use with collection: `db.collection<YourType>('path', validator)`
+
+#### Debugging Validation Errors
+- Check the `FirestoreTypedValidationError` for the original validation error
+- The error includes the exact validation failure from typia/zod
+- Use `validateOnWrite: false` temporarily to bypass validation for debugging
+
+### CI/CD Notes
+- GitHub Actions runs tests on Node.js 20.x and 22.x
+- Emulator tests are run separately in CI pipeline
+- Coverage reports are uploaded to Codecov
