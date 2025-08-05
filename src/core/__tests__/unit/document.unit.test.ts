@@ -1,18 +1,24 @@
 import { vi, describe, it, expect, beforeEach, type Mock, type MockedFunction } from 'vitest'
-import { DocumentReference } from '../document'
-import { serializeFirestoreTypes, deserializeFirestoreTypes } from '../../utils/firestore-converter'
-import { validateData } from '../../utils/validator'
-import { DocumentNotFoundError, DocumentAlreadyExistsError } from '../../errors/errors'
-import type { FirestoreTypedOptionsProvider } from '../../types/firestore-typed.types'
-import type { TestEntity } from './__helpers__/test-entities.helper'
-import { createTestEntity } from './__helpers__/test-entities.helper'
+import { DocumentReference } from '../../document'
+import {
+  serializeFirestoreTypes,
+  deserializeFirestoreTypes,
+} from '../../../utils/firestore-converter'
+import { validateData } from '../../../utils/validator'
+import { DocumentNotFoundError, DocumentAlreadyExistsError } from '../../../errors/errors'
+import type { FirestoreTypedOptionsProvider } from '../../../types/firestore-typed.types'
+import {
+  type TestEntity,
+  createTestEntity,
+  createTestEntityValidator,
+} from '../../../__tests__/__helpers__/test-entities.helper'
 
 // Mock dependencies
-vi.mock('../../utils/firestore-converter')
-vi.mock('../../utils/validator')
+vi.mock('../../../utils/firestore-converter')
+vi.mock('../../../utils/validator')
 
 vi.mock('firebase-admin/firestore', async () => {
-  const mockHelper = await import('./__helpers__/firebase-mock.helper')
+  const mockHelper = await import('../../../__tests__/__helpers__/firebase-mock.helper')
   return mockHelper.createFirebaseAdminMock()
 })
 
@@ -35,9 +41,11 @@ describe('DocumentReference', () => {
   beforeEach(() => {
     // Reset mocks
     vi.clearAllMocks()
-    mockSerializeFirestoreTypes.mockImplementation((data) => data)
-    mockDeserializeFirestoreTypes.mockImplementation((data) => data)
-    mockValidateData.mockImplementation((data) => data as any)
+    mockSerializeFirestoreTypes.mockImplementation((data: any) => data)
+    mockDeserializeFirestoreTypes.mockImplementation((data: any) => data)
+    mockValidateData.mockImplementation((_data: any, _path: any, validator: any) =>
+      validator(_data),
+    )
 
     // Create mock Firebase DocumentReference
     mockFirebaseDoc = {
@@ -59,7 +67,7 @@ describe('DocumentReference', () => {
     }
 
     // Create mock validator
-    mockValidator = vi.fn((data) => data as TestEntity)
+    mockValidator = createTestEntityValidator()
 
     // Create DocumentReference instance
     docRef = new DocumentReference<TestEntity>(mockFirebaseDoc, mockFirestoreTyped, mockValidator)

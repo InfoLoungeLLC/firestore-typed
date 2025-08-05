@@ -1,6 +1,6 @@
 import { vi, describe, it, expect } from 'vitest'
-import { validateData } from '../validator'
-import { FirestoreTypedValidationError } from '../../errors/errors'
+import { validateData } from '../../validator'
+import { FirestoreTypedValidationError } from '../../../errors/errors'
 
 describe('Validator', () => {
   interface TestEntity {

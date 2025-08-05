@@ -3,7 +3,7 @@ import { getFirestoreTyped } from '../index'
 import { FirestoreTypedValidationError } from '../errors/errors'
 
 vi.mock('firebase-admin/firestore', async () => {
-  const mockHelper = await import('../core/__tests__/__helpers__/firebase-mock.helper')
+  const mockHelper = await import('./__helpers__/firebase-mock.helper')
   return mockHelper.createFirebaseAdminMock()
 })
 
@@ -15,7 +15,6 @@ describe('FirestoreTyped Validation', () => {
     status: 'active' | 'inactive'
     createdAt: Date
   }
-
   const strictValidator = (data: unknown): UserEntity => {
     const obj = data as any
 

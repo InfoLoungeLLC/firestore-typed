@@ -5,6 +5,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.1] - 2025-01-26
+
+### Added
+
+- **Validation Library Support**: Added comprehensive test examples demonstrating typia and Zod validator integration
+- **Development Tools**: Added automated typia code generation with `typia:generate` and `typia:postprocess` scripts
+- **Complex Schema Examples**: Added real-world validation schemas for nested objects (UserProfile, Order, AnalyticsEvent)
+- **Peer Dependencies**: Declared typia (^9.6.1) and Zod (^4.0.14) as optional peer dependencies for better dependency management
+
+### Changed
+
+- **Documentation**: Enhanced README with validation library alternatives and usage examples
+- **Test Infrastructure**: Consolidated test helpers from `src/core/__tests__/__helpers__` to `src/__tests__/__helpers__` for project-wide accessibility
+- **Integration Tests**: Improved test realism by using actual typia validators instead of manual validation logic
+- **Package Keywords**: Added 'typia' and 'zod' keywords for better discoverability
+
+### Fixed
+
+- **TypeScript Compilation**: Fixed compilation errors with proper type assertions for optional test data properties
+- **Test Error Handling**: Improved validation error testing to properly access original error details
+
+### Internal
+
+- **Test Organization**: Centralized all test utilities in global helpers directory for better maintainability
+- **Code Quality**: Updated integration tests to use generated validators for more accurate validation testing
+- **Development Workflow**: Streamlined typia code generation process with automated post-processing
+
 ## [0.5.0] - 2025-07-31
 
 ### Changed

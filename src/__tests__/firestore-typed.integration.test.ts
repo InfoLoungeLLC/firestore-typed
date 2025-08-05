@@ -1,40 +1,17 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { firestoreTyped, getFirestoreTyped } from '../index'
 import { FirestoreTypedValidationError } from '../errors/errors'
-import { createFirebaseAdminMock } from '../core/__tests__/__helpers__/firebase-mock.helper'
+import { createFirebaseAdminMock } from './__helpers__/firebase-mock.helper'
+import { type TestEntity } from './__helpers__/test-entities.helper'
+import { validateTestEntity } from './__helpers__/typia-validators/__generated__/test-entity-validators.helper'
 
 vi.mock('firebase-admin/firestore', async () => {
-  const mockHelper = await import('../core/__tests__/__helpers__/firebase-mock.helper')
+  const mockHelper = await import('./__helpers__/firebase-mock.helper')
   return mockHelper.createFirebaseAdminMock()
 })
 
 describe('FirestoreTyped', () => {
-  interface TestEntity {
-    id: string
-    name: string
-    age: number
-    createdAt: Date
-  }
-
-  const mockValidator = (data: unknown): TestEntity => {
-    const obj = data as any
-    if (!obj || typeof obj !== 'object') {
-      throw new Error('Invalid data')
-    }
-    if (!obj.id || typeof obj.id !== 'string') {
-      throw new Error('Invalid id')
-    }
-    if (!obj.name || typeof obj.name !== 'string') {
-      throw new Error('Invalid name')
-    }
-    if (typeof obj.age !== 'number') {
-      throw new Error('Invalid age')
-    }
-    if (!(obj.createdAt instanceof Date)) {
-      throw new Error('Invalid createdAt')
-    }
-    return obj as TestEntity
-  }
+  const mockValidator = validateTestEntity
 
   describe('Factory Function', () => {
     it('should create a FirestoreTyped instance with default options', () => {
@@ -87,9 +64,8 @@ describe('FirestoreTyped', () => {
 
       it('should validate data before adding when validateOnWrite is true', async () => {
         const invalidData = {
-          id: 'test-1',
+          id: 123, // should be string
           name: 'John Doe',
-          // missing age and createdAt
         } as any
 
         try {
@@ -99,7 +75,7 @@ describe('FirestoreTyped', () => {
           expect(error).toBeInstanceOf(FirestoreTypedValidationError)
           const validationError = error as FirestoreTypedValidationError
           if (validationError.originalError instanceof Error) {
-            expect(validationError.originalError.message).toContain('Invalid age')
+            expect(validationError.originalError.message).toContain('expect to be string')
           }
         }
       })
@@ -140,7 +116,7 @@ describe('FirestoreTyped', () => {
         expect(snapshot.data?.age).toBe(testData.age)
         expect(snapshot.data?.createdAt).toBeInstanceOf(Date)
         // Allow up to 1 second difference due to timestamp conversion
-        expect(snapshot.data?.createdAt.getTime()).toBeCloseTo(testData.createdAt.getTime(), -3)
+        expect(snapshot.data!.createdAt!.getTime()).toBeCloseTo(testData.createdAt!.getTime(), -3)
       })
 
       it('should validate data before setting when validateOnWrite is true', async () => {
@@ -171,7 +147,7 @@ describe('FirestoreTyped', () => {
         expect(snapshot.data?.age).toBe(testData.age)
         expect(snapshot.data?.createdAt).toBeInstanceOf(Date)
         // Allow up to 1 second difference due to timestamp conversion
-        expect(snapshot.data?.createdAt.getTime()).toBeCloseTo(testData.createdAt.getTime(), -3)
+        expect(snapshot.data!.createdAt!.getTime()).toBeCloseTo(testData.createdAt!.getTime(), -3)
       })
 
       it('should return null for non-existent document', async () => {

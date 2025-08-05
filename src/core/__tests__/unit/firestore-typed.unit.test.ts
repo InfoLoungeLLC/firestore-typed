@@ -1,13 +1,20 @@
 /* eslint-disable @typescript-eslint/unbound-method */
 import { vi, describe, it, expect, beforeEach, type Mock, type Mocked } from 'vitest'
-import { FirestoreTyped } from '../firestore-typed'
-import { CollectionReference } from '../collection'
-import { CollectionGroup } from '../collection-group'
+import { FirestoreTyped } from '../../firestore-typed'
+import { CollectionReference } from '../../collection'
+import { CollectionGroup } from '../../collection-group'
 import type { Firestore } from 'firebase-admin/firestore'
-import type { TestEntity } from './__helpers__/test-entities.helper'
+import {
+  type TestEntity,
+  createTestEntityValidator,
+  type ProductEntity,
+  createProductEntityValidator,
+  type ArticleEntity,
+  createArticleEntityValidator,
+} from '../../../__tests__/__helpers__/test-entities.helper'
 
 vi.mock('firebase-admin/firestore', async () => {
-  const mockHelper = await import('./__helpers__/firebase-mock.helper')
+  const mockHelper = await import('../../../__tests__/__helpers__/firebase-mock.helper')
   return mockHelper.createFirebaseAdminMock()
 })
 
@@ -23,8 +30,8 @@ describe('FirestoreTyped Core Class', () => {
       collectionGroup: vi.fn(),
     } as any
 
-    // Create mock validator
-    mockValidator = vi.fn((data) => data as TestEntity)
+    // Create mock validator using factory
+    mockValidator = createTestEntityValidator()
 
     // Create FirestoreTyped instance with default options
     firestoreTyped = new FirestoreTyped(mockFirestore)
@@ -98,18 +105,8 @@ describe('FirestoreTyped Core Class', () => {
     })
 
     it('should allow different validators for different collections', () => {
-      interface UserEntity {
-        name: string
-        email: string
-      }
-
-      interface ProductEntity {
-        title: string
-        price: number
-      }
-
-      const userValidator = vi.fn((data) => data as UserEntity)
-      const productValidator = vi.fn((data) => data as ProductEntity)
+      const userValidator = createTestEntityValidator()
+      const productValidator = createProductEntityValidator()
 
       const mockUserCollectionRef = { id: 'users', path: 'users' }
       const mockProductCollectionRef = { id: 'products', path: 'products' }
@@ -118,7 +115,7 @@ describe('FirestoreTyped Core Class', () => {
         .mockReturnValueOnce(mockUserCollectionRef as any)
         .mockReturnValueOnce(mockProductCollectionRef as any)
 
-      const users = firestoreTyped.collection<UserEntity>('users', userValidator)
+      const users = firestoreTyped.collection<TestEntity>('users', userValidator)
       const products = firestoreTyped.collection<ProductEntity>('products', productValidator)
 
       expect(users).toBeInstanceOf(CollectionReference)
@@ -359,18 +356,12 @@ describe('FirestoreTyped Core Class', () => {
     })
 
     it('should work with different entity types', () => {
-      interface DifferentEntity {
-        id: string
-        title: string
-        published: boolean
-      }
-
-      const differentValidator = vi.fn((data) => data as DifferentEntity)
+      const differentValidator = createArticleEntityValidator()
 
       const mockCollectionRef = { id: 'articles', path: 'articles' }
       mockFirestore.collection.mockReturnValue(mockCollectionRef as any)
 
-      const collection = firestoreTyped.collection<DifferentEntity>('articles', differentValidator)
+      const collection = firestoreTyped.collection<ArticleEntity>('articles', differentValidator)
       expect(collection).toBeInstanceOf(CollectionReference)
     })
   })
