@@ -1,6 +1,6 @@
 {
   "name": "@info-lounge/firestore-typed",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "description": "Type-safe, low-level wrapper for Firebase Firestore with enhanced validation and developer experience",
   "type": "module",
   "main": "dist/index.cjs",
@@ -53,8 +53,8 @@
   "license": "MIT",
   "peerDependencies": {
     "firebase-admin": "^13.4.0",
-    "typia": "^9.6.1",
-    "zod": "^4.0.14"
+    "typia": "^9.7.1",
+    "zod": "^4.0.17"
   },
   "peerDependenciesMeta": {
     "typia": {
