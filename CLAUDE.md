@@ -27,7 +27,7 @@ npm test -- --grep "pattern"
 npm test -- src/core/__tests__/unit/
 ```
 
-**Note**: Tests automatically run `typia:generate` before execution to generate validator code. The `typia:postprocess` step is a temporary workaround for [typia issue #1625](https://github.com/samchon/typia/issues/1625).
+**Note**: Tests automatically run `typia:generate` before execution to generate validator code.
 
 ### Firebase Emulator (for emulator tests)
 ```bash

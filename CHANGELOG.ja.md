@@ -5,6 +5,17 @@
 このフォーマットは[Keep a Changelog](https://keepachangelog.com/en/1.0.0/)に基づいており、
 このプロジェクトは[セマンティックバージョニング](https://semver.org/spec/v2.0.0.html)に準拠しています。
 
+## [0.5.2] - 2025-08-11
+
+### 変更
+
+- **ビルドツール**: typia v9.7.1では未使用のimport文が生成されなくなったため、不要な`typia:postprocess`スクリプトを削除（[typia issue #1625](https://github.com/samchon/typia/issues/1625)を修正）
+- **開発ワークフロー**: 後処理ステップを削除してtypiaコード生成を簡素化
+
+### 内部
+
+- **依存関係**: typia v9.7.1との互換性を検証
+
 ## [0.5.1] - 2025-01-26
 
 ### 追加
