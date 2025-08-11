@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.2] - 2025-08-11
+
+### Changed
+
+- **Build Tools**: Removed unnecessary `typia:postprocess` script as typia v9.7.1 no longer generates unused import statements (fixes [typia issue #1625](https://github.com/samchon/typia/issues/1625))
+- **Development Workflow**: Simplified typia code generation by removing post-processing step
+
+### Internal
+
+- **Dependencies**: Verified compatibility with typia v9.7.1
+
 ## [0.5.1] - 2025-01-26
 
 ### Added
