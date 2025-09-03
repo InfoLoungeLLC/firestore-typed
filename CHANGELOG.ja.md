@@ -5,6 +5,15 @@
 このフォーマットは[Keep a Changelog](https://keepachangelog.com/en/1.0.0/)に基づいており、
 このプロジェクトは[セマンティックバージョニング](https://semver.org/spec/v2.0.0.html)に準拠しています。
 
+## [0.5.4] - 2025-09-03
+
+### 修正
+
+- **依存関係**: npm CLIのオプショナルピア依存関係に関する問題を回避するため、`firebase-admin`をdevDependenciesに追加
+  - npm CLIには、devDependenciesにリストされているオプショナルピア依存関係が`npm ci`実行時にインストールされない既知の問題があります（[npm/cli#8464](https://github.com/npm/cli/issues/8464)）
+  - これがGitHub ActionsのCI環境でテストが失敗する原因となっていました
+  - 開発およびテストのため、全てのピア依存関係（firebase-admin、typia、zod）がdevDependenciesに適切に重複記載されるようになりました
+
 ## [0.5.3] - 2025-08-11
 
 ### 変更
