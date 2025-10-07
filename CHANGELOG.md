@@ -13,6 +13,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - These utility types are now properly exported from the main entry point
   - Enables users to import and use these types as documented in the README
 
+### Changed
+
+- **Dependencies**: Updated development dependencies
+  - firebase-admin: ^13.4.0 → ^13.5.0
+  - typia: ^9.7.1 → ^9.7.2
+  - @types/node: ^24.3.0 → ^24.3.1
+  - @vitest/eslint-plugin: ^1.3.4 → ^1.3.8
+  - Updated ESLint packages and tsdown to latest versions
+- **CI/CD**: Updated GitHub Actions checkout action to v5
+
 ## [0.5.4] - 2025-09-03
 
 ### Fixed
