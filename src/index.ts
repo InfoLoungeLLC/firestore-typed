@@ -47,6 +47,9 @@ export function firestoreTyped(options?: FirestoreTypedOptions): FirestoreTyped 
 export * from './types/firestore-typed.types'
 export * from './errors/errors'
 
+// Export utility types
+export type { SerializedDocumentReference, SerializedGeoPoint } from './utils/firestore-converter'
+
 // Export core classes
 export { FirestoreTyped } from './core/firestore-typed'
 export { CollectionReference } from './core/collection'
