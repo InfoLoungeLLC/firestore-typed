@@ -5,6 +5,24 @@
 このフォーマットは[Keep a Changelog](https://keepachangelog.com/en/1.0.0/)に基づいており、
 このプロジェクトは[セマンティックバージョニング](https://semver.org/spec/v2.0.0.html)に準拠しています。
 
+## [0.5.5] - 2025-10-07
+
+### 修正
+
+- **エクスポート**: `SerializedDocumentReference`と`SerializedGeoPoint`の型エクスポートが不足していた問題を修正
+  - これらのユーティリティ型がメインエントリーポイントから適切にエクスポートされるようになりました
+  - READMEに記載されている通り、ユーザーがこれらの型をインポートして使用できるようになります
+
+### 変更
+
+- **依存関係**: 開発依存関係を更新
+  - firebase-admin: ^13.4.0 → ^13.5.0
+  - typia: ^9.7.1 → ^9.7.2
+  - @types/node: ^24.3.0 → ^24.3.1
+  - @vitest/eslint-plugin: ^1.3.4 → ^1.3.8
+  - ESLintパッケージとtsdownを最新バージョンに更新
+- **CI/CD**: GitHub Actionsのcheckoutアクションをv5に更新
+
 ## [0.5.4] - 2025-09-03
 
 ### 修正
