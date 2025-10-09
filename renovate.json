@@ -6,7 +6,11 @@
     ":semanticCommitTypeAll(chore)"
   ],
   "timezone": "Asia/Tokyo",
-  "schedule": ["after 10pm and before 5am every weekday", "every weekend"],
+  "schedule": [
+    "after 10pm every weekday",
+    "every weekend",
+    "before 5am every weekday"
+  ],
   "labels": ["dependencies"],
   "packageRules": [
     {
@@ -17,13 +21,13 @@
     },
     {
       "description": "Group ESLint and related packages",
-      "matchPackagePatterns": ["eslint", "@typescript-eslint"],
-      "groupName": "ESLint packages"
+      "groupName": "ESLint packages",
+      "matchPackageNames": ["/eslint/", "/@typescript-eslint/"]
     },
     {
       "description": "Group Jest and testing packages",
-      "matchPackagePatterns": ["jest", "@types/jest", "ts-jest"],
-      "groupName": "Jest packages"
+      "groupName": "Jest packages",
+      "matchPackageNames": ["/jest/", "/@types/jest/", "/ts-jest/"]
     },
     {
       "description": "TypeScript packages require careful testing",
