@@ -204,6 +204,34 @@ describe('FirestoreTyped Core Class (Emulator)', () => {
     })
   })
 
+  describe('Binary field round-trip', () => {
+    it('should preserve Buffer bytes through write and read', async () => {
+      interface BlobEntity extends Record<string, unknown> {
+        id: string
+        payload: Uint8Array
+      }
+      const validator = (data: unknown) => data as BlobEntity
+      const uniqueCollectionName = `test-bytes-${Date.now()}-${Math.random()}`
+      const collection = firestoreTyped.collection<BlobEntity>(uniqueCollectionName, validator)
+      const docRef = collection.doc('blob-doc')
+
+      const payload = Buffer.from([0xde, 0xad, 0xbe, 0xef])
+      await docRef.set({ id: 'blob', payload })
+
+      try {
+        const snapshot = await docRef.get()
+        const stored = snapshot.data?.payload
+
+        // Without binary passthrough this comes back as an index-keyed
+        // plain object like { "0": 222, "1": 173, ... }
+        expect(stored).toBeInstanceOf(Uint8Array)
+        expect(Buffer.from(stored as Uint8Array).equals(payload)).toBe(true)
+      } finally {
+        await docRef.delete()
+      }
+    })
+  })
+
   describe('Validation behavior', () => {
     it('should validate on write when enabled', async () => {
       const instance = new FirestoreTyped(emulator.firestore, { validateOnWrite: true })
