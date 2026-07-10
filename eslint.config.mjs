@@ -40,6 +40,8 @@ export default tseslint.config(
     },
     rules: {
       ...vitestPlugin.configs.recommended.rules,
+      // Recognize shared assertion helpers (e.g. expectValidationErrorContaining) as assertions
+      'vitest/expect-expect': ['error', { assertFunctionNames: ['expect', 'expect*'] }],
       '@typescript-eslint/no-unsafe-assignment': 'off',
       '@typescript-eslint/no-unsafe-call': 'off',
       '@typescript-eslint/no-unsafe-member-access': 'off',
