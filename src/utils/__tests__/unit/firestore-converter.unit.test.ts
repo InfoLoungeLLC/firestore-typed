@@ -201,6 +201,28 @@ describe('Firestore Converter', () => {
         expect(result).toEqual({})
       })
     })
+
+    describe('Binary Value Preservation', () => {
+      it('should pass Buffer values through unchanged', () => {
+        const buffer = Buffer.from([0xde, 0xad, 0xbe, 0xef])
+
+        const result = serializeFirestoreTypes({ payload: buffer }) as any
+
+        expect(result.payload).toBe(buffer)
+      })
+
+      it('should pass Uint8Array values through unchanged, including nested ones', () => {
+        const bytes = new Uint8Array([1, 2, 3])
+
+        const result = serializeFirestoreTypes({
+          nested: { data: bytes },
+          list: [bytes],
+        }) as any
+
+        expect(result.nested.data).toBe(bytes)
+        expect(result.list[0]).toBe(bytes)
+      })
+    })
   })
 
   describe('deserializeFirestoreTypes', () => {
@@ -498,6 +520,19 @@ describe('Firestore Converter', () => {
 
       const result = deserializeFirestoreTypes({ author: validDocRef }, mockFirestore) as any
       expect(result.author).toBe(mockDocRef)
+    })
+
+    it('should pass binary values through unchanged', () => {
+      const buffer = Buffer.from([0xca, 0xfe])
+      const bytes = new Uint8Array([4, 5, 6])
+
+      const result = deserializeFirestoreTypes(
+        { payload: buffer, nested: { data: bytes } },
+        mockFirestore,
+      ) as any
+
+      expect(result.payload).toBe(buffer)
+      expect(result.nested.data).toBe(bytes)
     })
 
     it('should handle invalid type objects that fail type guards', () => {

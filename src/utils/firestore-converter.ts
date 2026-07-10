@@ -74,6 +74,12 @@ function serializeFirestoreTypesInternal(data: unknown): unknown {
     }
   }
 
+  if (isBinaryValue(data)) {
+    // Firestore bytes fields (Buffer/Uint8Array) must pass through unchanged;
+    // copying them via Object.entries would corrupt them into index-keyed maps
+    return data
+  }
+
   if (Array.isArray(data)) {
     // Recursively convert arrays
     return data.map((item: unknown) => serializeFirestoreTypesInternal(item))
@@ -85,6 +91,14 @@ function serializeFirestoreTypesInternal(data: unknown): unknown {
     result[key] = serializeFirestoreTypesInternal(value)
   }
   return result
+}
+
+/**
+ * Binary values supported by Firestore as bytes fields
+ * (Buffer is a Uint8Array subclass, so this covers both)
+ */
+function isBinaryValue(data: unknown): data is Uint8Array {
+  return data instanceof Uint8Array
 }
 
 /**
@@ -134,6 +148,11 @@ function deserializeFirestoreTypesInternal(data: unknown, firestore: Firestore):
   // SerializedDocumentReference -> DocumentReference
   if (isSerializedDocumentReference(data)) {
     return firestore.doc(data.path)
+  }
+
+  if (isBinaryValue(data)) {
+    // Firestore bytes fields (Buffer/Uint8Array) must pass through unchanged
+    return data
   }
 
   if (Array.isArray(data)) {
