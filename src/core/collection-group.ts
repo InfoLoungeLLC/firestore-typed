@@ -8,7 +8,7 @@ import type {
   DocumentSnapshot,
 } from '../types/firestore-typed.types'
 import { validateData } from '../utils/validator'
-import { serializeFirestoreTypes } from '../utils/firestore-converter'
+import { serializeFirestoreTypes, deserializeQueryValue } from '../utils/firestore-converter'
 
 /**
  * Typed wrapper for Firestore Collection Group queries
@@ -62,7 +62,7 @@ export class CollectionGroup<T extends SerializedDocumentData> {
    * Creates a new Query with where clause (Phase 2)
    */
   where<K extends keyof T & string>(field: K, op: WhereFilterOp, value: T[K]): Query<T> {
-    const query = this.query.where(field, op, value)
+    const query = this.query.where(field, op, deserializeQueryValue(value, this.query.firestore))
     return new Query<T>(query, this.firestoreTyped, this.validator)
   }
 
