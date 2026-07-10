@@ -94,6 +94,9 @@ import { FirestoreTyped, CollectionReference, DocumentReference, Query, Collecti
 - `Date` → `Timestamp` (loses nanosecond precision)
 - `SerializedGeoPoint` → `GeoPoint`
 - `SerializedDocumentReference<TCollection, TDocument>` → `DocumentReference`
+- `Buffer`/`Uint8Array` pass through unchanged (Firestore bytes fields)
+- Already-native values (`Timestamp`, `GeoPoint`, `DocumentReference`, `DocumentSnapshot` cursors) pass through unchanged, including as query operands
+- `merge()` runs its read-modify-write inside a transaction; `failIfExists` uses atomic `create()`
 
 ### Testing Strategy
 The codebase uses a three-tiered testing approach:
@@ -181,5 +184,5 @@ Primary support for typia validators, but accepts any function with signature `(
 
 ### CI/CD Notes
 - GitHub Actions runs tests on Node.js 22.x, 24.x, and 26.x
-- Emulator tests are run separately in CI pipeline
+- Emulator tests run in a dedicated CI job via `firebase emulators:exec` (separate from the Node-matrix test job)
 - Coverage reports are uploaded to Codecov

@@ -32,6 +32,8 @@ const mockValidateData = validateData as MockedFunction<typeof validateData>
 
 describe('DocumentReference', () => {
   let mockFirebaseDoc: any
+  let mockTransaction: any
+  let mockFirestore: any
   let mockFirestoreTyped: FirestoreTypedOptionsProvider
   let mockValidator: Mock
   let docRef: DocumentReference<TestEntity>
@@ -47,13 +49,24 @@ describe('DocumentReference', () => {
       validator(_data),
     )
 
+    // Transaction mock delegates to the document mock so per-test
+    // get/set expectations keep working for transactional operations
+    mockTransaction = {
+      get: vi.fn(() => mockFirebaseDoc.get()),
+      set: vi.fn((_ref: unknown, data: unknown) => mockFirebaseDoc.set(data)),
+    }
+    mockFirestore = {
+      runTransaction: vi.fn(async (fn: (tx: unknown) => Promise<unknown>) => fn(mockTransaction)),
+    }
+
     // Create mock Firebase DocumentReference
     mockFirebaseDoc = {
       id: 'test-id',
       path: 'users/test-id',
-      firestore: {},
+      firestore: mockFirestore,
       get: vi.fn(),
       set: vi.fn(),
+      create: vi.fn(),
       delete: vi.fn(),
       update: vi.fn(),
     }
@@ -191,7 +204,7 @@ describe('DocumentReference', () => {
 
       await docRef.set(testData)
 
-      expect(mockDeserializeFirestoreTypes).toHaveBeenCalledWith(testData, {})
+      expect(mockDeserializeFirestoreTypes).toHaveBeenCalledWith(testData, mockFirestore)
       expect(mockFirebaseDoc.set).toHaveBeenCalledWith(convertedData)
     })
 
@@ -241,33 +254,38 @@ describe('DocumentReference', () => {
     })
 
     describe('failIfExists option', () => {
-      it('should check existence when failIfExists is true', async () => {
-        mockFirebaseDoc.get.mockResolvedValue({
-          exists: false,
-          id: 'test-id',
-          ref: mockFirebaseDoc,
-          data: () => undefined,
-        })
+      it('should write atomically via create() when failIfExists is true', async () => {
+        mockFirebaseDoc.create.mockResolvedValue(undefined)
 
         await docRef.set(testData, { failIfExists: true })
 
-        expect(mockFirebaseDoc.get).toHaveBeenCalled()
-        expect(mockFirebaseDoc.set).toHaveBeenCalledWith(testData)
+        expect(mockFirebaseDoc.create).toHaveBeenCalledWith(testData)
+        expect(mockFirebaseDoc.set).not.toHaveBeenCalled()
+        expect(mockFirebaseDoc.get).not.toHaveBeenCalled()
       })
 
       it('should throw DocumentAlreadyExistsError when document exists', async () => {
-        mockFirebaseDoc.get.mockResolvedValue({
-          exists: true,
-          id: 'test-id',
-          ref: mockFirebaseDoc,
-          data: () => testData,
-        })
+        // gRPC ALREADY_EXISTS error as thrown by Firestore's create()
+        const alreadyExistsError = Object.assign(
+          new Error('6 ALREADY_EXISTS: Document already exists'),
+          {
+            code: 6,
+          },
+        )
+        mockFirebaseDoc.create.mockRejectedValue(alreadyExistsError)
 
         await expect(docRef.set(testData, { failIfExists: true })).rejects.toThrow(
           DocumentAlreadyExistsError,
         )
 
         expect(mockFirebaseDoc.set).not.toHaveBeenCalled()
+      })
+
+      it('should rethrow non-ALREADY_EXISTS errors from create() unchanged', async () => {
+        const permissionError = Object.assign(new Error('7 PERMISSION_DENIED'), { code: 7 })
+        mockFirebaseDoc.create.mockRejectedValue(permissionError)
+
+        await expect(docRef.set(testData, { failIfExists: true })).rejects.toThrow(permissionError)
       })
     })
   })
@@ -300,6 +318,43 @@ describe('DocumentReference', () => {
       await expect(docRef.merge(partialData)).rejects.toThrow(DocumentNotFoundError)
 
       expect(mockFirebaseDoc.set).not.toHaveBeenCalled()
+    })
+
+    it('should abort the transaction and write nothing when merged data fails validation', async () => {
+      mockFirebaseDoc.get.mockResolvedValue({
+        exists: true,
+        id: 'test-id',
+        ref: mockFirebaseDoc,
+        data: () => testData,
+      })
+
+      const validationError = new Error('merged data is invalid')
+      mockValidateData.mockImplementation(() => {
+        throw validationError
+      })
+
+      await expect(docRef.merge(partialData)).rejects.toThrow(validationError)
+
+      expect(mockFirestore.runTransaction).toHaveBeenCalledTimes(1)
+      expect(mockFirebaseDoc.set).not.toHaveBeenCalled()
+    })
+
+    it('should run the read-modify-write inside a transaction', async () => {
+      mockFirebaseDoc.get.mockResolvedValue({
+        exists: true,
+        id: 'test-id',
+        ref: mockFirebaseDoc,
+        data: () => testData,
+      })
+
+      await docRef.merge(partialData)
+
+      expect(mockFirestore.runTransaction).toHaveBeenCalledTimes(1)
+      expect(mockTransaction.get).toHaveBeenCalledWith(mockFirebaseDoc)
+      expect(mockTransaction.set).toHaveBeenCalledWith(mockFirebaseDoc, {
+        ...testData,
+        ...partialData,
+      })
     })
 
     it('should validate merged data when validateOnWrite is true', async () => {
@@ -335,7 +390,7 @@ describe('DocumentReference', () => {
 
       expect(mockDeserializeFirestoreTypes).toHaveBeenCalledWith(
         { ...testData, ...partialData },
-        {},
+        mockFirestore,
       )
       expect(mockFirebaseDoc.set).toHaveBeenCalledWith(convertedData)
     })
@@ -410,7 +465,7 @@ describe('DocumentReference', () => {
       // The merged data should be just the partial data since existing was null
       expect(mockDeserializeFirestoreTypes).toHaveBeenCalledWith(
         partialData, // Since existingData was null, mergedData is just partialData
-        {},
+        mockFirestore,
       )
     })
   })

@@ -1,4 +1,10 @@
-import { Timestamp, GeoPoint, DocumentReference, Firestore } from 'firebase-admin/firestore'
+import {
+  Timestamp,
+  GeoPoint,
+  DocumentReference,
+  DocumentSnapshot,
+  Firestore,
+} from 'firebase-admin/firestore'
 import type { DocumentData } from 'firebase-admin/firestore'
 import type { SerializedDocumentData } from '../types/firestore-typed.types'
 
@@ -14,17 +20,22 @@ export interface SerializedGeoPoint {
 /**
  * Serialized DocumentReference type
  * @template TCollection - Collection name type
- * @template TDocument - Document type (for type-level information)
+ * @template TDocument - Referenced document type
  */
 export interface SerializedDocumentReference<
   TCollection extends string = string,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   TDocument = unknown,
 > {
   type: 'DocumentReference'
   path: string
   collectionId: TCollection
   documentId: string
+  /**
+   * Phantom brand carrying the referenced document type at the type level,
+   * so references to different document types are not mutually assignable.
+   * Never present at runtime.
+   */
+  readonly __documentType?: TDocument
 }
 
 /**
@@ -69,6 +80,12 @@ function serializeFirestoreTypesInternal(data: unknown): unknown {
     }
   }
 
+  if (isBinaryValue(data)) {
+    // Firestore bytes fields (Buffer/Uint8Array) must pass through unchanged;
+    // copying them via Object.entries would corrupt them into index-keyed maps
+    return data
+  }
+
   if (Array.isArray(data)) {
     // Recursively convert arrays
     return data.map((item: unknown) => serializeFirestoreTypesInternal(item))
@@ -80,6 +97,14 @@ function serializeFirestoreTypesInternal(data: unknown): unknown {
     result[key] = serializeFirestoreTypesInternal(value)
   }
   return result
+}
+
+/**
+ * Binary values supported by Firestore as bytes fields
+ * (Buffer is a Uint8Array subclass, so this covers both)
+ */
+function isBinaryValue(data: unknown): data is Uint8Array {
+  return data instanceof Uint8Array
 }
 
 /**
@@ -97,10 +122,34 @@ export function deserializeFirestoreTypes(
 }
 
 /**
+ * Converts a single query operand (where() value or cursor value) to its
+ * Firestore representation (Date → Timestamp, SerializedGeoPoint → GeoPoint,
+ * SerializedDocumentReference → DocumentReference).
+ *
+ * Stored documents go through deserializeFirestoreTypes on write, so query
+ * operands must receive the same conversion or comparisons never match.
+ */
+export function deserializeQueryValue(value: unknown, firestore: Firestore): unknown {
+  return deserializeFirestoreTypesInternal(value, firestore)
+}
+
+/**
  * Internal recursive deserialization function
  */
 function deserializeFirestoreTypesInternal(data: unknown, firestore: Firestore): unknown {
   if (!data || typeof data !== 'object') {
+    return data
+  }
+
+  // Values that are already native Firestore types pass through unchanged.
+  // Walking them with Object.entries would corrupt them — and DocumentSnapshot
+  // (a valid cursor value) contains circular references that overflow the stack.
+  if (
+    data instanceof Timestamp ||
+    data instanceof GeoPoint ||
+    data instanceof DocumentReference ||
+    data instanceof DocumentSnapshot
+  ) {
     return data
   }
 
@@ -117,6 +166,11 @@ function deserializeFirestoreTypesInternal(data: unknown, firestore: Firestore):
   // SerializedDocumentReference -> DocumentReference
   if (isSerializedDocumentReference(data)) {
     return firestore.doc(data.path)
+  }
+
+  if (isBinaryValue(data)) {
+    // Firestore bytes fields (Buffer/Uint8Array) must pass through unchanged
+    return data
   }
 
   if (Array.isArray(data)) {

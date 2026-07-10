@@ -5,7 +5,7 @@
 [![codecov](https://codecov.io/gh/InfoLoungeLLC/firestore-typed/branch/main/graph/badge.svg)](https://codecov.io/gh/InfoLoungeLLC/firestore-typed)
 [![license](https://img.shields.io/npm/l/@info-lounge/firestore-typed.svg)](https://github.com/InfoLoungeLLC/firestore-typed/blob/main/LICENSE)
 
-A type-safe, low-level wrapper for Firebase Firestore with **mandatory runtime validation**. This package ensures that **all data is validated using typia validators during both read and write operations**, providing comprehensive type safety, data integrity, and improved developer experience for Firestore operations.
+A type-safe, low-level wrapper for Firebase Firestore with a **validator-first design**. Every collection requires a runtime validator (typia or zod): **writes are validated by default, and reads are validated too when `validateOnRead` is enabled**, providing comprehensive type safety, data integrity, and improved developer experience for Firestore operations.
 
 > **[日本語のREADMEはこちら / Japanese README here →](README.ja.md)**
 
@@ -43,7 +43,7 @@ await users.doc('123').set({
 
 ## Key Features
 
-- **🛡️ Mandatory Runtime Validation**: All data is automatically validated using typia validators on read/write operations
+- **🛡️ Validator-First Architecture**: every collection requires a runtime validator — writes are validated by default, reads opt in via `validateOnRead: true`
 - **🔒 Type Safety**: Full TypeScript compile-time and runtime type checking
 - **⚡ Performance Optimized**: Minimal overhead with maximum data integrity
 - **🎯 Firebase Native**: Direct mapping to Firestore's native API patterns
@@ -144,7 +144,7 @@ npx ts-node your-file.ts
 
 ### Why FirestoreTyped?
 
-**FirestoreTyped's core principle: Every piece of data is validated.** Unlike raw Firestore operations, FirestoreTyped ensures data integrity by requiring validators for all operations.
+**FirestoreTyped's core principle: no collection without a validator.** Unlike raw Firestore operations, every write is validated by default, and reads are validated as well when `validateOnRead` is enabled (off by default for performance).
 
 ```typescript
 // ❌ Raw Firestore - No validation, potential runtime errors
@@ -200,7 +200,8 @@ await usersCollection.doc('user-001').set({
 
 // ✅ This data will be validated after read (if validateOnRead: true)
 const user = await usersCollection.doc('user-001').get()
-// user.data is guaranteed to match UserEntity or throw validation error
+// With validateOnRead: true, user.data is guaranteed to match UserEntity
+// (or a validation error is thrown); without it, data is returned as-is
 ```
 
 ### Using Custom Firestore Instances
@@ -443,6 +444,7 @@ await collection.doc('id').set(data, { validateOnWrite: false })
 // Ensure document creation without overwriting
 await collection.doc('id').set(data, { failIfExists: true })
 // Throws DocumentAlreadyExistsError if document already exists
+// (atomic — enforced server-side via Firestore's create(), safe under concurrency)
 ```
 
 ### Read Documents
@@ -466,6 +468,7 @@ const documents = querySnapshot.docs.map(doc => doc.data)
 - FirestoreTyped uses a dedicated `merge()` method instead of `set(data, { merge: true })`
 - The `merge` operation validates the **complete merged data**, not just the partial data being merged
 - **The document must exist** - throws `DocumentNotFoundError` if the document doesn't exist
+- The read-merge-validate-write sequence **runs inside a transaction**: a concurrent update between the read and the write causes the merge to retry against fresh data instead of overwriting it
 - Native Firestore's `set(..., { merge: true })` is not available in FirestoreTyped
 
 ```typescript
@@ -609,8 +612,16 @@ const sortedQuery = usersCollection.orderBy('createdAt', 'desc')
 // ❌ Compile errors for invalid field names
 // const invalidQuery = usersCollection.where('invalidField', '==', 'value')
 
-// ⚠️ Note: Value types and pagination parameters are not fully type-checked
-// const query = usersCollection.where('name', '==', 123) // May not catch type errors
+// ✅ Operand types are checked per operator
+// usersCollection.where('name', '==', 123)        // ❌ number is not assignable to string
+// usersCollection.where('name', '==', undefined)  // ❌ undefined is never a valid operand
+// usersCollection.where('status', 'in', ['active', 'inactive']) // ✅ 'in' takes an array
+// usersCollection.where('tags', 'array-contains', 'admin')      // ✅ element type of the array field
+
+// ✅ Native Firestore values are accepted alongside serialized forms
+// usersCollection.where('createdAt', '>=', Timestamp.fromDate(date)) // Date fields also take Timestamp
+
+// ⚠️ Note: pagination cursor parameters are not type-checked
 // const paginated = usersCollection.startAt('any', 'values') // Parameters are unknown[]
 ```
 
@@ -876,6 +887,9 @@ FirestoreTyped automatically handles the conversion of JavaScript types to Fires
 | `Date` | `Timestamp` | DateTime data conversion (see precision note below) |
 | `SerializedGeoPoint` | `GeoPoint` | Geographic location data conversion |
 | `SerializedDocumentReference<TCollection, TDocument>` | `DocumentReference` | Type-safe document reference restoration |
+| `Buffer` / `Uint8Array` | Bytes | Passed through unchanged in both directions |
+
+Values that are already native Firestore types (`Timestamp`, `GeoPoint`, `DocumentReference`) pass through unchanged, both in document data and as query operands.
 
 > **⚠️ Important Note on Date/Timestamp Precision**: JavaScript `Date` objects have millisecond precision, while Firestore `Timestamp` objects support nanosecond precision. When converting from `Date` to `Timestamp`, the nanosecond portion will always be `000000` (zero). This means any nanosecond-level precision from the original Firestore data will be lost during the conversion process.
 
@@ -1167,12 +1181,16 @@ const data = await userCollection.doc('user-id').get({ validateOnRead: true })
 
 ```typescript
 // ✅ Good: Use collection group queries for cross-collection searches
-const allProducts = await db.queryCollectionGroup('products', (query) =>
-  query.where('category', '==', 'electronics').orderBy('name')
-)
+const productsGroup = db.collectionGroup<ProductEntity>('products', productValidator)
+const electronicsProducts = await productsGroup
+  .where('category', '==', 'electronics')
+  .orderBy('name')
+  .get()
 
 // ✅ Good: Regular collection queries for single collection
-const userProducts = await db.collection('users/user-001/products').get()
+const userProducts = await db
+  .collection<ProductEntity>('users/user-001/products', productValidator)
+  .get()
 ```
 
 ### 6. Performance Considerations
@@ -1215,6 +1233,7 @@ await batch.commit()
  * ```
  */
 function getFirestoreTyped(
+  firestore?: Firestore,
   options?: FirestoreTypedOptions
 ): FirestoreTyped
 ```
@@ -1285,48 +1304,6 @@ class FirestoreTyped {
    * ```
    */
   get native(): Firestore
-
-  /**
-   * Performs collection group query across multiple collections
-   * @param collectionId - Collection ID to search across
-   * @param queryFn - Optional query builder function
-   * @returns Query results from all matching collections
-   * @throws FirestoreTypedValidationError if validation fails
-   * @example
-   * ```typescript
-   * // Find all products across all users
-   * const allProducts = await db.queryCollectionGroup('products')
-   * 
-   * // With query constraints
-   * const electronicsProducts = await db.queryCollectionGroup('products', (query) =>
-   *   query.where('category', '==', 'electronics').orderBy('name')
-   * )
-   * ```
-   */
-  queryCollectionGroup<T>(
-    collectionId: string, 
-    queryFn?: (query: Query) => Query
-  ): Promise<QuerySnapshot<T>>
-
-  /**
-   * Finds specific document across collection groups
-   * @param collectionId - Collection ID to search in
-   * @param documentId - Document ID to find
-   * @returns Document data if found, null otherwise
-   * @throws FirestoreTypedValidationError if validation fails
-   * @example
-   * ```typescript
-   * // Find user across all users/products
-   * const user = await db.findDocumentInCollectionGroup('publicUsers', 'user123')
-   * if (user) {
-   *   console.log(`Found user: ${user.name}`)
-   * }
-   * ```
-   */
-  findDocumentInCollectionGroup<T>(
-    collectionId: string, 
-    documentId: string
-  ): Promise<T | null>
 }
 ```
 

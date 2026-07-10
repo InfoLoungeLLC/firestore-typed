@@ -5,6 +5,7 @@ import { Query } from '../../query'
 import {
   deserializeFirestoreTypes,
   serializeFirestoreTypes,
+  deserializeQueryValue,
 } from '../../../utils/firestore-converter'
 import { validateData } from '../../../utils/validator'
 import type { FirestoreTypedOptionsProvider } from '../../../types/firestore-typed.types'
@@ -30,6 +31,9 @@ const mockSerializeFirestoreTypes = serializeFirestoreTypes as MockedFunction<
   typeof serializeFirestoreTypes
 >
 const mockValidateData = validateData as MockedFunction<typeof validateData>
+const mockDeserializeQueryValue = deserializeQueryValue as MockedFunction<
+  typeof deserializeQueryValue
+>
 
 describe('CollectionReference', () => {
   let mockFirebaseCollection: any
@@ -44,6 +48,7 @@ describe('CollectionReference', () => {
     vi.clearAllMocks()
     mockDeserializeFirestoreTypes.mockImplementation((data: any) => data)
     mockSerializeFirestoreTypes.mockImplementation((data: any) => data)
+    mockDeserializeQueryValue.mockImplementation((value: any) => value)
     mockValidateData.mockImplementation((_data: any, _path: any, validator: any) =>
       validator(_data),
     )

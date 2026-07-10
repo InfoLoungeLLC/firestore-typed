@@ -1,6 +1,8 @@
 import { vi, describe, it, expect, beforeEach, type Mock, type MockedFunction } from 'vitest'
+import { GeoPoint, Timestamp } from 'firebase-admin/firestore'
 import { Query } from '../../query'
-import { serializeFirestoreTypes } from '../../../utils/firestore-converter'
+import { serializeFirestoreTypes, deserializeQueryValue } from '../../../utils/firestore-converter'
+import type { SerializedGeoPoint } from '../../../utils/firestore-converter'
 import { validateData } from '../../../utils/validator'
 import type { FirestoreTypedOptionsProvider } from '../../../types/firestore-typed.types'
 import {
@@ -23,6 +25,9 @@ const mockSerializeFirestoreTypes = serializeFirestoreTypes as MockedFunction<
   typeof serializeFirestoreTypes
 >
 const mockValidateData = validateData as MockedFunction<typeof validateData>
+const mockDeserializeQueryValue = deserializeQueryValue as MockedFunction<
+  typeof deserializeQueryValue
+>
 
 describe('Query', () => {
   let mockFirebaseQuery: any
@@ -34,6 +39,7 @@ describe('Query', () => {
     // Reset mocks
     vi.clearAllMocks()
     mockSerializeFirestoreTypes.mockImplementation((data: any) => data)
+    mockDeserializeQueryValue.mockImplementation((value: any) => value)
     mockValidateData.mockImplementation((_data: any, _path: any, validator: any) =>
       validator(_data),
     )
@@ -79,9 +85,59 @@ describe('Query', () => {
         query.where('age', '>', 18)
         expect(mockFirebaseQuery.where).toHaveBeenCalledWith('age', '>', 18)
 
-        // For 'in' operator, cast to any to handle union type limitations
-        query.where('status', 'in', ['active', 'inactive'] as any)
+        // 'in' takes an array of field values (typed via WhereFilterValue)
+        query.where('status', 'in', ['active', 'inactive'])
         expect(mockFirebaseQuery.where).toHaveBeenCalledWith('status', 'in', ['active', 'inactive'])
+      })
+
+      it('should reject operand types that do not match the operator', () => {
+        // @ts-expect-error 'in' requires an array of field values, not a single value
+        query.where('status', 'in', 'active')
+
+        // @ts-expect-error equality against an array is not valid for a scalar field
+        query.where('age', '==', [18])
+
+        expect(mockFirebaseQuery.where).toHaveBeenCalledTimes(2)
+      })
+
+      it('should reject undefined operands and accept native Firestore counterparts', () => {
+        interface MixedEntity extends Record<string, unknown> {
+          name?: string
+          location: SerializedGeoPoint
+          createdAt: Date
+        }
+        const mixedQuery = new Query<MixedEntity>(
+          mockFirebaseQuery,
+          mockFirestoreTyped,
+          vi.fn((data) => data as MixedEntity),
+        )
+
+        // @ts-expect-error undefined is rejected by Firestore at runtime, so the types forbid it
+        mixedQuery.where('name', '==', undefined)
+
+        // Native counterparts are accepted alongside serialized forms
+        mixedQuery.where('location', '==', new GeoPoint(35.6, 139.6))
+        mixedQuery.where('createdAt', '>=', Timestamp.fromDate(new Date('2024-01-01')))
+
+        expect(mockFirebaseQuery.where).toHaveBeenCalledTimes(3)
+      })
+
+      it('should accept array-contains on optional and nullable array fields', () => {
+        interface OptionalArrays extends Record<string, unknown> {
+          tags?: string[]
+          labels: string[] | null
+        }
+        const optQuery = new Query<OptionalArrays>(
+          mockFirebaseQuery,
+          mockFirestoreTyped,
+          vi.fn((data) => data as OptionalArrays),
+        )
+
+        // Both compile because WhereFilterValue extracts the array part of the union
+        optQuery.where('tags', 'array-contains', 'important')
+        optQuery.where('labels', 'array-contains', 'urgent')
+
+        expect(mockFirebaseQuery.where).toHaveBeenCalledTimes(2)
       })
 
       it('should be chainable', () => {
@@ -321,7 +377,7 @@ describe('Query', () => {
         taggedValidator,
       )
 
-      taggedQuery.where('tags', 'array-contains', 'important' as any)
+      taggedQuery.where('tags', 'array-contains', 'important')
 
       expect(mockFirebaseQuery.where).toHaveBeenCalledWith('tags', 'array-contains', 'important')
     })

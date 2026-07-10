@@ -2,7 +2,13 @@
 import { vi, describe, it, expect, beforeEach, type Mocked } from 'vitest'
 import { serializeFirestoreTypes, deserializeFirestoreTypes } from '../../firestore-converter'
 import type { SerializedGeoPoint, SerializedDocumentReference } from '../../firestore-converter'
-import { Timestamp, GeoPoint, DocumentReference, Firestore } from 'firebase-admin/firestore'
+import {
+  Timestamp,
+  GeoPoint,
+  DocumentReference,
+  DocumentSnapshot,
+  Firestore,
+} from 'firebase-admin/firestore'
 
 describe('Firestore Converter', () => {
   let mockFirestore: Mocked<Firestore>
@@ -199,6 +205,28 @@ describe('Firestore Converter', () => {
       it('should handle empty objects', () => {
         const result = serializeFirestoreTypes({})
         expect(result).toEqual({})
+      })
+    })
+
+    describe('Binary Value Preservation', () => {
+      it('should pass Buffer values through unchanged', () => {
+        const buffer = Buffer.from([0xde, 0xad, 0xbe, 0xef])
+
+        const result = serializeFirestoreTypes({ payload: buffer }) as any
+
+        expect(result.payload).toBe(buffer)
+      })
+
+      it('should pass Uint8Array values through unchanged, including nested ones', () => {
+        const bytes = new Uint8Array([1, 2, 3])
+
+        const result = serializeFirestoreTypes({
+          nested: { data: bytes },
+          list: [bytes],
+        }) as any
+
+        expect(result.nested.data).toBe(bytes)
+        expect(result.list[0]).toBe(bytes)
       })
     })
   })
@@ -500,6 +528,46 @@ describe('Firestore Converter', () => {
       expect(result.author).toBe(mockDocRef)
     })
 
+    it('should pass native Firestore instances through unchanged', () => {
+      const nativeTimestamp = createMockTimestamp(new Date('2024-01-01'))
+      const nativeGeoPoint = createMockGeoPoint(35.6762, 139.6503)
+      const nativeDocRef = createMockDocumentReference('users/user123', 'user123', 'users')
+
+      const result = deserializeFirestoreTypes(
+        { at: nativeTimestamp, loc: nativeGeoPoint, ref: nativeDocRef },
+        mockFirestore,
+      ) as any
+
+      expect(result.at).toBe(nativeTimestamp)
+      expect(result.loc).toBe(nativeGeoPoint)
+      expect(result.ref).toBe(nativeDocRef)
+    })
+
+    it('should pass DocumentSnapshot values through without walking their circular internals', () => {
+      // Native snapshots hold circular references (e.g. back to the Firestore
+      // client); recursing into them overflows the stack
+      const snapshotLike: Record<string, unknown> = {}
+      snapshotLike._firestore = { _snapshot: snapshotLike }
+      Object.setPrototypeOf(snapshotLike, DocumentSnapshot.prototype)
+
+      const result = deserializeFirestoreTypes({ cursor: snapshotLike }, mockFirestore) as any
+
+      expect(result.cursor).toBe(snapshotLike)
+    })
+
+    it('should pass binary values through unchanged', () => {
+      const buffer = Buffer.from([0xca, 0xfe])
+      const bytes = new Uint8Array([4, 5, 6])
+
+      const result = deserializeFirestoreTypes(
+        { payload: buffer, nested: { data: bytes } },
+        mockFirestore,
+      ) as any
+
+      expect(result.payload).toBe(buffer)
+      expect(result.nested.data).toBe(bytes)
+    })
+
     it('should handle invalid type objects that fail type guards', () => {
       // Test invalid objects that don't pass type guard validation
       const invalidObjects = [
@@ -513,6 +581,29 @@ describe('Firestore Converter', () => {
         const result = deserializeFirestoreTypes({ test: obj }, mockFirestore) as any
         expect(result.test).toEqual(obj) // Should remain unchanged
       })
+    })
+  })
+
+  describe('SerializedDocumentReference type branding', () => {
+    it('should not allow references to different document types to be assigned to each other', () => {
+      interface UserDoc {
+        name: string
+      }
+      interface OrderDoc {
+        total: number
+      }
+
+      const userRef: SerializedDocumentReference<'users', UserDoc> = {
+        type: 'DocumentReference',
+        path: 'users/user-1',
+        collectionId: 'users',
+        documentId: 'user-1',
+      }
+
+      // @ts-expect-error references to different document types must not be assignable
+      const orderRef: SerializedDocumentReference<'users', OrderDoc> = userRef
+
+      expect(orderRef).toBe(userRef)
     })
   })
 })

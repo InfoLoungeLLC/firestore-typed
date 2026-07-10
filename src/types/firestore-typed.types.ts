@@ -54,6 +54,53 @@ export interface WriteOptions {
 export type SerializedDocumentData = object
 
 /**
+ * Native Firestore counterpart of a serialized value type: Date fields also
+ * accept Timestamp operands, SerializedGeoPoint fields accept GeoPoint, and
+ * SerializedDocumentReference fields accept DocumentReference (all pass
+ * through query-value conversion unchanged).
+ */
+type NativeQueryOperand<V> = V extends Date
+  ? import('firebase-admin/firestore').Timestamp
+  : V extends import('../utils/firestore-converter').SerializedGeoPoint
+    ? import('firebase-admin/firestore').GeoPoint
+    : V extends import('../utils/firestore-converter').SerializedDocumentReference
+      ? import('firebase-admin/firestore').DocumentReference
+      : never
+
+/**
+ * A single query operand for field values of type V:
+ * the value itself (undefined excluded — Firestore rejects undefined
+ * operands at runtime) or its native Firestore counterpart.
+ */
+type QueryOperand<V> = Exclude<V, undefined> | NativeQueryOperand<Exclude<V, undefined>>
+
+/**
+ * Maps a Firestore where() operator to the operand type it expects for field K:
+ * - `in` / `not-in` compare against an array of field values
+ * - `array-contains` compares against a single element of an array field
+ * - `array-contains-any` compares against an array of elements of an array field
+ * - all other operators compare against the field value itself
+ *
+ * Native Firestore values (Timestamp, GeoPoint, DocumentReference) are accepted
+ * alongside their serialized forms; undefined is never a valid operand.
+ */
+export type WhereFilterValue<
+  T,
+  K extends keyof T,
+  Op extends import('firebase-admin/firestore').WhereFilterOp,
+> = Op extends 'in' | 'not-in'
+  ? readonly QueryOperand<T[K]>[]
+  : Op extends 'array-contains'
+    ? Extract<T[K], readonly unknown[]> extends readonly (infer E)[]
+      ? QueryOperand<E>
+      : never
+    : Op extends 'array-contains-any'
+      ? Extract<T[K], readonly unknown[]> extends readonly (infer E)[]
+        ? readonly QueryOperand<E>[]
+        : never
+      : QueryOperand<T[K]>
+
+/**
  * Metadata about a document
  */
 export interface DocumentMetadata {

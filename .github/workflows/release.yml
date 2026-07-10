@@ -22,6 +22,12 @@ jobs:
           node-version: '24'
           cache: 'npm'
 
+      - name: Setup Java (required by the Firestore emulator)
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
       - name: Get package version
         id: package-version
         run: |
@@ -29,23 +35,38 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "tag=v$VERSION" >> $GITHUB_OUTPUT
 
-      - name: Check if version exists on npm
+      # Idempotent release state: each publish/tag/release step below is
+      # skipped if its artifact already exists, so a partially-failed run
+      # can be re-run and will complete only the missing pieces.
+      - name: Check release state
+        id: state
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           VERSION=${{ steps.package-version.outputs.version }}
-          if npm view @info-lounge/firestore-typed@$VERSION version 2>/dev/null; then
-            echo "Version $VERSION already exists on npm"
-            exit 1
-          fi
-          echo "Version $VERSION is available for publishing"
-
-      - name: Check if tag exists
-        run: |
           TAG=${{ steps.package-version.outputs.tag }}
-          if git tag -l | grep -q "^$TAG$"; then
-            echo "Tag $TAG already exists"
-            exit 1
+
+          if npm view @info-lounge/firestore-typed@$VERSION version 2>/dev/null; then
+            echo "Version $VERSION already on npm — publish will be skipped"
+            echo "published=true" >> $GITHUB_OUTPUT
+          else
+            echo "Version $VERSION is not on npm yet"
+            echo "published=false" >> $GITHUB_OUTPUT
           fi
-          echo "Tag $TAG is available"
+
+          if git tag -l | grep -q "^$TAG$"; then
+            echo "Tag $TAG already exists — tagging will be skipped"
+            echo "tagged=true" >> $GITHUB_OUTPUT
+          else
+            echo "tagged=false" >> $GITHUB_OUTPUT
+          fi
+
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "GitHub Release $TAG already exists — release creation will be skipped"
+            echo "released=true" >> $GITHUB_OUTPUT
+          else
+            echo "released=false" >> $GITHUB_OUTPUT
+          fi
 
       - name: Install dependencies
         run: npm ci
@@ -62,6 +83,9 @@ jobs:
       - name: Run tests
         run: npm test
 
+      - name: Run emulator tests
+        run: npx --yes firebase-tools@15 emulators:exec --project demo-firestore-typed --only firestore 'npm run test:emulator'
+
       - name: Build package
         run: npm run build
 
@@ -69,9 +93,11 @@ jobs:
       # Requires the trusted publisher configured on npmjs.com for this repo/workflow
       # and the id-token: write permission declared above.
       - name: Publish to npm
+        if: steps.state.outputs.published == 'false'
         run: npm publish --access public
 
       - name: Create Git tag
+        if: steps.state.outputs.tagged == 'false'
         run: |
           TAG=${{ steps.package-version.outputs.tag }}
           git config user.name "github-actions[bot]"
@@ -80,26 +106,28 @@ jobs:
           git push origin $TAG
 
       - name: Extract changelog for this version
+        if: steps.state.outputs.released == 'false'
         id: changelog
         run: |
           VERSION=${{ steps.package-version.outputs.version }}
-          
+
           # Extract changelog section for this version
           awk -v version="[$VERSION]" '
-            /^## \[/ { 
+            /^## \[/ {
               if (found) exit
               if ($0 ~ version) found=1
             }
             found && !/^## \[/ { print }
             found && /^## \[/ && $0 !~ version { exit }
           ' CHANGELOG.md > release_notes.md
-          
+
           # Remove the first empty line if it exists
           sed -i '1{/^$/d;}' release_notes.md
-          
+
           echo "Release notes extracted for version $VERSION"
 
       - name: Create GitHub Release
+        if: steps.state.outputs.released == 'false'
         run: |
           gh release create ${{ steps.package-version.outputs.tag }} \
             --title "Release ${{ steps.package-version.outputs.tag }}" \

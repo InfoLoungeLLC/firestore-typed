@@ -5,13 +5,14 @@ import type {
   DocumentData,
 } from 'firebase-admin/firestore'
 import { validateData } from '../utils/validator'
-import { serializeFirestoreTypes } from '../utils/firestore-converter'
+import { serializeFirestoreTypes, deserializeQueryValue } from '../utils/firestore-converter'
 import type {
   SerializedDocumentData,
   QuerySnapshot,
   DocumentSnapshot,
   ReadOptions,
   FirestoreTypedOptionsProvider,
+  WhereFilterValue,
 } from '../types/firestore-typed.types'
 
 /**
@@ -28,8 +29,12 @@ export class Query<T extends SerializedDocumentData> {
   /**
    * Add a where clause with type-safe field names
    */
-  where<K extends keyof T & string>(field: K, op: WhereFilterOp, value: T[K]): Query<T> {
-    const newQuery = this.query.where(field, op, value)
+  where<K extends keyof T & string, Op extends WhereFilterOp>(
+    field: K,
+    op: Op,
+    value: WhereFilterValue<T, K, Op>,
+  ): Query<T> {
+    const newQuery = this.query.where(field, op, deserializeQueryValue(value, this.query.firestore))
     return new Query<T>(newQuery, this.firestoreTyped, this.validator)
   }
 
@@ -53,7 +58,7 @@ export class Query<T extends SerializedDocumentData> {
    * Start pagination at a specific point
    */
   startAt(...fieldValues: unknown[]): Query<T> {
-    const newQuery = this.query.startAt(...fieldValues)
+    const newQuery = this.query.startAt(...this.deserializeCursorValues(fieldValues))
     return new Query<T>(newQuery, this.firestoreTyped, this.validator)
   }
 
@@ -61,7 +66,7 @@ export class Query<T extends SerializedDocumentData> {
    * Start pagination after a specific point
    */
   startAfter(...fieldValues: unknown[]): Query<T> {
-    const newQuery = this.query.startAfter(...fieldValues)
+    const newQuery = this.query.startAfter(...this.deserializeCursorValues(fieldValues))
     return new Query<T>(newQuery, this.firestoreTyped, this.validator)
   }
 
@@ -69,7 +74,7 @@ export class Query<T extends SerializedDocumentData> {
    * End pagination at a specific point
    */
   endAt(...fieldValues: unknown[]): Query<T> {
-    const newQuery = this.query.endAt(...fieldValues)
+    const newQuery = this.query.endAt(...this.deserializeCursorValues(fieldValues))
     return new Query<T>(newQuery, this.firestoreTyped, this.validator)
   }
 
@@ -77,8 +82,12 @@ export class Query<T extends SerializedDocumentData> {
    * End pagination before a specific point
    */
   endBefore(...fieldValues: unknown[]): Query<T> {
-    const newQuery = this.query.endBefore(...fieldValues)
+    const newQuery = this.query.endBefore(...this.deserializeCursorValues(fieldValues))
     return new Query<T>(newQuery, this.firestoreTyped, this.validator)
+  }
+
+  private deserializeCursorValues(fieldValues: unknown[]): unknown[] {
+    return fieldValues.map((value) => deserializeQueryValue(value, this.query.firestore))
   }
 
   /**

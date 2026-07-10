@@ -5,6 +5,56 @@
 このフォーマットは[Keep a Changelog](https://keepachangelog.com/en/1.0.0/)に基づいており、
 このプロジェクトは[セマンティックバージョニング](https://semver.org/spec/v2.0.0.html)に準拠しています。
 
+## [0.7.0] - 2026-07-10
+
+このリリースの全項目は外部コードレビュー(issue #92〜#100)に基づきます。
+
+### 修正
+
+- **`failIfExists`が原子的になりました**(#92): `set(data, { failIfExists: true })`が
+  非原子的な読み取り→書き込みではなくFirestoreの`create()`を使うようになり、
+  同時の作成試行が両方成功することがなくなりました。gRPCの`ALREADY_EXISTS`エラーは
+  従来どおり`DocumentAlreadyExistsError`に変換されます
+- **特殊型フィールドへのクエリが一致するようになりました**(#93): `where()`のオペランドと
+  カーソル値(`startAt`/`startAfter`/`endAt`/`endBefore`)がネイティブFirestore型に変換されます
+  (`SerializedGeoPoint`→`GeoPoint`、`SerializedDocumentReference`→`DocumentReference`)。
+  従来はこれらのクエリが暗黙に0件を返していました。すでにネイティブな値(`Timestamp`、
+  `GeoPoint`、`DocumentReference`、カーソルの`DocumentSnapshot`)はそのまま通過します
+- **`merge()`が並行更新を失わなくなりました**(#94): 読み取り→マージ→書き込みが
+  トランザクション内で実行され、読み書きの間にコミットされた更新は上書きされず
+  リトライされます
+- **`Buffer`/`Uint8Array`フィールドが保持されます**(#97): バイナリ値が両方向の変換を
+  そのまま通過します。従来は読み書き双方でインデックスキーのプレーンマップに破損していました
+
+### 変更
+
+- **破壊的変更(型レベル)**: `where()`のオペランド型が演算子を表現するようになりました(#96) —
+  `in`/`not-in`はフィールド値の配列、`array-contains`は配列要素型
+  (`tags?: string[]`のようなoptional/nullable配列フィールドにも対応)、`array-contains-any`は
+  要素の配列を取ります。ネイティブFirestore値(`Timestamp`、`GeoPoint`、`DocumentReference`)は
+  シリアライズ形式と並んで受け付けられ、`undefined`はオペランドとして拒否されます
+  (Firestoreが実行時に拒否するため)。誤った型のオペランド(主に`as any`経由)を渡していた
+  コードでは新たな型エラーが出る可能性があります。実行時挙動は不変です
+- **破壊的変更(型レベル)**: `SerializedDocumentReference<TCollection, TDocument>`の
+  `TDocument`がブランド化され(#98)、異なるドキュメント型への参照は相互代入できなくなりました。
+  既存のオブジェクトリテラルは有効なままです(ブランドメンバーはオプショナル)
+- **挙動**: `failIfExists`使用時、バリデーションが存在チェックより先に実行されます。
+  既存ドキュメントに不正データを書き込もうとした場合、`DocumentAlreadyExistsError`ではなく
+  `FirestoreTypedValidationError`がスローされます(#92)
+- CIが専用ジョブで`firebase emulators:exec`によるエミュレータテストを実行するようになりました(#99)
+- リリースワークフローが公開前にエミュレータテストを実行し、publish・タグ・GitHub Releaseの
+  各ステップがイデンポテントになりました(途中失敗したリリースrunを安全に再実行できます)
+
+### ドキュメント
+
+- READMEのバリデーションに関する記述を実際のデフォルトに合わせました(#95):
+  全コレクションにバリデータ必須、書き込みはデフォルト検証、読み取り検証は
+  `validateOnRead: true`でオプトイン
+- README APIリファレンスを実装と一致させました(#100): `getFirestoreTyped`のシグネチャ修正、
+  存在しないコレクショングループメソッドの削除
+- README/CLAUDE.mdを0.7.0の挙動に合わせて更新: 型変換表(バイト列パススルー含む)、
+  演算子対応の型安全性の例、トランザクション化された`merge()`と原子的`failIfExists`の注記
+
 ## [0.6.1] - 2026-07-10
 
 ### 変更

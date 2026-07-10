@@ -240,6 +240,7 @@ export const createFirebaseAdminMock = () => ({
   Timestamp: MockTimestamp,
   GeoPoint: MockGeoPoint,
   DocumentReference: MockDocumentReferenceForTypeConversion,
+  DocumentSnapshot: MockDocumentSnapshot,
 })
 
 // This is a helper file, not a test file - no tests needed here

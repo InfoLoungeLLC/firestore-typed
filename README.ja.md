@@ -5,7 +5,7 @@
 [![codecov](https://codecov.io/gh/InfoLoungeLLC/firestore-typed/branch/main/graph/badge.svg)](https://codecov.io/gh/InfoLoungeLLC/firestore-typed)
 [![license](https://img.shields.io/npm/l/@info-lounge/firestore-typed.svg)](https://github.com/InfoLoungeLLC/firestore-typed/blob/main/LICENSE)
 
-**必須ランタイムバリデーション**付きFirebase Firestoreの型安全な低レベルラッパーです。このパッケージは、**読み書き操作時にtypiaValidatorを用いてすべてのデータがバリデーションされることを保証**し、包括的な型安全性、データ整合性、改善された開発者体験をFirestore操作に提供します。
+**バリデータファースト設計**のFirebase Firestore向け型安全な低レベルラッパーです。すべてのコレクションにランタイムバリデータ(typiaまたはzod)が必須で、**書き込みはデフォルトで検証され、`validateOnRead`を有効にすれば読み取りも検証されます**。包括的な型安全性、データ整合性、改善された開発者体験をFirestore操作に提供します。
 
 > **[English README here / 英語版READMEはこちら →](README.md)**
 
@@ -43,7 +43,7 @@ await users.doc('123').set({
 
 ## 主要機能
 
-- **🛡️ 必須ランタイムバリデーション**: 読み書き操作時にtypiaValidatorで自動的にすべてのデータをバリデーション
+- **🛡️ バリデータファースト設計**: すべてのコレクションにランタイムバリデータが必須 — 書き込みはデフォルトで検証、読み取りは`validateOnRead: true`でオプトイン
 - **🔒 型安全性**: 完全なTypeScriptコンパイル時・ランタイム型チェック
 - **⚡ パフォーマンス最適化**: 最大のデータ整合性で最小のオーバーヘッド
 - **🎯 Firebaseネイティブ**: FirestoreのネイティブAPIパターンへの直接マッピング
@@ -143,7 +143,7 @@ npx ts-node your-file.ts
 
 ### なぜFirestoreTypedなのか？
 
-**FirestoreTypedの核心原則：すべてのデータがバリデーションされる。**生のFirestore操作とは異なり、FirestoreTypedはすべての操作にvalidatorを必須とすることでデータ整合性を保証します。
+**FirestoreTypedの核心原則：バリデータのないコレクションは作れない。**生のFirestore操作とは異なり、書き込みはデフォルトで検証され、`validateOnRead`を有効にすれば読み取りも検証されます(パフォーマンスのためデフォルトはオフ)。
 
 ```typescript
 // ❌ 生のFirestore - バリデーションなし、ランタイムエラーの可能性
@@ -199,7 +199,8 @@ await usersCollection.doc('user-001').set({
 
 // ✅ このデータは読み取り後にバリデーションされる（validateOnRead: trueの場合）
 const user = await usersCollection.doc('user-001').get()
-// user.dataはUserEntityと一致するかバリデーションエラーをスローすることが保証される
+// validateOnRead: trueの場合、user.dataはUserEntityと一致することが保証される
+// (一致しなければバリデーションエラー)。無効の場合はデータがそのまま返る
 ```
 
 ### カスタムFirestoreインスタンスの使用
@@ -442,6 +443,7 @@ await collection.doc('id').set(data, { validateOnWrite: false })
 // 上書きせずにドキュメントを作成
 await collection.doc('id').set(data, { failIfExists: true })
 // ドキュメントが既に存在する場合はDocumentAlreadyExistsErrorをスロー
+// (Firestoreのcreate()によるサーバー側の原子的な強制 — 並行実行でも安全)
 ```
 
 ### ドキュメントの読み取り
@@ -465,6 +467,7 @@ const documents = querySnapshot.docs.map(doc => doc.data)
 - FirestoreTypedでは`set(data, { merge: true })`の代わりに専用の`merge()`メソッドを使用します
 - `merge`操作は**完全にマージされたデータ**に対してバリデーションを実行します
 - **ドキュメントが存在する必要があります** - ドキュメントが存在しない場合は`DocumentNotFoundError`をスロー
+- 読み取り→マージ→検証→書き込みの一連は**トランザクション内で実行**されます: 読み書きの間に他の更新がコミットされた場合、上書きせず最新データでリトライします
 - 生のFirestoreの`set(..., { merge: true })`パターンはFirestoreTypedでは利用できません
 
 ```typescript
@@ -607,8 +610,16 @@ const sortedQuery = usersCollection.orderBy('createdAt', 'desc')
 // ❌ 無効なフィールド名のコンパイルエラー
 // const invalidQuery = usersCollection.where('invalidField', '==', 'value')
 
-// ⚠️ 注意: 値の型やページネーションパラメータは完全に型チェックされません
-// const query = usersCollection.where('name', '==', 123) // 型エラーを捕捉できない可能性
+// ✅ オペランドの型は演算子ごとにチェックされます
+// usersCollection.where('name', '==', 123)        // ❌ numberはstringに代入不可
+// usersCollection.where('name', '==', undefined)  // ❌ undefinedはオペランドとして常に不正
+// usersCollection.where('status', 'in', ['active', 'inactive']) // ✅ 'in'は配列を取る
+// usersCollection.where('tags', 'array-contains', 'admin')      // ✅ 配列フィールドの要素型
+
+// ✅ ネイティブFirestore値もシリアライズ形式と並んで受け付けられます
+// usersCollection.where('createdAt', '>=', Timestamp.fromDate(date)) // DateフィールドはTimestampも可
+
+// ⚠️ 注意: ページネーションのカーソルパラメータは型チェックされません
 // const paginated = usersCollection.startAt('any', 'values') // パラメータはunknown[]
 ```
 
@@ -873,6 +884,9 @@ FirestoreTypedは書き込み操作時にJavaScript型をFirestore特殊型に�
 | `Date` | `Timestamp` | 日時データ変換（下記の精度に関する注意事項を参照） |
 | `SerializedGeoPoint` | `GeoPoint` | 地理的位置データ変換 |
 | `SerializedDocumentReference<TCollection, TDocument>` | `DocumentReference` | 型安全なドキュメント参照復元 |
+| `Buffer` / `Uint8Array` | Bytes | 両方向とも変換せずそのまま通過 |
+
+すでにネイティブなFirestore型(`Timestamp`、`GeoPoint`、`DocumentReference`)の値は、ドキュメントデータ内でもクエリのオペランドとしても、変換されずそのまま通過します。
 
 > **⚠️ Date/Timestamp精度に関する重要な注意事項**: JavaScript `Date`オブジェクトはミリ秒精度ですが、Firestore `Timestamp`オブジェクトはナノ秒精度をサポートしています。`Date`から`Timestamp`への変換時、ナノ秒部分は常に`000000`（ゼロ）になります。これは、元のFirestoreデータのナノ秒レベルの精度が変換プロセス中に失われることを意味します。
 
@@ -1143,9 +1157,11 @@ const data = await userCollection.doc('user-id').get({ validateOnRead: true })
 
 ```typescript
 // ✅ 良い例: 横断コレクション検索にコレクショングループクエリを使用
-const allProducts = await db.queryCollectionGroup('products', (query) =>
-  query.where('category', '==', 'electronics').orderBy('name')
-)
+const productsGroup = db.collectionGroup<ProductEntity>('products', productValidator)
+const electronicsProducts = await productsGroup
+  .where('category', '==', 'electronics')
+  .orderBy('name')
+  .get()
 
 // ✅ 良い例: 単一コレクション用の通常のコレクションクエリ
 const categoryProducts = await db.collection<ProductEntity>('categories/electronics/products', productValidator).get()
@@ -1191,6 +1207,7 @@ await batch.commit()
  * ```
  */
 function getFirestoreTyped(
+  firestore?: Firestore,
   options?: FirestoreTypedOptions
 ): FirestoreTyped
 ```
@@ -1261,48 +1278,6 @@ class FirestoreTyped {
    * ```
    */
   get native(): Firestore
-
-  /**
-   * 複数コレクション横断でコレクショングループクエリを実行
-   * @param collectionId - 横断検索するコレクションID
-   * @param queryFn - オプションのクエリビルダー関数
-   * @returns すべての一致するコレクションからのクエリ結果
-   * @throws バリデーション失敗時FirestoreTypedValidationError
-   * @example
-   * ```typescript
-   * // すべてのカテゴリで全商品を検索
-   * const allProducts = await db.queryCollectionGroup('products')
-   * 
-   * // クエリ制約付き
-   * const electronicsProducts = await db.queryCollectionGroup('products', (query) =>
-   *   query.where('category', '==', 'electronics').orderBy('name')
-   * )
-   * ```
-   */
-  queryCollectionGroup<T>(
-    collectionId: string, 
-    queryFn?: (query: Query) => Query
-  ): Promise<QuerySnapshot<T>>
-
-  /**
-   * コレクショングループ横断で特定ドキュメントを検索
-   * @param collectionId - 検索するコレクションID
-   * @param documentId - 検索するドキュメントID
-   * @returns 見つかった場合はドキュメントデータ、それ以外はnull
-   * @throws バリデーション失敗時FirestoreTypedValidationError
-   * @example
-   * ```typescript
-   * // すべてのカテゴリ/商品でユーザーを検索
-   * const user = await db.findDocumentInCollectionGroup('users', 'user123')
-   * if (user) {
-   *   console.log(`Found user: ${user.name}`)
-   * }
-   * ```
-   */
-  findDocumentInCollectionGroup<T>(
-    collectionId: string, 
-    documentId: string
-  ): Promise<T | null>
 }
 ```
 

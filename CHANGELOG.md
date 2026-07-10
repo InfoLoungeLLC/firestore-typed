@@ -5,6 +5,58 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.0] - 2026-07-10
+
+All items in this release come from an external code review (issues #92–#100).
+
+### Fixed
+
+- **`failIfExists` is now atomic** (#92): `set(data, { failIfExists: true })` uses Firestore's
+  `create()` instead of a non-atomic read-then-write, so two concurrent creation attempts can
+  no longer both succeed. The gRPC `ALREADY_EXISTS` error is translated to
+  `DocumentAlreadyExistsError` as before
+- **Queries on special-type fields now match** (#93): `where()` operands and cursor values
+  (`startAt`/`startAfter`/`endAt`/`endBefore`) are converted to native Firestore types
+  (`SerializedGeoPoint` → `GeoPoint`, `SerializedDocumentReference` → `DocumentReference`).
+  Previously such queries silently returned 0 results. Values that are already native
+  (`Timestamp`, `GeoPoint`, `DocumentReference`, and `DocumentSnapshot` cursors) pass
+  through unchanged
+- **`merge()` no longer loses concurrent updates** (#94): the read-modify-write now runs inside
+  a transaction, so updates committed between the read and the write abort and retry the merge
+  instead of being overwritten
+- **`Buffer`/`Uint8Array` fields are preserved** (#97): binary values pass through both
+  conversion directions unchanged; previously they were corrupted into index-keyed plain maps
+  on write and read
+
+### Changed
+
+- **BREAKING (type-level)**: `where()` operand types now model the operator (#96) —
+  `in`/`not-in` take an array of field values, `array-contains` takes the array element type
+  (including for optional/nullable array fields such as `tags?: string[]`),
+  `array-contains-any` takes an array of elements. Native Firestore values (`Timestamp`,
+  `GeoPoint`, `DocumentReference`) are accepted alongside their serialized forms, and
+  `undefined` is rejected as an operand (Firestore rejects it at runtime). Code that passed
+  mistyped operands (typically via `as any`) may surface new type errors; runtime behavior
+  is unchanged
+- **BREAKING (type-level)**: `SerializedDocumentReference<TCollection, TDocument>` now brands
+  `TDocument` (#98), so references to different document types are no longer mutually
+  assignable. Existing object literals remain valid (the brand member is optional)
+- **Behavior**: with `failIfExists`, validation now runs before the existence check; invalid
+  data targeting an existing document throws `FirestoreTypedValidationError` instead of
+  `DocumentAlreadyExistsError` (#92)
+- CI now runs emulator tests in a dedicated job via `firebase emulators:exec` (#99)
+- The release workflow now runs emulator tests before publishing, and its publish/tag/release
+  steps are idempotent so a partially failed release run can be safely re-run
+
+### Documentation
+
+- README validation claims now match the actual defaults (#95): every collection requires a
+  validator, writes are validated by default, read validation is opt-in via `validateOnRead: true`
+- README API reference aligned with the implemented API (#100): fixed the `getFirestoreTyped`
+  signature and removed non-existent collection-group methods
+- README/CLAUDE.md updated for 0.7.0 behavior: conversion table (incl. bytes passthrough),
+  operator-aware type-safety examples, transactional `merge()` and atomic `failIfExists` notes
+
 ## [0.6.1] - 2026-07-10
 
 ### Changed
