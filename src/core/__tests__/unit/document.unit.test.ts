@@ -54,6 +54,7 @@ describe('DocumentReference', () => {
       firestore: {},
       get: vi.fn(),
       set: vi.fn(),
+      create: vi.fn(),
       delete: vi.fn(),
       update: vi.fn(),
     }
@@ -241,33 +242,38 @@ describe('DocumentReference', () => {
     })
 
     describe('failIfExists option', () => {
-      it('should check existence when failIfExists is true', async () => {
-        mockFirebaseDoc.get.mockResolvedValue({
-          exists: false,
-          id: 'test-id',
-          ref: mockFirebaseDoc,
-          data: () => undefined,
-        })
+      it('should write atomically via create() when failIfExists is true', async () => {
+        mockFirebaseDoc.create.mockResolvedValue(undefined)
 
         await docRef.set(testData, { failIfExists: true })
 
-        expect(mockFirebaseDoc.get).toHaveBeenCalled()
-        expect(mockFirebaseDoc.set).toHaveBeenCalledWith(testData)
+        expect(mockFirebaseDoc.create).toHaveBeenCalledWith(testData)
+        expect(mockFirebaseDoc.set).not.toHaveBeenCalled()
+        expect(mockFirebaseDoc.get).not.toHaveBeenCalled()
       })
 
       it('should throw DocumentAlreadyExistsError when document exists', async () => {
-        mockFirebaseDoc.get.mockResolvedValue({
-          exists: true,
-          id: 'test-id',
-          ref: mockFirebaseDoc,
-          data: () => testData,
-        })
+        // gRPC ALREADY_EXISTS error as thrown by Firestore's create()
+        const alreadyExistsError = Object.assign(
+          new Error('6 ALREADY_EXISTS: Document already exists'),
+          {
+            code: 6,
+          },
+        )
+        mockFirebaseDoc.create.mockRejectedValue(alreadyExistsError)
 
         await expect(docRef.set(testData, { failIfExists: true })).rejects.toThrow(
           DocumentAlreadyExistsError,
         )
 
         expect(mockFirebaseDoc.set).not.toHaveBeenCalled()
+      })
+
+      it('should rethrow non-ALREADY_EXISTS errors from create() unchanged', async () => {
+        const permissionError = Object.assign(new Error('7 PERMISSION_DENIED'), { code: 7 })
+        mockFirebaseDoc.create.mockRejectedValue(permissionError)
+
+        await expect(docRef.set(testData, { failIfExists: true })).rejects.toThrow(permissionError)
       })
     })
   })
