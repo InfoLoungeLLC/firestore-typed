@@ -94,6 +94,9 @@ import { FirestoreTyped, CollectionReference, DocumentReference, Query, Collecti
 - `Date` → `Timestamp` (loses nanosecond precision)
 - `SerializedGeoPoint` → `GeoPoint`
 - `SerializedDocumentReference<TCollection, TDocument>` → `DocumentReference`
+- `Buffer`/`Uint8Array` pass through unchanged (Firestore bytes fields)
+- Already-native values (`Timestamp`, `GeoPoint`, `DocumentReference`, `DocumentSnapshot` cursors) pass through unchanged, including as query operands
+- `merge()` runs its read-modify-write inside a transaction; `failIfExists` uses atomic `create()`
 
 ### Testing Strategy
 The codebase uses a three-tiered testing approach:
