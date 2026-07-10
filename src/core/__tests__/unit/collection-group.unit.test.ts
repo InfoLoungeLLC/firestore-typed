@@ -1,7 +1,7 @@
 import { vi, describe, it, expect, beforeEach, type Mock, type MockedFunction } from 'vitest'
 import { CollectionGroup } from '../../collection-group'
 import { Query } from '../../query'
-import { serializeFirestoreTypes } from '../../../utils/firestore-converter'
+import { serializeFirestoreTypes, deserializeQueryValue } from '../../../utils/firestore-converter'
 import { validateData } from '../../../utils/validator'
 import type { FirestoreTypedOptionsProvider } from '../../../types/firestore-typed.types'
 import type { TestPostEntity } from '../../../__tests__/__helpers__/test-entities.helper'
@@ -19,6 +19,9 @@ const mockSerializeFirestoreTypes = serializeFirestoreTypes as MockedFunction<
   typeof serializeFirestoreTypes
 >
 const mockValidateData = validateData as MockedFunction<typeof validateData>
+const mockDeserializeQueryValue = deserializeQueryValue as MockedFunction<
+  typeof deserializeQueryValue
+>
 
 describe('CollectionGroup', () => {
   let mockFirebaseQuery: any
@@ -30,6 +33,7 @@ describe('CollectionGroup', () => {
     // Reset mocks
     vi.clearAllMocks()
     mockSerializeFirestoreTypes.mockImplementation((data) => data)
+    mockDeserializeQueryValue.mockImplementation((value: any) => value)
     mockValidateData.mockImplementation((data) => data as any)
 
     // Create mock Firebase Query (for collection group)

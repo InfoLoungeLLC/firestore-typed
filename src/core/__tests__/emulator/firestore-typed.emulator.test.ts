@@ -1,6 +1,10 @@
 import { describe, it, expect, beforeAll, beforeEach, afterAll } from 'vitest'
 import { FirestoreTyped } from '../../firestore-typed'
 import { DocumentAlreadyExistsError } from '../../../errors/errors'
+import type {
+  SerializedGeoPoint,
+  SerializedDocumentReference,
+} from '../../../utils/firestore-converter'
 import {
   setupEmulator,
   teardownEmulator,
@@ -127,6 +131,50 @@ describe('FirestoreTyped Core Class (Emulator)', () => {
         await expect(docRef.set(testData, { failIfExists: true })).rejects.toThrow(
           DocumentAlreadyExistsError,
         )
+      } finally {
+        await docRef.delete()
+      }
+    })
+  })
+
+  describe('Queries on special-type fields', () => {
+    interface PlaceEntity extends Record<string, unknown> {
+      id: string
+      name: string
+      location: SerializedGeoPoint
+      owner: SerializedDocumentReference
+    }
+
+    it('should match documents by GeoPoint and DocumentReference values via where()', async () => {
+      const validator = (data: unknown) => data as PlaceEntity
+      const uniqueCollectionName = `test-places-${Date.now()}-${Math.random()}`
+      const collection = firestoreTyped.collection<PlaceEntity>(uniqueCollectionName, validator)
+
+      const location: SerializedGeoPoint = {
+        type: 'GeoPoint',
+        latitude: 35.6762,
+        longitude: 139.6503,
+      }
+      const owner: SerializedDocumentReference = {
+        type: 'DocumentReference',
+        path: `owners-${uniqueCollectionName}/owner-1`,
+        collectionId: `owners-${uniqueCollectionName}`,
+        documentId: 'owner-1',
+      }
+
+      const docRef = collection.doc('tokyo')
+      await docRef.set({ id: 'tokyo', name: 'Tokyo Office', location, owner })
+
+      try {
+        // Both queries return 0 results without query-value deserialization,
+        // because the stored native types never equal the serialized plain objects
+        const byLocation = await collection.where('location', '==', location).get()
+        expect(byLocation.size).toBe(1)
+        expect(byLocation.docs[0].data?.name).toBe('Tokyo Office')
+
+        const byOwner = await collection.where('owner', '==', owner).get()
+        expect(byOwner.size).toBe(1)
+        expect(byOwner.docs[0].data?.name).toBe('Tokyo Office')
       } finally {
         await docRef.delete()
       }

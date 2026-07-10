@@ -97,6 +97,18 @@ export function deserializeFirestoreTypes(
 }
 
 /**
+ * Converts a single query operand (where() value or cursor value) to its
+ * Firestore representation (Date → Timestamp, SerializedGeoPoint → GeoPoint,
+ * SerializedDocumentReference → DocumentReference).
+ *
+ * Stored documents go through deserializeFirestoreTypes on write, so query
+ * operands must receive the same conversion or comparisons never match.
+ */
+export function deserializeQueryValue(value: unknown, firestore: Firestore): unknown {
+  return deserializeFirestoreTypesInternal(value, firestore)
+}
+
+/**
  * Internal recursive deserialization function
  */
 function deserializeFirestoreTypesInternal(data: unknown, firestore: Firestore): unknown {

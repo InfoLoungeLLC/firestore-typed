@@ -7,7 +7,11 @@ import type {
 import { DocumentReference } from './document'
 import { Query } from './query'
 import { validateData } from '../utils/validator'
-import { serializeFirestoreTypes, deserializeFirestoreTypes } from '../utils/firestore-converter'
+import {
+  serializeFirestoreTypes,
+  deserializeFirestoreTypes,
+  deserializeQueryValue,
+} from '../utils/firestore-converter'
 import type {
   SerializedDocumentData,
   QuerySnapshot,
@@ -107,7 +111,7 @@ export class CollectionReference<T extends SerializedDocumentData> {
    * Creates a new Query with where clause (Phase 2)
    */
   where<K extends keyof T & string>(field: K, op: WhereFilterOp, value: T[K]): Query<T> {
-    const query = this.ref.where(field, op, value)
+    const query = this.ref.where(field, op, deserializeQueryValue(value, this.ref.firestore))
     return new Query<T>(query, this.firestoreTyped, this.validator)
   }
 
