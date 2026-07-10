@@ -5,6 +5,26 @@
 このフォーマットは[Keep a Changelog](https://keepachangelog.com/en/1.0.0/)に基づいており、
 このプロジェクトは[セマンティックバージョニング](https://semver.org/spec/v2.0.0.html)に準拠しています。
 
+## [0.6.0] - 2026-07-10
+
+### 追加
+
+- **firebase-admin v14サポート**: peer dependencyの範囲を`^13.5.0 || ^14.0.0`に拡大
+  - @google-cloud/firestore 8に対して、実Firestoreエミュレータでの読み書きテストを含めて検証済み
+- **typia v10〜v12サポート**: peer dependencyの範囲を`^9.7.2`から`>=9.7.2 <13`に拡大
+  - typia v13はTypeScript 7 + ttsc専用のため除外(issue #85参照)
+
+### 変更
+
+- **破壊的変更**: Node.js 22以上が必須になりました(`engines`フィールドを追加)。
+  Node.js 20は2026年4月にEOLを迎えたためサポート対象外です
+- tsdown 0.22のデフォルトに従いESMビルド成果物のファイル名を変更
+  (`dist/index.js` → `dist/index.mjs`、`dist/index.d.ts` → `dist/index.d.mts`)。
+  エントリポイントは`exports`マップ経由で解決されるため利用者側の対応は不要です
+- CIのテスト対象をNode.js 22.x、24.x、26.xに変更
+- **開発依存関係**: TypeScript 6.0、typia 12.1、tsdown 0.22、vitest 4、
+  ESLint 10、firebase-admin 14
+
 ## [0.5.5] - 2025-10-07
 
 ### 修正

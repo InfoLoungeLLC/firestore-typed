@@ -68,11 +68,17 @@ await users.doc('123').set({
 
 ## インストール
 
-これはワークスペース内のプライベートnpmパッケージです：
-
 ```bash
 npm install @info-lounge/firestore-typed
 ```
+
+### 動作要件
+
+- **Node.js**: 22以上
+- **firebase-admin**: `^13.5.0 || ^14.0.0`(peer dependency)
+- **バリデーションライブラリ**(peer dependency、少なくとも一方を選択):
+  - typia: `>=9.7.2 <13`(v13はTypeScript 7 + ttsc専用のため現時点では未サポート)
+  - zod: `^4.0.17`
 
 ### 依存関係
 

@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] - 2026-07-10
+
+### Added
+
+- **firebase-admin v14 support**: peer dependency range widened to `^13.5.0 || ^14.0.0`
+  - Verified against @google-cloud/firestore 8 including real Firestore emulator I/O tests
+- **typia v10–v12 support**: peer dependency range widened from `^9.7.2` to `>=9.7.2 <13`
+  - typia v13 is excluded because it requires TypeScript 7 + ttsc (see issue #85)
+
+### Changed
+
+- **BREAKING**: Node.js >= 22 is now required (`engines` field added). Node.js 20 reached
+  end-of-life in April 2026 and is no longer supported
+- ESM build artifacts renamed following tsdown 0.22 defaults
+  (`dist/index.js` → `dist/index.mjs`, `dist/index.d.ts` → `dist/index.d.mts`).
+  Consumers resolve entry points via the `exports` map, so no action is required
+- CI now tests on Node.js 22.x, 24.x, and 26.x
+- **Development dependencies**: TypeScript 6.0, typia 12.1, tsdown 0.22, vitest 4,
+  ESLint 10, firebase-admin 14
+
 ## [0.5.5] - 2025-10-07
 
 ### Fixed

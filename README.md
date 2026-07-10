@@ -68,11 +68,17 @@ await users.doc('123').set({
 
 ## Installation
 
-This is a private npm package within the workspace:
-
 ```bash
 npm install @info-lounge/firestore-typed
 ```
+
+### Requirements
+
+- **Node.js**: >= 22
+- **firebase-admin**: `^13.5.0 || ^14.0.0` (peer dependency)
+- **Validation library** (peer dependency, choose at least one):
+  - typia: `>=9.7.2 <13` (v13 requires TypeScript 7 + ttsc, which is not supported yet)
+  - zod: `^4.0.17`
 
 ### Dependencies
 
