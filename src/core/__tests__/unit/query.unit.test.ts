@@ -83,9 +83,19 @@ describe('Query', () => {
         query.where('age', '>', 18)
         expect(mockFirebaseQuery.where).toHaveBeenCalledWith('age', '>', 18)
 
-        // For 'in' operator, cast to any to handle union type limitations
-        query.where('status', 'in', ['active', 'inactive'] as any)
+        // 'in' takes an array of field values (typed via WhereFilterValue)
+        query.where('status', 'in', ['active', 'inactive'])
         expect(mockFirebaseQuery.where).toHaveBeenCalledWith('status', 'in', ['active', 'inactive'])
+      })
+
+      it('should reject operand types that do not match the operator', () => {
+        // @ts-expect-error 'in' requires an array of field values, not a single value
+        query.where('status', 'in', 'active')
+
+        // @ts-expect-error equality against an array is not valid for a scalar field
+        query.where('age', '==', [18])
+
+        expect(mockFirebaseQuery.where).toHaveBeenCalledTimes(2)
       })
 
       it('should be chainable', () => {
@@ -325,7 +335,7 @@ describe('Query', () => {
         taggedValidator,
       )
 
-      taggedQuery.where('tags', 'array-contains', 'important' as any)
+      taggedQuery.where('tags', 'array-contains', 'important')
 
       expect(mockFirebaseQuery.where).toHaveBeenCalledWith('tags', 'array-contains', 'important')
     })

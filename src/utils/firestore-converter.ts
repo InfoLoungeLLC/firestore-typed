@@ -14,17 +14,22 @@ export interface SerializedGeoPoint {
 /**
  * Serialized DocumentReference type
  * @template TCollection - Collection name type
- * @template TDocument - Document type (for type-level information)
+ * @template TDocument - Referenced document type
  */
 export interface SerializedDocumentReference<
   TCollection extends string = string,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   TDocument = unknown,
 > {
   type: 'DocumentReference'
   path: string
   collectionId: TCollection
   documentId: string
+  /**
+   * Phantom brand carrying the referenced document type at the type level,
+   * so references to different document types are not mutually assignable.
+   * Never present at runtime.
+   */
+  readonly __documentType?: TDocument
 }
 
 /**

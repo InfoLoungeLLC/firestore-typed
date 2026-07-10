@@ -12,6 +12,7 @@ import type {
   DocumentSnapshot,
   ReadOptions,
   FirestoreTypedOptionsProvider,
+  WhereFilterValue,
 } from '../types/firestore-typed.types'
 
 /**
@@ -28,7 +29,11 @@ export class Query<T extends SerializedDocumentData> {
   /**
    * Add a where clause with type-safe field names
    */
-  where<K extends keyof T & string>(field: K, op: WhereFilterOp, value: T[K]): Query<T> {
+  where<K extends keyof T & string, Op extends WhereFilterOp>(
+    field: K,
+    op: Op,
+    value: WhereFilterValue<T, K, Op>,
+  ): Query<T> {
     const newQuery = this.query.where(field, op, deserializeQueryValue(value, this.query.firestore))
     return new Query<T>(newQuery, this.firestoreTyped, this.validator)
   }

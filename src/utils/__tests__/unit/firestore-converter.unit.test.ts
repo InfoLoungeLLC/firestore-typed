@@ -515,4 +515,27 @@ describe('Firestore Converter', () => {
       })
     })
   })
+
+  describe('SerializedDocumentReference type branding', () => {
+    it('should not allow references to different document types to be assigned to each other', () => {
+      interface UserDoc {
+        name: string
+      }
+      interface OrderDoc {
+        total: number
+      }
+
+      const userRef: SerializedDocumentReference<'users', UserDoc> = {
+        type: 'DocumentReference',
+        path: 'users/user-1',
+        collectionId: 'users',
+        documentId: 'user-1',
+      }
+
+      // @ts-expect-error references to different document types must not be assignable
+      const orderRef: SerializedDocumentReference<'users', OrderDoc> = userRef
+
+      expect(orderRef).toBe(userRef)
+    })
+  })
 })
