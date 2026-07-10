@@ -181,5 +181,5 @@ Primary support for typia validators, but accepts any function with signature `(
 
 ### CI/CD Notes
 - GitHub Actions runs tests on Node.js 22.x, 24.x, and 26.x
-- Emulator tests are run separately in CI pipeline
+- Emulator tests run in a dedicated CI job via `firebase emulators:exec` (separate from the Node-matrix test job)
 - Coverage reports are uploaded to Codecov
