@@ -444,6 +444,7 @@ await collection.doc('id').set(data, { validateOnWrite: false })
 // Ensure document creation without overwriting
 await collection.doc('id').set(data, { failIfExists: true })
 // Throws DocumentAlreadyExistsError if document already exists
+// (atomic — enforced server-side via Firestore's create(), safe under concurrency)
 ```
 
 ### Read Documents
@@ -467,6 +468,7 @@ const documents = querySnapshot.docs.map(doc => doc.data)
 - FirestoreTyped uses a dedicated `merge()` method instead of `set(data, { merge: true })`
 - The `merge` operation validates the **complete merged data**, not just the partial data being merged
 - **The document must exist** - throws `DocumentNotFoundError` if the document doesn't exist
+- The read-merge-validate-write sequence **runs inside a transaction**: a concurrent update between the read and the write causes the merge to retry against fresh data instead of overwriting it
 - Native Firestore's `set(..., { merge: true })` is not available in FirestoreTyped
 
 ```typescript
@@ -610,8 +612,16 @@ const sortedQuery = usersCollection.orderBy('createdAt', 'desc')
 // ❌ Compile errors for invalid field names
 // const invalidQuery = usersCollection.where('invalidField', '==', 'value')
 
-// ⚠️ Note: Value types and pagination parameters are not fully type-checked
-// const query = usersCollection.where('name', '==', 123) // May not catch type errors
+// ✅ Operand types are checked per operator
+// usersCollection.where('name', '==', 123)        // ❌ number is not assignable to string
+// usersCollection.where('name', '==', undefined)  // ❌ undefined is never a valid operand
+// usersCollection.where('status', 'in', ['active', 'inactive']) // ✅ 'in' takes an array
+// usersCollection.where('tags', 'array-contains', 'admin')      // ✅ element type of the array field
+
+// ✅ Native Firestore values are accepted alongside serialized forms
+// usersCollection.where('createdAt', '>=', Timestamp.fromDate(date)) // Date fields also take Timestamp
+
+// ⚠️ Note: pagination cursor parameters are not type-checked
 // const paginated = usersCollection.startAt('any', 'values') // Parameters are unknown[]
 ```
 
@@ -877,6 +887,9 @@ FirestoreTyped automatically handles the conversion of JavaScript types to Fires
 | `Date` | `Timestamp` | DateTime data conversion (see precision note below) |
 | `SerializedGeoPoint` | `GeoPoint` | Geographic location data conversion |
 | `SerializedDocumentReference<TCollection, TDocument>` | `DocumentReference` | Type-safe document reference restoration |
+| `Buffer` / `Uint8Array` | Bytes | Passed through unchanged in both directions |
+
+Values that are already native Firestore types (`Timestamp`, `GeoPoint`, `DocumentReference`) pass through unchanged, both in document data and as query operands.
 
 > **⚠️ Important Note on Date/Timestamp Precision**: JavaScript `Date` objects have millisecond precision, while Firestore `Timestamp` objects support nanosecond precision. When converting from `Date` to `Timestamp`, the nanosecond portion will always be `000000` (zero). This means any nanosecond-level precision from the original Firestore data will be lost during the conversion process.
 

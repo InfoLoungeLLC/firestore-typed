@@ -443,6 +443,7 @@ await collection.doc('id').set(data, { validateOnWrite: false })
 // 上書きせずにドキュメントを作成
 await collection.doc('id').set(data, { failIfExists: true })
 // ドキュメントが既に存在する場合はDocumentAlreadyExistsErrorをスロー
+// (Firestoreのcreate()によるサーバー側の原子的な強制 — 並行実行でも安全)
 ```
 
 ### ドキュメントの読み取り
@@ -466,6 +467,7 @@ const documents = querySnapshot.docs.map(doc => doc.data)
 - FirestoreTypedでは`set(data, { merge: true })`の代わりに専用の`merge()`メソッドを使用します
 - `merge`操作は**完全にマージされたデータ**に対してバリデーションを実行します
 - **ドキュメントが存在する必要があります** - ドキュメントが存在しない場合は`DocumentNotFoundError`をスロー
+- 読み取り→マージ→検証→書き込みの一連は**トランザクション内で実行**されます: 読み書きの間に他の更新がコミットされた場合、上書きせず最新データでリトライします
 - 生のFirestoreの`set(..., { merge: true })`パターンはFirestoreTypedでは利用できません
 
 ```typescript
@@ -608,8 +610,16 @@ const sortedQuery = usersCollection.orderBy('createdAt', 'desc')
 // ❌ 無効なフィールド名のコンパイルエラー
 // const invalidQuery = usersCollection.where('invalidField', '==', 'value')
 
-// ⚠️ 注意: 値の型やページネーションパラメータは完全に型チェックされません
-// const query = usersCollection.where('name', '==', 123) // 型エラーを捕捉できない可能性
+// ✅ オペランドの型は演算子ごとにチェックされます
+// usersCollection.where('name', '==', 123)        // ❌ numberはstringに代入不可
+// usersCollection.where('name', '==', undefined)  // ❌ undefinedはオペランドとして常に不正
+// usersCollection.where('status', 'in', ['active', 'inactive']) // ✅ 'in'は配列を取る
+// usersCollection.where('tags', 'array-contains', 'admin')      // ✅ 配列フィールドの要素型
+
+// ✅ ネイティブFirestore値もシリアライズ形式と並んで受け付けられます
+// usersCollection.where('createdAt', '>=', Timestamp.fromDate(date)) // DateフィールドはTimestampも可
+
+// ⚠️ 注意: ページネーションのカーソルパラメータは型チェックされません
 // const paginated = usersCollection.startAt('any', 'values') // パラメータはunknown[]
 ```
 
@@ -874,6 +884,9 @@ FirestoreTypedは書き込み操作時にJavaScript型をFirestore特殊型に�
 | `Date` | `Timestamp` | 日時データ変換（下記の精度に関する注意事項を参照） |
 | `SerializedGeoPoint` | `GeoPoint` | 地理的位置データ変換 |
 | `SerializedDocumentReference<TCollection, TDocument>` | `DocumentReference` | 型安全なドキュメント参照復元 |
+| `Buffer` / `Uint8Array` | Bytes | 両方向とも変換せずそのまま通過 |
+
+すでにネイティブなFirestore型(`Timestamp`、`GeoPoint`、`DocumentReference`)の値は、ドキュメントデータ内でもクエリのオペランドとしても、変換されずそのまま通過します。
 
 > **⚠️ Date/Timestamp精度に関する重要な注意事項**: JavaScript `Date`オブジェクトはミリ秒精度ですが、Firestore `Timestamp`オブジェクトはナノ秒精度をサポートしています。`Date`から`Timestamp`への変換時、ナノ秒部分は常に`000000`（ゼロ）になります。これは、元のFirestoreデータのナノ秒レベルの精度が変換プロセス中に失われることを意味します。
 
