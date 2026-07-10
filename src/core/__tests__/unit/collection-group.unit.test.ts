@@ -81,7 +81,7 @@ describe('CollectionGroup', () => {
       it('should support chaining with multiple where clauses', () => {
         const query = collectionGroup
           .where('authorId', '==', 'user-1')
-          .where('tags', 'array-contains', 'test' as any)
+          .where('tags', 'array-contains', 'test')
 
         expect(query).toBeInstanceOf(Query)
       })

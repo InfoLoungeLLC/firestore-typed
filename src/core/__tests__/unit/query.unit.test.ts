@@ -335,7 +335,7 @@ describe('Query', () => {
         taggedValidator,
       )
 
-      taggedQuery.where('tags', 'array-contains', 'important' as any)
+      taggedQuery.where('tags', 'array-contains', 'important')
 
       expect(mockFirebaseQuery.where).toHaveBeenCalledWith('tags', 'array-contains', 'important')
     })
