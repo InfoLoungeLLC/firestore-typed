@@ -320,6 +320,25 @@ describe('DocumentReference', () => {
       expect(mockFirebaseDoc.set).not.toHaveBeenCalled()
     })
 
+    it('should abort the transaction and write nothing when merged data fails validation', async () => {
+      mockFirebaseDoc.get.mockResolvedValue({
+        exists: true,
+        id: 'test-id',
+        ref: mockFirebaseDoc,
+        data: () => testData,
+      })
+
+      const validationError = new Error('merged data is invalid')
+      mockValidateData.mockImplementation(() => {
+        throw validationError
+      })
+
+      await expect(docRef.merge(partialData)).rejects.toThrow(validationError)
+
+      expect(mockFirestore.runTransaction).toHaveBeenCalledTimes(1)
+      expect(mockFirebaseDoc.set).not.toHaveBeenCalled()
+    })
+
     it('should run the read-modify-write inside a transaction', async () => {
       mockFirebaseDoc.get.mockResolvedValue({
         exists: true,

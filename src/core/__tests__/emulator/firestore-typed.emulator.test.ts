@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, beforeEach, afterAll } from 'vitest'
 import { GeoPoint } from 'firebase-admin/firestore'
 import { FirestoreTyped } from '../../firestore-typed'
-import { DocumentAlreadyExistsError } from '../../../errors/errors'
+import { DocumentAlreadyExistsError, FirestoreTypedValidationError } from '../../../errors/errors'
 import type {
   SerializedGeoPoint,
   SerializedDocumentReference,
@@ -139,6 +139,36 @@ describe('FirestoreTyped Core Class (Emulator)', () => {
   })
 
   describe('merge() concurrency', () => {
+    it('should leave the document unchanged when merged data fails validation', async () => {
+      interface NamedEntity extends Record<string, unknown> {
+        id: string
+        name: string
+      }
+      const validator = (data: unknown): NamedEntity => {
+        const obj = data as NamedEntity
+        if (typeof obj.name !== 'string' || obj.name.length < 2) {
+          throw new Error('Name must be at least 2 characters')
+        }
+        return obj
+      }
+      const uniqueCollectionName = `test-merge-abort-${Date.now()}-${Math.random()}`
+      const collection = firestoreTyped.collection<NamedEntity>(uniqueCollectionName, validator)
+      const docRef = collection.doc('validated-doc')
+
+      await docRef.set({ id: '1', name: 'Original' })
+
+      try {
+        // Merged result {id, name: 'X'} fails validation → transaction aborts
+        // (the validator's error is wrapped in FirestoreTypedValidationError)
+        await expect(docRef.merge({ name: 'X' })).rejects.toThrow(FirestoreTypedValidationError)
+
+        const snapshot = await docRef.get()
+        expect(snapshot.data?.name).toBe('Original')
+      } finally {
+        await docRef.delete()
+      }
+    })
+
     it('should not lose a concurrent update to a different field', async () => {
       const validator = createSimpleTestEntityValidator()
       const uniqueCollectionName = `test-merge-${Date.now()}-${Math.random()}`

@@ -54,6 +54,8 @@ All items in this release come from an external code review (issues #92–#100).
   validator, writes are validated by default, read validation is opt-in via `validateOnRead: true`
 - README API reference aligned with the implemented API (#100): fixed the `getFirestoreTyped`
   signature and removed non-existent collection-group methods
+- README/CLAUDE.md updated for 0.7.0 behavior: conversion table (incl. bytes passthrough),
+  operator-aware type-safety examples, transactional `merge()` and atomic `failIfExists` notes
 
 ## [0.6.1] - 2026-07-10
 
