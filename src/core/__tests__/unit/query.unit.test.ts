@@ -98,6 +98,24 @@ describe('Query', () => {
         expect(mockFirebaseQuery.where).toHaveBeenCalledTimes(2)
       })
 
+      it('should accept array-contains on optional and nullable array fields', () => {
+        interface OptionalArrays extends Record<string, unknown> {
+          tags?: string[]
+          labels: string[] | null
+        }
+        const optQuery = new Query<OptionalArrays>(
+          mockFirebaseQuery,
+          mockFirestoreTyped,
+          vi.fn((data) => data as OptionalArrays),
+        )
+
+        // Both compile because WhereFilterValue extracts the array part of the union
+        optQuery.where('tags', 'array-contains', 'important')
+        optQuery.where('labels', 'array-contains', 'urgent')
+
+        expect(mockFirebaseQuery.where).toHaveBeenCalledTimes(2)
+      })
+
       it('should be chainable', () => {
         const result = query
           .where('name', '==', 'John')

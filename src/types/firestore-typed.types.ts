@@ -67,11 +67,11 @@ export type WhereFilterValue<
 > = Op extends 'in' | 'not-in'
   ? readonly T[K][]
   : Op extends 'array-contains'
-    ? T[K] extends readonly (infer E)[]
+    ? Extract<T[K], readonly unknown[]> extends readonly (infer E)[]
       ? E
       : never
     : Op extends 'array-contains-any'
-      ? T[K] extends readonly (infer E)[]
+      ? Extract<T[K], readonly unknown[]> extends readonly (infer E)[]
         ? readonly E[]
         : never
       : T[K]

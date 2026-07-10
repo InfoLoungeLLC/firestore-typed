@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeAll, beforeEach, afterAll } from 'vitest'
+import { GeoPoint } from 'firebase-admin/firestore'
 import { FirestoreTyped } from '../../firestore-typed'
 import { DocumentAlreadyExistsError } from '../../../errors/errors'
 import type {
@@ -198,6 +199,68 @@ describe('FirestoreTyped Core Class (Emulator)', () => {
         const byOwner = await collection.where('owner', '==', owner).get()
         expect(byOwner.size).toBe(1)
         expect(byOwner.docs[0].data?.name).toBe('Tokyo Office')
+      } finally {
+        await docRef.delete()
+      }
+    })
+  })
+
+  describe('Native operands for queries and cursors', () => {
+    it('should accept a native DocumentSnapshot as a cursor value', async () => {
+      const validator = createSimpleTestEntityValidator()
+      const uniqueCollectionName = `test-cursor-${Date.now()}-${Math.random()}`
+      const collection = firestoreTyped.collection(uniqueCollectionName, validator)
+
+      const docRefs = await Promise.all([
+        collection.add(createSimpleTestEntity({ id: '1', name: 'Alice' })),
+        collection.add(createSimpleTestEntity({ id: '2', name: 'Bob' })),
+        collection.add(createSimpleTestEntity({ id: '3', name: 'Carol' })),
+      ])
+
+      try {
+        // Native snapshots contain circular references; before the passthrough
+        // fix this overflowed the stack (RangeError) in cursor conversion
+        const nativeSnapshot = await collection.native.orderBy('name').get()
+
+        const page = await collection
+          .orderBy('name')
+          .startAfter(nativeSnapshot.docs[0])
+          .get({ validateOnRead: false })
+
+        expect(page.size).toBe(2)
+        expect(page.docs.map((d) => d.data?.name)).toEqual(['Bob', 'Carol'])
+      } finally {
+        await Promise.all(docRefs.map((ref) => ref.delete()))
+      }
+    })
+
+    it('should match documents when a native GeoPoint is used as a where() operand', async () => {
+      interface PlaceEntity extends Record<string, unknown> {
+        id: string
+        name: string
+        location: SerializedGeoPoint
+      }
+      const validator = (data: unknown) => data as PlaceEntity
+      const uniqueCollectionName = `test-native-geo-${Date.now()}-${Math.random()}`
+      const collection = firestoreTyped.collection<PlaceEntity>(uniqueCollectionName, validator)
+
+      const docRef = collection.doc('osaka')
+      await docRef.set({
+        id: 'osaka',
+        name: 'Osaka Office',
+        location: { type: 'GeoPoint', latitude: 34.6937, longitude: 135.5023 },
+      })
+
+      try {
+        // Native instances worked before 0.7.0's query-value conversion and
+        // must keep working: they pass through instead of being flattened
+        const nativeGeoPoint = new GeoPoint(34.6937, 135.5023)
+        const result = await collection
+          .where('location', '==', nativeGeoPoint as unknown as SerializedGeoPoint)
+          .get()
+
+        expect(result.size).toBe(1)
+        expect(result.docs[0].data?.name).toBe('Osaka Office')
       } finally {
         await docRef.delete()
       }
