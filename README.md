@@ -1167,12 +1167,16 @@ const data = await userCollection.doc('user-id').get({ validateOnRead: true })
 
 ```typescript
 // ✅ Good: Use collection group queries for cross-collection searches
-const allProducts = await db.queryCollectionGroup('products', (query) =>
-  query.where('category', '==', 'electronics').orderBy('name')
-)
+const productsGroup = db.collectionGroup<ProductEntity>('products', productValidator)
+const electronicsProducts = await productsGroup
+  .where('category', '==', 'electronics')
+  .orderBy('name')
+  .get()
 
 // ✅ Good: Regular collection queries for single collection
-const userProducts = await db.collection('users/user-001/products').get()
+const userProducts = await db
+  .collection<ProductEntity>('users/user-001/products', productValidator)
+  .get()
 ```
 
 ### 6. Performance Considerations
@@ -1215,6 +1219,7 @@ await batch.commit()
  * ```
  */
 function getFirestoreTyped(
+  firestore?: Firestore,
   options?: FirestoreTypedOptions
 ): FirestoreTyped
 ```
@@ -1285,48 +1290,6 @@ class FirestoreTyped {
    * ```
    */
   get native(): Firestore
-
-  /**
-   * Performs collection group query across multiple collections
-   * @param collectionId - Collection ID to search across
-   * @param queryFn - Optional query builder function
-   * @returns Query results from all matching collections
-   * @throws FirestoreTypedValidationError if validation fails
-   * @example
-   * ```typescript
-   * // Find all products across all users
-   * const allProducts = await db.queryCollectionGroup('products')
-   * 
-   * // With query constraints
-   * const electronicsProducts = await db.queryCollectionGroup('products', (query) =>
-   *   query.where('category', '==', 'electronics').orderBy('name')
-   * )
-   * ```
-   */
-  queryCollectionGroup<T>(
-    collectionId: string, 
-    queryFn?: (query: Query) => Query
-  ): Promise<QuerySnapshot<T>>
-
-  /**
-   * Finds specific document across collection groups
-   * @param collectionId - Collection ID to search in
-   * @param documentId - Document ID to find
-   * @returns Document data if found, null otherwise
-   * @throws FirestoreTypedValidationError if validation fails
-   * @example
-   * ```typescript
-   * // Find user across all users/products
-   * const user = await db.findDocumentInCollectionGroup('publicUsers', 'user123')
-   * if (user) {
-   *   console.log(`Found user: ${user.name}`)
-   * }
-   * ```
-   */
-  findDocumentInCollectionGroup<T>(
-    collectionId: string, 
-    documentId: string
-  ): Promise<T | null>
 }
 ```
 

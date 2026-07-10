@@ -1143,9 +1143,11 @@ const data = await userCollection.doc('user-id').get({ validateOnRead: true })
 
 ```typescript
 // ✅ 良い例: 横断コレクション検索にコレクショングループクエリを使用
-const allProducts = await db.queryCollectionGroup('products', (query) =>
-  query.where('category', '==', 'electronics').orderBy('name')
-)
+const productsGroup = db.collectionGroup<ProductEntity>('products', productValidator)
+const electronicsProducts = await productsGroup
+  .where('category', '==', 'electronics')
+  .orderBy('name')
+  .get()
 
 // ✅ 良い例: 単一コレクション用の通常のコレクションクエリ
 const categoryProducts = await db.collection<ProductEntity>('categories/electronics/products', productValidator).get()
@@ -1191,6 +1193,7 @@ await batch.commit()
  * ```
  */
 function getFirestoreTyped(
+  firestore?: Firestore,
   options?: FirestoreTypedOptions
 ): FirestoreTyped
 ```
@@ -1261,48 +1264,6 @@ class FirestoreTyped {
    * ```
    */
   get native(): Firestore
-
-  /**
-   * 複数コレクション横断でコレクショングループクエリを実行
-   * @param collectionId - 横断検索するコレクションID
-   * @param queryFn - オプションのクエリビルダー関数
-   * @returns すべての一致するコレクションからのクエリ結果
-   * @throws バリデーション失敗時FirestoreTypedValidationError
-   * @example
-   * ```typescript
-   * // すべてのカテゴリで全商品を検索
-   * const allProducts = await db.queryCollectionGroup('products')
-   * 
-   * // クエリ制約付き
-   * const electronicsProducts = await db.queryCollectionGroup('products', (query) =>
-   *   query.where('category', '==', 'electronics').orderBy('name')
-   * )
-   * ```
-   */
-  queryCollectionGroup<T>(
-    collectionId: string, 
-    queryFn?: (query: Query) => Query
-  ): Promise<QuerySnapshot<T>>
-
-  /**
-   * コレクショングループ横断で特定ドキュメントを検索
-   * @param collectionId - 検索するコレクションID
-   * @param documentId - 検索するドキュメントID
-   * @returns 見つかった場合はドキュメントデータ、それ以外はnull
-   * @throws バリデーション失敗時FirestoreTypedValidationError
-   * @example
-   * ```typescript
-   * // すべてのカテゴリ/商品でユーザーを検索
-   * const user = await db.findDocumentInCollectionGroup('users', 'user123')
-   * if (user) {
-   *   console.log(`Found user: ${user.name}`)
-   * }
-   * ```
-   */
-  findDocumentInCollectionGroup<T>(
-    collectionId: string, 
-    documentId: string
-  ): Promise<T | null>
 }
 ```
 
