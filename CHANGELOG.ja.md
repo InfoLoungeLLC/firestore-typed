@@ -29,10 +29,12 @@
 ### 変更
 
 - **破壊的変更(型レベル)**: `where()`のオペランド型が演算子を表現するようになりました(#96) —
-  `in`/`not-in`は`readonly T[K][]`、`array-contains`は配列要素型
+  `in`/`not-in`はフィールド値の配列、`array-contains`は配列要素型
   (`tags?: string[]`のようなoptional/nullable配列フィールドにも対応)、`array-contains-any`は
-  要素の配列を取ります。誤った型のオペランド(主に`as any`経由)を渡していたコードでは
-  新たな型エラーが出る可能性があります。実行時挙動は不変です
+  要素の配列を取ります。ネイティブFirestore値(`Timestamp`、`GeoPoint`、`DocumentReference`)は
+  シリアライズ形式と並んで受け付けられ、`undefined`はオペランドとして拒否されます
+  (Firestoreが実行時に拒否するため)。誤った型のオペランド(主に`as any`経由)を渡していた
+  コードでは新たな型エラーが出る可能性があります。実行時挙動は不変です
 - **破壊的変更(型レベル)**: `SerializedDocumentReference<TCollection, TDocument>`の
   `TDocument`がブランド化され(#98)、異なるドキュメント型への参照は相互代入できなくなりました。
   既存のオブジェクトリテラルは有効なままです(ブランドメンバーはオプショナル)

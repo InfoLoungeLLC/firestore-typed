@@ -253,11 +253,10 @@ describe('FirestoreTyped Core Class (Emulator)', () => {
 
       try {
         // Native instances worked before 0.7.0's query-value conversion and
-        // must keep working: they pass through instead of being flattened
+        // must keep working: they pass through instead of being flattened,
+        // and WhereFilterValue accepts them alongside the serialized form
         const nativeGeoPoint = new GeoPoint(34.6937, 135.5023)
-        const result = await collection
-          .where('location', '==', nativeGeoPoint as unknown as SerializedGeoPoint)
-          .get()
+        const result = await collection.where('location', '==', nativeGeoPoint).get()
 
         expect(result.size).toBe(1)
         expect(result.docs[0].data?.name).toBe('Osaka Office')

@@ -1,6 +1,8 @@
 import { vi, describe, it, expect, beforeEach, type Mock, type MockedFunction } from 'vitest'
+import { GeoPoint, Timestamp } from 'firebase-admin/firestore'
 import { Query } from '../../query'
 import { serializeFirestoreTypes, deserializeQueryValue } from '../../../utils/firestore-converter'
+import type { SerializedGeoPoint } from '../../../utils/firestore-converter'
 import { validateData } from '../../../utils/validator'
 import type { FirestoreTypedOptionsProvider } from '../../../types/firestore-typed.types'
 import {
@@ -96,6 +98,28 @@ describe('Query', () => {
         query.where('age', '==', [18])
 
         expect(mockFirebaseQuery.where).toHaveBeenCalledTimes(2)
+      })
+
+      it('should reject undefined operands and accept native Firestore counterparts', () => {
+        interface MixedEntity extends Record<string, unknown> {
+          name?: string
+          location: SerializedGeoPoint
+          createdAt: Date
+        }
+        const mixedQuery = new Query<MixedEntity>(
+          mockFirebaseQuery,
+          mockFirestoreTyped,
+          vi.fn((data) => data as MixedEntity),
+        )
+
+        // @ts-expect-error undefined is rejected by Firestore at runtime, so the types forbid it
+        mixedQuery.where('name', '==', undefined)
+
+        // Native counterparts are accepted alongside serialized forms
+        mixedQuery.where('location', '==', new GeoPoint(35.6, 139.6))
+        mixedQuery.where('createdAt', '>=', Timestamp.fromDate(new Date('2024-01-01')))
+
+        expect(mockFirebaseQuery.where).toHaveBeenCalledTimes(3)
       })
 
       it('should accept array-contains on optional and nullable array fields', () => {
