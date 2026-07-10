@@ -240,7 +240,7 @@ describe('FirestoreTyped', () => {
       const mockFirebaseAdmin = createFirebaseAdminMock()
       const customFirestore = mockFirebaseAdmin.getFirestore()
 
-      const db = getFirestoreTyped(customFirestore as any)
+      const db = getFirestoreTyped(customFirestore)
       expect(db).toBeDefined()
       expect(db.native).toBe(customFirestore)
     })
@@ -249,7 +249,7 @@ describe('FirestoreTyped', () => {
       const mockFirebaseAdmin = createFirebaseAdminMock()
       const customFirestore = mockFirebaseAdmin.getFirestore()
 
-      const db = getFirestoreTyped(customFirestore as any, {
+      const db = getFirestoreTyped(customFirestore, {
         validateOnRead: true,
         validateOnWrite: false,
       })

@@ -66,7 +66,7 @@ function serializeFirestoreTypesInternal(data: unknown): unknown {
       path: data.path,
       collectionId: data.parent.id,
       documentId: data.id,
-    } as SerializedDocumentReference
+    }
   }
 
   if (Array.isArray(data)) {
