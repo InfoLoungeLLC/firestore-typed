@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeAll, beforeEach, afterAll } from 'vitest'
 import { FirestoreTyped } from '../../firestore-typed'
+import { DocumentAlreadyExistsError } from '../../../errors/errors'
 import {
   setupEmulator,
   teardownEmulator,
@@ -83,6 +84,51 @@ describe('FirestoreTyped Core Class (Emulator)', () => {
       } finally {
         // Clean up: delete the documents we created
         await Promise.all([docRef1.delete(), docRef2.delete()])
+      }
+    })
+  })
+
+  describe('failIfExists atomicity', () => {
+    it('should allow exactly one of two concurrent failIfExists writes to succeed', async () => {
+      const validator = createSimpleTestEntityValidator()
+      const uniqueCollectionName = `test-atomic-${Date.now()}-${Math.random()}`
+      const collection = firestoreTyped.collection(uniqueCollectionName, validator)
+      const docRef = collection.doc('contested-doc')
+
+      const testData = createSimpleTestEntity({ id: '123', name: 'First Writer' })
+
+      try {
+        const results = await Promise.allSettled([
+          docRef.set(testData, { failIfExists: true }),
+          docRef.set(testData, { failIfExists: true }),
+        ])
+
+        const fulfilled = results.filter((r) => r.status === 'fulfilled')
+        const rejected = results.filter((r): r is PromiseRejectedResult => r.status === 'rejected')
+
+        expect(fulfilled).toHaveLength(1)
+        expect(rejected).toHaveLength(1)
+        expect(rejected[0].reason).toBeInstanceOf(DocumentAlreadyExistsError)
+      } finally {
+        await docRef.delete()
+      }
+    })
+
+    it('should throw DocumentAlreadyExistsError for an existing document', async () => {
+      const validator = createSimpleTestEntityValidator()
+      const uniqueCollectionName = `test-exists-${Date.now()}-${Math.random()}`
+      const collection = firestoreTyped.collection(uniqueCollectionName, validator)
+      const docRef = collection.doc('existing-doc')
+
+      const testData = createSimpleTestEntity({ id: '123', name: 'Original' })
+      await docRef.set(testData)
+
+      try {
+        await expect(docRef.set(testData, { failIfExists: true })).rejects.toThrow(
+          DocumentAlreadyExistsError,
+        )
+      } finally {
+        await docRef.delete()
       }
     })
   })

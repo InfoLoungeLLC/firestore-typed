@@ -10,6 +10,18 @@ import type {
   FirestoreTypedOptionsProvider,
 } from '../types/firestore-typed.types'
 
+/** gRPC status code returned by Firestore when create() targets an existing document */
+const GRPC_ALREADY_EXISTS = 6
+
+function isAlreadyExistsError(error: unknown): boolean {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    error.code === GRPC_ALREADY_EXISTS
+  )
+}
+
 /**
  * Wrapper for Firestore DocumentReference with type safety and validation
  */
@@ -78,19 +90,25 @@ export class DocumentReference<T extends SerializedDocumentData> {
     const globalOptions = this.firestoreTyped.getOptions()
     const validateOnWrite = options?.validateOnWrite ?? globalOptions.validateOnWrite
 
-    // Check if document already exists when failIfExists is true
-    if (options?.failIfExists) {
-      const snapshot = await this.ref.get()
-      if (snapshot.exists) {
-        throw new DocumentAlreadyExistsError(this.path)
-      }
-    }
-
     // Validate data first
     const validatedData = validateOnWrite ? validateData<T>(data, this.path, this.validator) : data
 
     // Deserialize data before writing to Firestore
     const deserializedData = deserializeFirestoreTypes(validatedData, this.ref.firestore)
+
+    if (options?.failIfExists) {
+      // create() enforces non-existence atomically on the server,
+      // unlike a read-then-write which is open to races
+      try {
+        await this.ref.create(deserializedData)
+      } catch (error) {
+        if (isAlreadyExistsError(error)) {
+          throw new DocumentAlreadyExistsError(this.path)
+        }
+        throw error
+      }
+      return
+    }
 
     await this.ref.set(deserializedData)
   }
