@@ -53,7 +53,7 @@
   "license": "MIT",
   "peerDependencies": {
     "firebase-admin": "^13.5.0",
-    "typia": "^9.7.2",
+    "typia": ">=9.7.2 <13",
     "zod": "^4.0.17"
   },
   "peerDependenciesMeta": {
@@ -78,7 +78,7 @@
     "tsdown": "^0.15.0",
     "typescript": "~5.9.2",
     "typescript-eslint": "^8.39.0",
-    "typia": "^9.7.1",
+    "typia": "^12.1.1",
     "vitest": "^3.2.4",
     "zod": "^4.0.17"
   },
