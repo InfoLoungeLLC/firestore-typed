@@ -1,6 +1,7 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { getFirestoreTyped } from '../index'
 import { FirestoreTypedValidationError } from '../errors/errors'
+import { catchError } from './__helpers__/catch-error.helper'
 
 vi.mock('firebase-admin/firestore', async () => {
   const mockHelper = await import('./__helpers__/firebase-mock.helper')
@@ -83,33 +84,23 @@ describe('FirestoreTyped Validation', () => {
     })
 
     it('should reject null data', async () => {
-      try {
-        await collection.add(null as any)
-        expect.fail('Should have thrown an error')
-      } catch (error) {
-        expect(error).toBeInstanceOf(FirestoreTypedValidationError)
-        const validationError = error as FirestoreTypedValidationError
-        if (validationError.originalError instanceof Error) {
-          expect(validationError.originalError.message).toContain('Data must be an object')
-        } else {
-          expect(String(validationError.originalError)).toContain('Data must be an object')
-        }
-      }
+      const error = await catchError<FirestoreTypedValidationError>(() =>
+        collection.add(null as any),
+      )
+
+      expect(error).toBeInstanceOf(FirestoreTypedValidationError)
+      expect(error.originalError).toBeInstanceOf(Error)
+      expect((error.originalError as Error).message).toContain('Data must be an object')
     })
 
     it('should reject undefined data', async () => {
-      try {
-        await collection.add(undefined as any)
-        expect.fail('Should have thrown an error')
-      } catch (error) {
-        expect(error).toBeInstanceOf(FirestoreTypedValidationError)
-        const validationError = error as FirestoreTypedValidationError
-        if (validationError.originalError instanceof Error) {
-          expect(validationError.originalError.message).toContain('Data must be an object')
-        } else {
-          expect(String(validationError.originalError)).toContain('Data must be an object')
-        }
-      }
+      const error = await catchError<FirestoreTypedValidationError>(() =>
+        collection.add(undefined as any),
+      )
+
+      expect(error).toBeInstanceOf(FirestoreTypedValidationError)
+      expect(error.originalError).toBeInstanceOf(Error)
+      expect((error.originalError as Error).message).toContain('Data must be an object')
     })
 
     it('should reject data with missing required fields', async () => {
@@ -118,18 +109,13 @@ describe('FirestoreTyped Validation', () => {
         // missing email, age, status, createdAt
       }
 
-      try {
-        await collection.add(invalidUser as any)
-        expect.fail('Should have thrown an error')
-      } catch (error) {
-        expect(error).toBeInstanceOf(FirestoreTypedValidationError)
-        const validationError = error as FirestoreTypedValidationError
-        if (validationError.originalError instanceof Error) {
-          expect(validationError.originalError.message).toContain('Email is required')
-        } else {
-          expect(String(validationError.originalError)).toContain('Email is required')
-        }
-      }
+      const error = await catchError<FirestoreTypedValidationError>(() =>
+        collection.add(invalidUser as any),
+      )
+
+      expect(error).toBeInstanceOf(FirestoreTypedValidationError)
+      expect(error.originalError).toBeInstanceOf(Error)
+      expect((error.originalError as Error).message).toContain('Email is required')
     })
 
     it('should reject data with invalid name length', async () => {
@@ -141,22 +127,15 @@ describe('FirestoreTyped Validation', () => {
         createdAt: new Date(),
       }
 
-      try {
-        await collection.add(invalidUser)
-        expect.fail('Should have thrown an error')
-      } catch (error) {
-        expect(error).toBeInstanceOf(FirestoreTypedValidationError)
-        const validationError = error as FirestoreTypedValidationError
-        if (validationError.originalError instanceof Error) {
-          expect(validationError.originalError.message).toContain(
-            'Name must be between 2 and 50 characters',
-          )
-        } else {
-          expect(String(validationError.originalError)).toContain(
-            'Name must be between 2 and 50 characters',
-          )
-        }
-      }
+      const error = await catchError<FirestoreTypedValidationError>(() =>
+        collection.add(invalidUser),
+      )
+
+      expect(error).toBeInstanceOf(FirestoreTypedValidationError)
+      expect(error.originalError).toBeInstanceOf(Error)
+      expect((error.originalError as Error).message).toContain(
+        'Name must be between 2 and 50 characters',
+      )
     })
 
     it('should reject data with invalid email format', async () => {
@@ -168,22 +147,15 @@ describe('FirestoreTyped Validation', () => {
         createdAt: new Date(),
       }
 
-      try {
-        await collection.add(invalidUser)
-        expect.fail('Should have thrown an error')
-      } catch (error) {
-        expect(error).toBeInstanceOf(FirestoreTypedValidationError)
-        const validationError = error as FirestoreTypedValidationError
-        if (validationError.originalError instanceof Error) {
-          expect(validationError.originalError.message).toContain(
-            'Email must be a valid email address',
-          )
-        } else {
-          expect(String(validationError.originalError)).toContain(
-            'Email must be a valid email address',
-          )
-        }
-      }
+      const error = await catchError<FirestoreTypedValidationError>(() =>
+        collection.add(invalidUser),
+      )
+
+      expect(error).toBeInstanceOf(FirestoreTypedValidationError)
+      expect(error.originalError).toBeInstanceOf(Error)
+      expect((error.originalError as Error).message).toContain(
+        'Email must be a valid email address',
+      )
     })
 
     it('should reject data with invalid age range', async () => {
@@ -195,18 +167,13 @@ describe('FirestoreTyped Validation', () => {
         createdAt: new Date(),
       }
 
-      try {
-        await collection.add(invalidUser)
-        expect.fail('Should have thrown an error')
-      } catch (error) {
-        expect(error).toBeInstanceOf(FirestoreTypedValidationError)
-        const validationError = error as FirestoreTypedValidationError
-        if (validationError.originalError instanceof Error) {
-          expect(validationError.originalError.message).toContain('Age must be between 0 and 120')
-        } else {
-          expect(String(validationError.originalError)).toContain('Age must be between 0 and 120')
-        }
-      }
+      const error = await catchError<FirestoreTypedValidationError>(() =>
+        collection.add(invalidUser),
+      )
+
+      expect(error).toBeInstanceOf(FirestoreTypedValidationError)
+      expect(error.originalError).toBeInstanceOf(Error)
+      expect((error.originalError as Error).message).toContain('Age must be between 0 and 120')
     })
 
     it('should reject data with invalid status', async () => {
@@ -218,22 +185,15 @@ describe('FirestoreTyped Validation', () => {
         createdAt: new Date(),
       }
 
-      try {
-        await collection.add(invalidUser)
-        expect.fail('Should have thrown an error')
-      } catch (error) {
-        expect(error).toBeInstanceOf(FirestoreTypedValidationError)
-        const validationError = error as FirestoreTypedValidationError
-        if (validationError.originalError instanceof Error) {
-          expect(validationError.originalError.message).toContain(
-            'Status must be either "active" or "inactive"',
-          )
-        } else {
-          expect(String(validationError.originalError)).toContain(
-            'Status must be either "active" or "inactive"',
-          )
-        }
-      }
+      const error = await catchError<FirestoreTypedValidationError>(() =>
+        collection.add(invalidUser),
+      )
+
+      expect(error).toBeInstanceOf(FirestoreTypedValidationError)
+      expect(error.originalError).toBeInstanceOf(Error)
+      expect((error.originalError as Error).message).toContain(
+        'Status must be either "active" or "inactive"',
+      )
     })
 
     it('should wrap validation errors in FirestoreTypedValidationError', async () => {
@@ -245,13 +205,12 @@ describe('FirestoreTyped Validation', () => {
         createdAt: new Date(),
       }
 
-      try {
-        await collection.add(invalidUser as any)
-        expect.fail('Should have thrown an error')
-      } catch (error) {
-        expect(error).toBeInstanceOf(FirestoreTypedValidationError)
-        expect((error as FirestoreTypedValidationError).message).toContain('Validation failed')
-      }
+      const error = await catchError<FirestoreTypedValidationError>(() =>
+        collection.add(invalidUser as any),
+      )
+
+      expect(error).toBeInstanceOf(FirestoreTypedValidationError)
+      expect(error.message).toContain('Validation failed')
     })
   })
 

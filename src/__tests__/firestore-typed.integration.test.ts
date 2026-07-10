@@ -4,6 +4,7 @@ import { FirestoreTypedValidationError } from '../errors/errors'
 import { createFirebaseAdminMock } from './__helpers__/firebase-mock.helper'
 import { type TestEntity } from './__helpers__/test-entities.helper'
 import { validateTestEntity } from './__helpers__/typia-validators/__generated__/test-entity-validators.helper'
+import { catchError } from './__helpers__/catch-error.helper'
 
 vi.mock('firebase-admin/firestore', async () => {
   const mockHelper = await import('./__helpers__/firebase-mock.helper')
@@ -68,16 +69,13 @@ describe('FirestoreTyped', () => {
           name: 'John Doe',
         } as any
 
-        try {
-          await collection.add(invalidData)
-          expect.fail('Should have thrown an error')
-        } catch (error) {
-          expect(error).toBeInstanceOf(FirestoreTypedValidationError)
-          const validationError = error as FirestoreTypedValidationError
-          if (validationError.originalError instanceof Error) {
-            expect(validationError.originalError.message).toContain('expect to be string')
-          }
-        }
+        const error = await catchError<FirestoreTypedValidationError>(() =>
+          collection.add(invalidData),
+        )
+
+        expect(error).toBeInstanceOf(FirestoreTypedValidationError)
+        expect(error.originalError).toBeInstanceOf(Error)
+        expect((error.originalError as Error).message).toContain('expect to be string')
       })
 
       it('should skip validation when validateOnWrite is false', async () => {

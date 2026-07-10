@@ -1,6 +1,7 @@
 import { vi, describe, it, expect } from 'vitest'
 import { validateData } from '../../validator'
 import { FirestoreTypedValidationError } from '../../../errors/errors'
+import { catchError } from '../../../__tests__/__helpers__/catch-error.helper'
 
 describe('Validator', () => {
   interface TestEntity {
@@ -84,7 +85,7 @@ describe('Validator', () => {
         expect(mockValidator).toHaveBeenCalledWith(inputData)
       })
 
-      it('should preserve original error in wrapped error', () => {
+      it('should preserve original error in wrapped error', async () => {
         const inputData = { invalid: 'data' }
         const originalError = new Error('Type validation failed')
 
@@ -92,19 +93,17 @@ describe('Validator', () => {
           throw originalError
         })
 
-        try {
-          validateData(inputData, testPath, mockValidator)
-          expect.fail('Expected error to be thrown')
-        } catch (error) {
-          expect(error).toBeInstanceOf(FirestoreTypedValidationError)
-          const wrappedError = error as FirestoreTypedValidationError
-          expect(wrappedError.message).toBe('Validation failed')
-          expect(wrappedError.documentPath).toBe(testPath)
-          expect(wrappedError.originalError).toBe(originalError)
-        }
+        const wrappedError = await catchError<FirestoreTypedValidationError>(() =>
+          validateData(inputData, testPath, mockValidator),
+        )
+
+        expect(wrappedError).toBeInstanceOf(FirestoreTypedValidationError)
+        expect(wrappedError.message).toBe('Validation failed')
+        expect(wrappedError.documentPath).toBe(testPath)
+        expect(wrappedError.originalError).toBe(originalError)
       })
 
-      it('should handle string errors thrown by validator', () => {
+      it('should handle string errors thrown by validator', async () => {
         const inputData = { invalid: 'data' }
         const stringError = 'String error message'
 
@@ -113,17 +112,15 @@ describe('Validator', () => {
           throw stringError
         })
 
-        try {
-          validateData(inputData, testPath, mockValidator)
-          expect.fail('Expected error to be thrown')
-        } catch (error) {
-          expect(error).toBeInstanceOf(FirestoreTypedValidationError)
-          const wrappedError = error as FirestoreTypedValidationError
-          expect(wrappedError.originalError).toBe(stringError)
-        }
+        const wrappedError = await catchError<FirestoreTypedValidationError>(() =>
+          validateData(inputData, testPath, mockValidator),
+        )
+
+        expect(wrappedError).toBeInstanceOf(FirestoreTypedValidationError)
+        expect(wrappedError.originalError).toBe(stringError)
       })
 
-      it('should handle object errors thrown by validator', () => {
+      it('should handle object errors thrown by validator', async () => {
         const inputData = { invalid: 'data' }
         const objectError = { code: 'VALIDATION_FAILED', details: 'Field missing' }
 
@@ -132,17 +129,15 @@ describe('Validator', () => {
           throw objectError
         })
 
-        try {
-          validateData(inputData, testPath, mockValidator)
-          expect.fail('Expected error to be thrown')
-        } catch (error) {
-          expect(error).toBeInstanceOf(FirestoreTypedValidationError)
-          const wrappedError = error as FirestoreTypedValidationError
-          expect(wrappedError.originalError).toBe(objectError)
-        }
+        const wrappedError = await catchError<FirestoreTypedValidationError>(() =>
+          validateData(inputData, testPath, mockValidator),
+        )
+
+        expect(wrappedError).toBeInstanceOf(FirestoreTypedValidationError)
+        expect(wrappedError.originalError).toBe(objectError)
       })
 
-      it('should handle null/undefined errors thrown by validator', () => {
+      it('should handle null/undefined errors thrown by validator', async () => {
         const inputData = { invalid: 'data' }
 
         const nullValidator = vi.fn().mockImplementation(() => {
@@ -154,28 +149,24 @@ describe('Validator', () => {
           throw undefined
         })
 
-        try {
-          validateData(inputData, testPath, nullValidator)
-          expect.fail('Expected error to be thrown')
-        } catch (error) {
-          expect(error).toBeInstanceOf(FirestoreTypedValidationError)
-          const wrappedError = error as FirestoreTypedValidationError
-          expect(wrappedError.originalError).toBe(null)
-        }
+        const nullWrappedError = await catchError<FirestoreTypedValidationError>(() =>
+          validateData(inputData, testPath, nullValidator),
+        )
 
-        try {
-          validateData(inputData, testPath, undefinedValidator)
-          expect.fail('Expected error to be thrown')
-        } catch (error) {
-          expect(error).toBeInstanceOf(FirestoreTypedValidationError)
-          const wrappedError = error as FirestoreTypedValidationError
-          expect(wrappedError.originalError).toBe(undefined)
-        }
+        expect(nullWrappedError).toBeInstanceOf(FirestoreTypedValidationError)
+        expect(nullWrappedError.originalError).toBe(null)
+
+        const undefinedWrappedError = await catchError<FirestoreTypedValidationError>(() =>
+          validateData(inputData, testPath, undefinedValidator),
+        )
+
+        expect(undefinedWrappedError).toBeInstanceOf(FirestoreTypedValidationError)
+        expect(undefinedWrappedError.originalError).toBe(undefined)
       })
     })
 
     describe('Path Handling', () => {
-      it('should include correct document path in error', () => {
+      it('should include correct document path in error', async () => {
         const paths = [
           'users/user1',
           'posts/post123',
@@ -183,23 +174,21 @@ describe('Validator', () => {
           'organizations/org1/projects/project2/tasks/task789',
         ]
 
-        paths.forEach((path) => {
+        for (const path of paths) {
           const mockValidator = vi.fn().mockImplementation(() => {
             throw new Error('Validation error')
           })
 
-          try {
-            validateData({}, path, mockValidator)
-            expect.fail('Expected error to be thrown')
-          } catch (error) {
-            expect(error).toBeInstanceOf(FirestoreTypedValidationError)
-            const wrappedError = error as FirestoreTypedValidationError
-            expect(wrappedError.documentPath).toBe(path)
-          }
-        })
+          const wrappedError = await catchError<FirestoreTypedValidationError>(() =>
+            validateData({}, path, mockValidator),
+          )
+
+          expect(wrappedError).toBeInstanceOf(FirestoreTypedValidationError)
+          expect(wrappedError.documentPath).toBe(path)
+        }
       })
 
-      it('should handle empty and special character paths', () => {
+      it('should handle empty and special character paths', async () => {
         const specialPaths = [
           '',
           '/',
@@ -211,20 +200,18 @@ describe('Validator', () => {
           'users/user.with.dots',
         ]
 
-        specialPaths.forEach((path) => {
+        for (const path of specialPaths) {
           const mockValidator = vi.fn().mockImplementation(() => {
             throw new Error('Validation error')
           })
 
-          try {
-            validateData({}, path, mockValidator)
-            expect.fail('Expected error to be thrown')
-          } catch (error) {
-            expect(error).toBeInstanceOf(FirestoreTypedValidationError)
-            const wrappedError = error as FirestoreTypedValidationError
-            expect(wrappedError.documentPath).toBe(path)
-          }
-        })
+          const wrappedError = await catchError<FirestoreTypedValidationError>(() =>
+            validateData({}, path, mockValidator),
+          )
+
+          expect(wrappedError).toBeInstanceOf(FirestoreTypedValidationError)
+          expect(wrappedError.documentPath).toBe(path)
+        }
       })
     })
 

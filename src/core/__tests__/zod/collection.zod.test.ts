@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { CollectionReference } from '../../collection'
+import { catchError } from '../../../__tests__/__helpers__/catch-error.helper'
 import type { FirestoreTypedOptionsProvider } from '../../../types/firestore-typed.types'
 import {
   createUserProfileValidator,
@@ -683,18 +684,15 @@ describe('CollectionReference with Zod validators', () => {
         permissions: [],
       }
 
-      try {
-        await userCollection.add(invalidUserProfile as any)
-        expect.fail('Should have thrown validation error')
-      } catch (error) {
-        expect(error).toBeDefined()
-        // Check that we got a FirestoreTypedValidationError with original Zod error
-        expect((error as any).name).toBe('FirestoreTypedValidationError')
-        expect((error as any).originalError).toBeDefined()
-        // Zod provides detailed error information in the original error
-        const originalError = (error as any).originalError
-        expect(originalError.message || originalError.toString()).toContain('min')
-      }
+      const error = await catchError<any>(() => userCollection.add(invalidUserProfile as any))
+
+      expect(error).toBeDefined()
+      // Check that we got a FirestoreTypedValidationError with original Zod error
+      expect(error.name).toBe('FirestoreTypedValidationError')
+      expect(error.originalError).toBeDefined()
+      // Zod provides detailed error information in the original error
+      const originalError = error.originalError
+      expect(originalError.message || originalError.toString()).toContain('min')
     })
   })
 })
