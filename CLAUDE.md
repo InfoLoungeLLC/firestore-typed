@@ -180,6 +180,6 @@ Primary support for typia validators, but accepts any function with signature `(
 - Use `validateOnWrite: false` temporarily to bypass validation for debugging
 
 ### CI/CD Notes
-- GitHub Actions runs tests on Node.js 20.x and 22.x
+- GitHub Actions runs tests on Node.js 22.x, 24.x, and 26.x
 - Emulator tests are run separately in CI pipeline
 - Coverage reports are uploaded to Codecov
