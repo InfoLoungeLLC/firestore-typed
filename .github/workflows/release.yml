@@ -20,7 +20,6 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: '24'
-          registry-url: 'https://registry.npmjs.org'
           cache: 'npm'
 
       - name: Get package version
@@ -66,10 +65,11 @@ jobs:
       - name: Build package
         run: npm run build
 
+      # Publishes via npm Trusted Publishing (OIDC) — no token needed.
+      # Requires the trusted publisher configured on npmjs.com for this repo/workflow
+      # and the id-token: write permission declared above.
       - name: Publish to npm
         run: npm publish --access public
-        env:
-          NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
 
       - name: Create Git tag
         run: |
