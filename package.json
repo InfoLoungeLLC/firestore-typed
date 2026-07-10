@@ -1,6 +1,6 @@
 {
   "name": "@info-lounge/firestore-typed",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "Type-safe, low-level wrapper for Firebase Firestore with enhanced validation and developer experience",
   "type": "module",
   "main": "dist/index.cjs",
@@ -94,7 +94,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/InfoLoungeLLC/firestore-typed.git"
+    "url": "git+https://github.com/InfoLoungeLLC/firestore-typed.git"
   },
   "bugs": {
     "url": "https://github.com/InfoLoungeLLC/firestore-typed/issues"
