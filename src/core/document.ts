@@ -115,32 +115,38 @@ export class DocumentReference<T extends SerializedDocumentData> {
 
   /**
    * Merges partial data with existing document data and validates the complete schema
+   *
+   * Runs inside a transaction so the write is conditioned on the read snapshot:
+   * a concurrent update between read and write aborts and retries the merge
+   * instead of being silently overwritten.
    */
   async merge(data: Partial<T>, options?: WriteOptions): Promise<void> {
-    const snapshot = await this.ref.get()
-    if (!snapshot.exists) {
-      throw new DocumentNotFoundError(this.path)
-    }
-
     const globalOptions = this.firestoreTyped.getOptions()
     const validateOnWrite = options?.validateOnWrite ?? globalOptions.validateOnWrite
 
-    // Merge with existing data
-    const existingData = snapshot.data() || {}
-    // Convert Firestore types in existing data before merging
-    const convertedExistingData = serializeFirestoreTypes(existingData)
-    const mergedData = { ...convertedExistingData, ...data }
+    await this.ref.firestore.runTransaction(async (transaction) => {
+      const snapshot = await transaction.get(this.ref)
+      if (!snapshot.exists) {
+        throw new DocumentNotFoundError(this.path)
+      }
 
-    // Validate the complete merged data
-    const validatedData = validateOnWrite
-      ? validateData<T>(mergedData, this.path, this.validator)
-      : (mergedData as T)
+      // Merge with existing data
+      const existingData = snapshot.data() || {}
+      // Convert Firestore types in existing data before merging
+      const convertedExistingData = serializeFirestoreTypes(existingData)
+      const mergedData = { ...convertedExistingData, ...data }
 
-    // Deserialize the complete validated data before writing to Firestore
-    const deserializedData = deserializeFirestoreTypes(validatedData, this.ref.firestore)
+      // Validate the complete merged data (a validation failure aborts the transaction)
+      const validatedData = validateOnWrite
+        ? validateData<T>(mergedData, this.path, this.validator)
+        : (mergedData as T)
 
-    // Use set to ensure the complete schema is written
-    await this.ref.set(deserializedData)
+      // Deserialize the complete validated data before writing to Firestore
+      const deserializedData = deserializeFirestoreTypes(validatedData, this.ref.firestore)
+
+      // Use set to ensure the complete schema is written
+      transaction.set(this.ref, deserializedData)
+    })
   }
 
   /**

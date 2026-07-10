@@ -137,6 +137,29 @@ describe('FirestoreTyped Core Class (Emulator)', () => {
     })
   })
 
+  describe('merge() concurrency', () => {
+    it('should not lose a concurrent update to a different field', async () => {
+      const validator = createSimpleTestEntityValidator()
+      const uniqueCollectionName = `test-merge-${Date.now()}-${Math.random()}`
+      const collection = firestoreTyped.collection(uniqueCollectionName, validator)
+      const docRef = collection.doc('shared-doc')
+
+      await docRef.set(createSimpleTestEntity({ id: '123', name: 'Original', age: 1 }))
+
+      try {
+        // Without a transaction, one merge's full-document overwrite can
+        // silently drop the other merge's field update
+        await Promise.all([docRef.merge({ name: 'Updated Name' }), docRef.merge({ age: 99 })])
+
+        const snapshot = await docRef.get()
+        expect(snapshot.data?.name).toBe('Updated Name')
+        expect(snapshot.data?.age).toBe(99)
+      } finally {
+        await docRef.delete()
+      }
+    })
+  })
+
   describe('Queries on special-type fields', () => {
     interface PlaceEntity extends Record<string, unknown> {
       id: string
