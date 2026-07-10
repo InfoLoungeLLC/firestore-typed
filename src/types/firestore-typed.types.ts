@@ -54,6 +54,29 @@ export interface WriteOptions {
 export type SerializedDocumentData = object
 
 /**
+ * Maps a Firestore where() operator to the operand type it expects for field K:
+ * - `in` / `not-in` compare against an array of field values
+ * - `array-contains` compares against a single element of an array field
+ * - `array-contains-any` compares against an array of elements of an array field
+ * - all other operators compare against the field value itself
+ */
+export type WhereFilterValue<
+  T,
+  K extends keyof T,
+  Op extends import('firebase-admin/firestore').WhereFilterOp,
+> = Op extends 'in' | 'not-in'
+  ? readonly T[K][]
+  : Op extends 'array-contains'
+    ? T[K] extends readonly (infer E)[]
+      ? E
+      : never
+    : Op extends 'array-contains-any'
+      ? T[K] extends readonly (infer E)[]
+        ? readonly E[]
+        : never
+      : T[K]
+
+/**
  * Metadata about a document
  */
 export interface DocumentMetadata {
