@@ -2,7 +2,13 @@
 import { vi, describe, it, expect, beforeEach, type Mocked } from 'vitest'
 import { serializeFirestoreTypes, deserializeFirestoreTypes } from '../../firestore-converter'
 import type { SerializedGeoPoint, SerializedDocumentReference } from '../../firestore-converter'
-import { Timestamp, GeoPoint, DocumentReference, Firestore } from 'firebase-admin/firestore'
+import {
+  Timestamp,
+  GeoPoint,
+  DocumentReference,
+  DocumentSnapshot,
+  Firestore,
+} from 'firebase-admin/firestore'
 
 describe('Firestore Converter', () => {
   let mockFirestore: Mocked<Firestore>
@@ -520,6 +526,33 @@ describe('Firestore Converter', () => {
 
       const result = deserializeFirestoreTypes({ author: validDocRef }, mockFirestore) as any
       expect(result.author).toBe(mockDocRef)
+    })
+
+    it('should pass native Firestore instances through unchanged', () => {
+      const nativeTimestamp = createMockTimestamp(new Date('2024-01-01'))
+      const nativeGeoPoint = createMockGeoPoint(35.6762, 139.6503)
+      const nativeDocRef = createMockDocumentReference('users/user123', 'user123', 'users')
+
+      const result = deserializeFirestoreTypes(
+        { at: nativeTimestamp, loc: nativeGeoPoint, ref: nativeDocRef },
+        mockFirestore,
+      ) as any
+
+      expect(result.at).toBe(nativeTimestamp)
+      expect(result.loc).toBe(nativeGeoPoint)
+      expect(result.ref).toBe(nativeDocRef)
+    })
+
+    it('should pass DocumentSnapshot values through without walking their circular internals', () => {
+      // Native snapshots hold circular references (e.g. back to the Firestore
+      // client); recursing into them overflows the stack
+      const snapshotLike: Record<string, unknown> = {}
+      snapshotLike._firestore = { _snapshot: snapshotLike }
+      Object.setPrototypeOf(snapshotLike, DocumentSnapshot.prototype)
+
+      const result = deserializeFirestoreTypes({ cursor: snapshotLike }, mockFirestore) as any
+
+      expect(result.cursor).toBe(snapshotLike)
     })
 
     it('should pass binary values through unchanged', () => {

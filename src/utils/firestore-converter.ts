@@ -1,4 +1,10 @@
-import { Timestamp, GeoPoint, DocumentReference, Firestore } from 'firebase-admin/firestore'
+import {
+  Timestamp,
+  GeoPoint,
+  DocumentReference,
+  DocumentSnapshot,
+  Firestore,
+} from 'firebase-admin/firestore'
 import type { DocumentData } from 'firebase-admin/firestore'
 import type { SerializedDocumentData } from '../types/firestore-typed.types'
 
@@ -132,6 +138,18 @@ export function deserializeQueryValue(value: unknown, firestore: Firestore): unk
  */
 function deserializeFirestoreTypesInternal(data: unknown, firestore: Firestore): unknown {
   if (!data || typeof data !== 'object') {
+    return data
+  }
+
+  // Values that are already native Firestore types pass through unchanged.
+  // Walking them with Object.entries would corrupt them — and DocumentSnapshot
+  // (a valid cursor value) contains circular references that overflow the stack.
+  if (
+    data instanceof Timestamp ||
+    data instanceof GeoPoint ||
+    data instanceof DocumentReference ||
+    data instanceof DocumentSnapshot
+  ) {
     return data
   }
 
