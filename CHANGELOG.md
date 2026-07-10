@@ -31,10 +31,13 @@ All items in this release come from an external code review (issues #92–#100).
 ### Changed
 
 - **BREAKING (type-level)**: `where()` operand types now model the operator (#96) —
-  `in`/`not-in` take `readonly T[K][]`, `array-contains` takes the array element type
+  `in`/`not-in` take an array of field values, `array-contains` takes the array element type
   (including for optional/nullable array fields such as `tags?: string[]`),
-  `array-contains-any` takes an array of elements. Code that passed mistyped operands
-  (typically via `as any`) may surface new type errors; runtime behavior is unchanged
+  `array-contains-any` takes an array of elements. Native Firestore values (`Timestamp`,
+  `GeoPoint`, `DocumentReference`) are accepted alongside their serialized forms, and
+  `undefined` is rejected as an operand (Firestore rejects it at runtime). Code that passed
+  mistyped operands (typically via `as any`) may surface new type errors; runtime behavior
+  is unchanged
 - **BREAKING (type-level)**: `SerializedDocumentReference<TCollection, TDocument>` now brands
   `TDocument` (#98), so references to different document types are no longer mutually
   assignable. Existing object literals remain valid (the brand member is optional)
