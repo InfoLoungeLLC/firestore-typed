@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.1] - 2026-07-10
+
+### Changed
+
+- **Publishing**: npm releases are now published via npm Trusted Publishing (OIDC)
+  instead of long-lived access tokens, with provenance attestations attached
+- Normalized `repository.url` in package.json to the canonical `git+https://` form
+  (npm previously auto-corrected this at publish time)
+
+No runtime code changes — the published package is functionally identical to 0.6.0.
+
 ## [0.6.0] - 2026-07-10
 
 ### Added
