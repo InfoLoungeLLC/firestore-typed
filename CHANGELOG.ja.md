@@ -5,6 +5,17 @@
 このフォーマットは[Keep a Changelog](https://keepachangelog.com/en/1.0.0/)に基づいており、
 このプロジェクトは[セマンティックバージョニング](https://semver.org/spec/v2.0.0.html)に準拠しています。
 
+## [0.6.1] - 2026-07-10
+
+### 変更
+
+- **公開フロー**: npmへのリリースを長期アクセストークンからnpm Trusted Publishing(OIDC)に移行し、
+  provenance(来歴証明)を付与するようにしました
+- package.jsonの`repository.url`を正規形の`git+https://`形式に修正
+  (従来はnpmがpublish時に自動補正していました)
+
+ランタイムコードの変更はありません — 公開物は0.6.0と機能的に同一です。
+
 ## [0.6.0] - 2026-07-10
 
 ### 追加
