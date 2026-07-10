@@ -22,7 +22,7 @@ describe('Validator', () => {
           isActive: true,
         }
 
-        const mockValidator = vi.fn().mockReturnValue(inputData as TestEntity)
+        const mockValidator = vi.fn().mockReturnValue(inputData)
 
         const result = validateData(inputData, testPath, mockValidator)
 
