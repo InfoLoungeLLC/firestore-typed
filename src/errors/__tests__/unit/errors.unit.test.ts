@@ -4,6 +4,7 @@ import {
   DocumentNotFoundError,
   DocumentAlreadyExistsError,
 } from '../../errors'
+import { catchError } from '../../../__tests__/__helpers__/catch-error.helper'
 
 describe('Error Classes', () => {
   describe('FirestoreTypedValidationError', () => {
@@ -63,19 +64,18 @@ describe('Error Classes', () => {
       if (originalCaptureStackTrace) Error.captureStackTrace = originalCaptureStackTrace
     })
 
-    it('should preserve all properties when thrown and caught', () => {
+    it('should preserve all properties when thrown and caught', async () => {
       const originalError = new Error('Type validation failed')
 
-      try {
+      const error = await catchError<FirestoreTypedValidationError>(() => {
         throw new FirestoreTypedValidationError(testMessage, testPath, originalError)
-      } catch (caught) {
-        expect(caught).toBeInstanceOf(FirestoreTypedValidationError)
-        const error = caught as FirestoreTypedValidationError
-        expect(error.message).toBe(testMessage)
-        expect(error.documentPath).toBe(testPath)
-        expect(error.originalError).toBe(originalError)
-        expect(error.name).toBe('FirestoreTypedValidationError')
-      }
+      })
+
+      expect(error).toBeInstanceOf(FirestoreTypedValidationError)
+      expect(error.message).toBe(testMessage)
+      expect(error.documentPath).toBe(testPath)
+      expect(error.originalError).toBe(originalError)
+      expect(error.name).toBe('FirestoreTypedValidationError')
     })
 
     it('should handle different types of original errors', () => {
@@ -139,16 +139,15 @@ describe('Error Classes', () => {
       if (originalCaptureStackTrace) Error.captureStackTrace = originalCaptureStackTrace
     })
 
-    it('should preserve all properties when thrown and caught', () => {
-      try {
+    it('should preserve all properties when thrown and caught', async () => {
+      const error = await catchError<DocumentNotFoundError>(() => {
         throw new DocumentNotFoundError(testPath)
-      } catch (caught) {
-        expect(caught).toBeInstanceOf(DocumentNotFoundError)
-        const error = caught as DocumentNotFoundError
-        expect(error.message).toBe(`Document not found at path: ${testPath}`)
-        expect(error.documentPath).toBe(testPath)
-        expect(error.name).toBe('DocumentNotFoundError')
-      }
+      })
+
+      expect(error).toBeInstanceOf(DocumentNotFoundError)
+      expect(error.message).toBe(`Document not found at path: ${testPath}`)
+      expect(error.documentPath).toBe(testPath)
+      expect(error.name).toBe('DocumentNotFoundError')
     })
 
     it('should handle different document paths', () => {
@@ -213,16 +212,15 @@ describe('Error Classes', () => {
       if (originalCaptureStackTrace) Error.captureStackTrace = originalCaptureStackTrace
     })
 
-    it('should preserve all properties when thrown and caught', () => {
-      try {
+    it('should preserve all properties when thrown and caught', async () => {
+      const error = await catchError<DocumentAlreadyExistsError>(() => {
         throw new DocumentAlreadyExistsError(testPath)
-      } catch (caught) {
-        expect(caught).toBeInstanceOf(DocumentAlreadyExistsError)
-        const error = caught as DocumentAlreadyExistsError
-        expect(error.message).toBe(`Document already exists at path: ${testPath}`)
-        expect(error.documentPath).toBe(testPath)
-        expect(error.name).toBe('DocumentAlreadyExistsError')
-      }
+      })
+
+      expect(error).toBeInstanceOf(DocumentAlreadyExistsError)
+      expect(error.message).toBe(`Document already exists at path: ${testPath}`)
+      expect(error.documentPath).toBe(testPath)
+      expect(error.name).toBe('DocumentAlreadyExistsError')
     })
 
     it('should handle different document paths', () => {
