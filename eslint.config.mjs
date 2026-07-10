@@ -40,6 +40,8 @@ export default tseslint.config(
     },
     rules: {
       ...vitestPlugin.configs.recommended.rules,
+      // Tests assert typed error details inside catch blocks throughout the suite
+      'vitest/no-conditional-expect': 'off',
       '@typescript-eslint/no-unsafe-assignment': 'off',
       '@typescript-eslint/no-unsafe-call': 'off',
       '@typescript-eslint/no-unsafe-member-access': 'off',
