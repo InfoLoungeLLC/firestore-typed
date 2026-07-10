@@ -5,7 +5,7 @@
 [![codecov](https://codecov.io/gh/InfoLoungeLLC/firestore-typed/branch/main/graph/badge.svg)](https://codecov.io/gh/InfoLoungeLLC/firestore-typed)
 [![license](https://img.shields.io/npm/l/@info-lounge/firestore-typed.svg)](https://github.com/InfoLoungeLLC/firestore-typed/blob/main/LICENSE)
 
-A type-safe, low-level wrapper for Firebase Firestore with **mandatory runtime validation**. This package ensures that **all data is validated using typia validators during both read and write operations**, providing comprehensive type safety, data integrity, and improved developer experience for Firestore operations.
+A type-safe, low-level wrapper for Firebase Firestore with a **validator-first design**. Every collection requires a runtime validator (typia or zod): **writes are validated by default, and reads are validated too when `validateOnRead` is enabled**, providing comprehensive type safety, data integrity, and improved developer experience for Firestore operations.
 
 > **[日本語のREADMEはこちら / Japanese README here →](README.ja.md)**
 
@@ -43,7 +43,7 @@ await users.doc('123').set({
 
 ## Key Features
 
-- **🛡️ Mandatory Runtime Validation**: All data is automatically validated using typia validators on read/write operations
+- **🛡️ Validator-First Architecture**: every collection requires a runtime validator — writes are validated by default, reads opt in via `validateOnRead: true`
 - **🔒 Type Safety**: Full TypeScript compile-time and runtime type checking
 - **⚡ Performance Optimized**: Minimal overhead with maximum data integrity
 - **🎯 Firebase Native**: Direct mapping to Firestore's native API patterns
@@ -144,7 +144,7 @@ npx ts-node your-file.ts
 
 ### Why FirestoreTyped?
 
-**FirestoreTyped's core principle: Every piece of data is validated.** Unlike raw Firestore operations, FirestoreTyped ensures data integrity by requiring validators for all operations.
+**FirestoreTyped's core principle: no collection without a validator.** Unlike raw Firestore operations, every write is validated by default, and reads are validated as well when `validateOnRead` is enabled (off by default for performance).
 
 ```typescript
 // ❌ Raw Firestore - No validation, potential runtime errors
@@ -200,7 +200,8 @@ await usersCollection.doc('user-001').set({
 
 // ✅ This data will be validated after read (if validateOnRead: true)
 const user = await usersCollection.doc('user-001').get()
-// user.data is guaranteed to match UserEntity or throw validation error
+// With validateOnRead: true, user.data is guaranteed to match UserEntity
+// (or a validation error is thrown); without it, data is returned as-is
 ```
 
 ### Using Custom Firestore Instances

@@ -5,7 +5,7 @@
 [![codecov](https://codecov.io/gh/InfoLoungeLLC/firestore-typed/branch/main/graph/badge.svg)](https://codecov.io/gh/InfoLoungeLLC/firestore-typed)
 [![license](https://img.shields.io/npm/l/@info-lounge/firestore-typed.svg)](https://github.com/InfoLoungeLLC/firestore-typed/blob/main/LICENSE)
 
-**必須ランタイムバリデーション**付きFirebase Firestoreの型安全な低レベルラッパーです。このパッケージは、**読み書き操作時にtypiaValidatorを用いてすべてのデータがバリデーションされることを保証**し、包括的な型安全性、データ整合性、改善された開発者体験をFirestore操作に提供します。
+**バリデータファースト設計**のFirebase Firestore向け型安全な低レベルラッパーです。すべてのコレクションにランタイムバリデータ(typiaまたはzod)が必須で、**書き込みはデフォルトで検証され、`validateOnRead`を有効にすれば読み取りも検証されます**。包括的な型安全性、データ整合性、改善された開発者体験をFirestore操作に提供します。
 
 > **[English README here / 英語版READMEはこちら →](README.md)**
 
@@ -43,7 +43,7 @@ await users.doc('123').set({
 
 ## 主要機能
 
-- **🛡️ 必須ランタイムバリデーション**: 読み書き操作時にtypiaValidatorで自動的にすべてのデータをバリデーション
+- **🛡️ バリデータファースト設計**: すべてのコレクションにランタイムバリデータが必須 — 書き込みはデフォルトで検証、読み取りは`validateOnRead: true`でオプトイン
 - **🔒 型安全性**: 完全なTypeScriptコンパイル時・ランタイム型チェック
 - **⚡ パフォーマンス最適化**: 最大のデータ整合性で最小のオーバーヘッド
 - **🎯 Firebaseネイティブ**: FirestoreのネイティブAPIパターンへの直接マッピング
@@ -143,7 +143,7 @@ npx ts-node your-file.ts
 
 ### なぜFirestoreTypedなのか？
 
-**FirestoreTypedの核心原則：すべてのデータがバリデーションされる。**生のFirestore操作とは異なり、FirestoreTypedはすべての操作にvalidatorを必須とすることでデータ整合性を保証します。
+**FirestoreTypedの核心原則：バリデータのないコレクションは作れない。**生のFirestore操作とは異なり、書き込みはデフォルトで検証され、`validateOnRead`を有効にすれば読み取りも検証されます(パフォーマンスのためデフォルトはオフ)。
 
 ```typescript
 // ❌ 生のFirestore - バリデーションなし、ランタイムエラーの可能性
@@ -199,7 +199,8 @@ await usersCollection.doc('user-001').set({
 
 // ✅ このデータは読み取り後にバリデーションされる（validateOnRead: trueの場合）
 const user = await usersCollection.doc('user-001').get()
-// user.dataはUserEntityと一致するかバリデーションエラーをスローすることが保証される
+// validateOnRead: trueの場合、user.dataはUserEntityと一致することが保証される
+// (一致しなければバリデーションエラー)。無効の場合はデータがそのまま返る
 ```
 
 ### カスタムFirestoreインスタンスの使用
