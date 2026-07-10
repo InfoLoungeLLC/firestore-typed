@@ -18,7 +18,9 @@ All items in this release come from an external code review (issues #92–#100).
 - **Queries on special-type fields now match** (#93): `where()` operands and cursor values
   (`startAt`/`startAfter`/`endAt`/`endBefore`) are converted to native Firestore types
   (`SerializedGeoPoint` → `GeoPoint`, `SerializedDocumentReference` → `DocumentReference`).
-  Previously such queries silently returned 0 results
+  Previously such queries silently returned 0 results. Values that are already native
+  (`Timestamp`, `GeoPoint`, `DocumentReference`, and `DocumentSnapshot` cursors) pass
+  through unchanged
 - **`merge()` no longer loses concurrent updates** (#94): the read-modify-write now runs inside
   a transaction, so updates committed between the read and the write abort and retry the merge
   instead of being overwritten
@@ -29,7 +31,8 @@ All items in this release come from an external code review (issues #92–#100).
 ### Changed
 
 - **BREAKING (type-level)**: `where()` operand types now model the operator (#96) —
-  `in`/`not-in` take `readonly T[K][]`, `array-contains` takes the array element type,
+  `in`/`not-in` take `readonly T[K][]`, `array-contains` takes the array element type
+  (including for optional/nullable array fields such as `tags?: string[]`),
   `array-contains-any` takes an array of elements. Code that passed mistyped operands
   (typically via `as any`) may surface new type errors; runtime behavior is unchanged
 - **BREAKING (type-level)**: `SerializedDocumentReference<TCollection, TDocument>` now brands
@@ -39,6 +42,8 @@ All items in this release come from an external code review (issues #92–#100).
   data targeting an existing document throws `FirestoreTypedValidationError` instead of
   `DocumentAlreadyExistsError` (#92)
 - CI now runs emulator tests in a dedicated job via `firebase emulators:exec` (#99)
+- The release workflow now runs emulator tests before publishing, and its publish/tag/release
+  steps are idempotent so a partially failed release run can be safely re-run
 
 ### Documentation
 
