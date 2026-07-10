@@ -32,6 +32,8 @@ const mockValidateData = validateData as MockedFunction<typeof validateData>
 
 describe('DocumentReference', () => {
   let mockFirebaseDoc: any
+  let mockTransaction: any
+  let mockFirestore: any
   let mockFirestoreTyped: FirestoreTypedOptionsProvider
   let mockValidator: Mock
   let docRef: DocumentReference<TestEntity>
@@ -47,11 +49,21 @@ describe('DocumentReference', () => {
       validator(_data),
     )
 
+    // Transaction mock delegates to the document mock so per-test
+    // get/set expectations keep working for transactional operations
+    mockTransaction = {
+      get: vi.fn(() => mockFirebaseDoc.get()),
+      set: vi.fn((_ref: unknown, data: unknown) => mockFirebaseDoc.set(data)),
+    }
+    mockFirestore = {
+      runTransaction: vi.fn(async (fn: (tx: unknown) => Promise<unknown>) => fn(mockTransaction)),
+    }
+
     // Create mock Firebase DocumentReference
     mockFirebaseDoc = {
       id: 'test-id',
       path: 'users/test-id',
-      firestore: {},
+      firestore: mockFirestore,
       get: vi.fn(),
       set: vi.fn(),
       create: vi.fn(),
@@ -192,7 +204,7 @@ describe('DocumentReference', () => {
 
       await docRef.set(testData)
 
-      expect(mockDeserializeFirestoreTypes).toHaveBeenCalledWith(testData, {})
+      expect(mockDeserializeFirestoreTypes).toHaveBeenCalledWith(testData, mockFirestore)
       expect(mockFirebaseDoc.set).toHaveBeenCalledWith(convertedData)
     })
 
@@ -308,6 +320,24 @@ describe('DocumentReference', () => {
       expect(mockFirebaseDoc.set).not.toHaveBeenCalled()
     })
 
+    it('should run the read-modify-write inside a transaction', async () => {
+      mockFirebaseDoc.get.mockResolvedValue({
+        exists: true,
+        id: 'test-id',
+        ref: mockFirebaseDoc,
+        data: () => testData,
+      })
+
+      await docRef.merge(partialData)
+
+      expect(mockFirestore.runTransaction).toHaveBeenCalledTimes(1)
+      expect(mockTransaction.get).toHaveBeenCalledWith(mockFirebaseDoc)
+      expect(mockTransaction.set).toHaveBeenCalledWith(mockFirebaseDoc, {
+        ...testData,
+        ...partialData,
+      })
+    })
+
     it('should validate merged data when validateOnWrite is true', async () => {
       mockFirebaseDoc.get.mockResolvedValue({
         exists: true,
@@ -341,7 +371,7 @@ describe('DocumentReference', () => {
 
       expect(mockDeserializeFirestoreTypes).toHaveBeenCalledWith(
         { ...testData, ...partialData },
-        {},
+        mockFirestore,
       )
       expect(mockFirebaseDoc.set).toHaveBeenCalledWith(convertedData)
     })
@@ -416,7 +446,7 @@ describe('DocumentReference', () => {
       // The merged data should be just the partial data since existing was null
       expect(mockDeserializeFirestoreTypes).toHaveBeenCalledWith(
         partialData, // Since existingData was null, mergedData is just partialData
-        {},
+        mockFirestore,
       )
     })
   })
